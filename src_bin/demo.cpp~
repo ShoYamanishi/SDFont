@@ -1,0 +1,2069 @@
+#include <math.h>
+#include <sys/time.h>
+#include <time.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <vector>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/norm.hpp>
+#include <png.h>
+
+
+using namespace std;
+
+/** @file opengl_demo.cpp
+ *
+ *  @brief visual demo for signed distant fonts.
+ *
+ *  @dependencies
+ *    OpenGL 3.3 or later
+ *    GLFW3
+ *    GLEW
+ *    GLM
+ *
+ * c++  -Wall -std=c++1y -framework CoCoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework CoreVideo -lglfw3 -lGLEW -lpng -lstdc++ opengl_demo.cpp 
+ */
+
+
+class GlfwManager  {
+
+  public:
+
+    GlfwManager( int requestedWindowWidth, int requestedWindowHeight );
+
+    virtual ~GlfwManager();
+
+    void configGLFW();
+
+    int windowWidth()         const { return mWindowWidth; }
+
+    int windowHeight()        const { return mWindowHeight; }
+
+    int windowWidthInPixel()  const { return mWindowWidthInPixel; }
+
+    int windowHeightInPixel() const { return mWindowHeightInPixel; }
+
+    void update();
+
+
+    /** @param: keyCode (in): GLFW_KEY_* defined in glfw3.h
+     *
+     *  @return true if the key is pressed now.
+     *
+     *  @reference /usr/local/include/GLFW/glfw3.h
+     */
+    bool isPressed( int keyCode ) const {
+
+        if ( glfwGetKey( mWindow, GLFW_KEY_SPACE ) == GLFW_PRESS ) {
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    virtual bool shouldExit();
+
+    virtual void callbackWindowSize(
+        GLFWwindow* w,
+        int         width,
+        int         height
+    );
+
+    virtual  void callbackMouseButton(
+        GLFWwindow* window,
+        int         button,
+        int         action,
+        int         mods
+    );
+
+    virtual void callbackMousePos(
+        GLFWwindow* window,
+        double      xpos,
+        double      ypos
+    );
+
+    virtual void callbackMouseWheel(
+        GLFWwindow* window,
+        double      xoffset,
+        double      yoffset
+    );
+
+    virtual void callbackKey(
+        GLFWwindow* window,
+        int         key,
+        int         scancode,
+        int         action,
+        int         mods
+    );
+
+    virtual void callbackChar(
+        GLFWwindow* window,
+        int         codepoint
+    );
+
+
+  private:
+
+    GLFWwindow*   mWindow;
+    int           mWindowWidth;
+    int           mWindowHeight;
+    int           mWindowWidthInPixel;
+    int           mWindowHeightInPixel;
+
+    static GlfwManager* mThisSingleton;
+
+    static void dispatchWindowSize  ( GLFWwindow* w, int x, int y );
+    static void dispatchMouseButton ( GLFWwindow* w, int b, int a, int m );
+    static void dispatchMousePos    ( GLFWwindow* w, double x, double y );
+    static void dispatchMouseWheel  ( GLFWwindow* w, double x, double y );
+    static void dispatchKey         ( GLFWwindow* w,int k,int s,int a,int m );
+    static void dispatchChar        ( GLFWwindow* w, int c );
+};
+
+
+GlfwManager* GlfwManager::mThisSingleton = nullptr;
+
+
+GlfwManager::GlfwManager(
+
+    int requestedWindowWidth,
+    int requestedWindowHeight
+
+)
+{
+    // Check for singleton.
+    if ( mThisSingleton != nullptr )  {
+
+        cerr << "Duplicated GlfwManager.\n";
+    }
+
+    // Initialise GLFW
+    if ( !glfwInit() ) {
+
+        cerr << "glfwInit() failed.\n";
+    }
+
+    glfwWindowHint( GLFW_SAMPLES,               4 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3 );
+    glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
+    glfwWindowHint( GLFW_OPENGL_PROFILE,        GLFW_OPENGL_CORE_PROFILE );
+
+    mWindow = glfwCreateWindow(
+
+                  requestedWindowWidth,
+                  requestedWindowHeight,
+                  "Test Visualiser Convex Hull",
+                  NULL,
+                  NULL
+
+              );
+
+    if ( mWindow == NULL ) {
+
+        cerr << "glfwCreateWindow failed\n";
+        glfwTerminate();
+    }
+
+    glfwMakeContextCurrent( mWindow );
+    
+    glfwGetFramebufferSize(
+
+        mWindow,
+        &mWindowWidthInPixel,
+        &mWindowHeightInPixel
+
+    );
+
+
+    glfwGetWindowSize( mWindow, &mWindowWidth, &mWindowHeight );
+
+    glewExperimental = true;
+
+    if ( glewInit() != GLEW_OK ) {
+
+        cerr << "Failed to initialize GLEW\n";;
+        terminate();
+
+    }
+
+    glViewport(
+        0,
+        0,
+        (GLsizei)mWindowWidthInPixel, 
+        (GLsizei)mWindowHeightInPixel
+    );
+
+    GlfwManager::mThisSingleton = this;
+}
+
+
+void GlfwManager::configGLFW()
+{
+
+    glfwSetWindowSizeCallback
+                         ( mWindow, (GLFWwindowsizefun)  dispatchWindowSize );
+
+    glfwSetMouseButtonCallback 
+                         ( mWindow, (GLFWmousebuttonfun) dispatchMouseButton );
+
+    glfwSetCursorPosCallback   
+                         ( mWindow, (GLFWcursorposfun)   dispatchMousePos );
+                                        
+    glfwSetScrollCallback( mWindow, (GLFWscrollfun)      dispatchMouseWheel );
+                                        
+    glfwSetKeyCallback   ( mWindow, (GLFWkeyfun)         dispatchKey );
+                                        
+    glfwSetCharCallback  ( mWindow, (GLFWcharfun)        dispatchChar );
+
+    glfwSetInputMode     ( mWindow, GLFW_STICKY_KEYS, GL_TRUE );
+
+    glfwSetInputMode     ( mWindow, GLFW_CURSOR,      GLFW_CURSOR_NORMAL );
+
+    glfwPollEvents();
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    glDepthFunc(GL_LESS); 
+
+}
+
+
+void GlfwManager::update()
+{
+
+    glfwSwapBuffers( mWindow );
+    glfwPollEvents();
+
+}
+
+
+GlfwManager::~GlfwManager()
+{
+    glfwTerminate();
+}
+
+
+bool GlfwManager::shouldExit()
+{
+    return    glfwGetKey( mWindow, GLFW_KEY_ESCAPE ) != GLFW_PRESS
+           && glfwWindowShouldClose( mWindow )       == 0          ;
+}
+
+
+void GlfwManager::dispatchWindowSize( GLFWwindow* w, int x, int y )
+{
+    if ( mThisSingleton != nullptr ) {
+
+        glfwGetFramebufferSize(
+            mThisSingleton->mWindow,
+            &(mThisSingleton->mWindowWidthInPixel),
+            &(mThisSingleton->mWindowHeightInPixel)
+        );
+    
+        glfwGetWindowSize(
+            mThisSingleton->mWindow,
+            &(mThisSingleton->mWindowWidth),
+            &(mThisSingleton->mWindowHeight)
+        );
+
+        glViewport(
+            0,
+            0,
+            (GLsizei)(mThisSingleton->mWindowWidthInPixel), 
+            (GLsizei)(mThisSingleton->mWindowHeightInPixel)
+        );
+
+        mThisSingleton->callbackWindowSize( w, x, y );
+    }
+}
+
+
+void GlfwManager::dispatchMouseButton( GLFWwindow* w, int b, int a, int m )
+{
+    if ( mThisSingleton != nullptr ) {
+
+        mThisSingleton->callbackMouseButton( w, b, a, m );
+    }
+}
+
+
+void GlfwManager::dispatchMousePos( GLFWwindow* w, double x, double y )
+{
+    if ( mThisSingleton != nullptr ) {
+
+        mThisSingleton->callbackMousePos( w, x, y );
+    }
+}
+
+
+void GlfwManager::dispatchMouseWheel( GLFWwindow* w, double x, double y )
+{
+    if ( mThisSingleton != nullptr ) {
+
+        mThisSingleton->callbackMouseWheel( w, x, y );
+    }
+}
+
+
+void GlfwManager::dispatchKey( GLFWwindow* w,int k,int s,int a,int m )
+{
+    if ( mThisSingleton != nullptr ) {
+
+        mThisSingleton->callbackKey( w, k, s, a, m );
+    }
+}
+
+
+void GlfwManager::dispatchChar( GLFWwindow* w, int c )
+{
+    if ( mThisSingleton != nullptr ) {
+
+        mThisSingleton->callbackChar( w, c );
+    }
+}
+
+
+void GlfwManager::callbackWindowSize(
+    GLFWwindow* window, 
+    int         width,
+    int         height
+) {
+   ;
+}
+
+void GlfwManager::callbackMouseButton(
+    GLFWwindow* window,
+    int         button,
+    int         action,
+    int         mods
+) {
+    ;
+}
+
+
+void GlfwManager::callbackMousePos(
+    GLFWwindow* window,
+    double      xpos,
+    double      ypos
+) {
+    ;
+}
+
+
+void GlfwManager::callbackMouseWheel(
+    GLFWwindow* window,
+    double      xoffset,
+    double      yoffset
+) {
+    ;
+}
+
+
+void GlfwManager::callbackKey(
+    GLFWwindow* window,
+    int         key,
+    int         scancode,
+    int         action,
+    int         mods
+) {
+    ;
+}
+
+
+void GlfwManager::callbackChar(
+    GLFWwindow* window,
+    int         codepoint
+) {
+    ;
+}
+
+
+class DeltaTime {
+
+  public:
+
+    DeltaTime(): mMicroSecondsCur(0.0)
+    {
+        struct timeval  mTimeVal;
+
+        gettimeofday( &mTimeVal, NULL );
+
+        mMicroSecondsCur = mTimeVal.tv_sec*1000000.0 + 
+                           mTimeVal.tv_usec ;
+    }
+
+    ~DeltaTime(){;}
+
+    double delta()
+    {
+        struct timeval  mTimeVal;
+        double          microSecondsPrev;
+
+        gettimeofday( &mTimeVal, NULL );
+
+        microSecondsPrev = mMicroSecondsCur;
+
+        mMicroSecondsCur  = mTimeVal.tv_sec * 1000000.0 + mTimeVal.tv_usec ;
+
+        double delta = ( mMicroSecondsCur - microSecondsPrev ) / 1000000.0 ;
+        
+        return delta;
+    }
+
+  private:
+
+    double mMicroSecondsCur;
+
+};
+
+
+class Glyph {
+
+  public:
+
+    long  mCodePoint;
+    float mWidth;
+    float mHeight;
+    float mHorizontalBearingX;
+    float mHorizontalBearingY;
+    float mHorizontalAdvance;
+    float mVerticalBearingX;
+    float mVerticalBearingY;
+    float mVerticalAdvance;
+    float mTextureCoordX;
+    float mTextureCoordY;
+    float mTextureWidth;
+    float mTextureHeight;
+
+    /* 
+     *  key:   code point
+     *  value: kerning
+     */
+    map< long, float > mKernings;
+
+};
+
+
+class Parser {
+
+  public:
+
+    /** @brief constructor
+     *
+     *  @param  G (in/out) graph to which nodes and edges are to be added
+     */
+    Parser( map< long, Glyph>& glyphs ) : mMargin(0.0), mGlyphs(glyphs) {;}
+
+    virtual ~Parser(){;}
+
+    /** @brief
+     *
+     *  @param  filename (in): name of the file to be opened and parsed.
+     *
+     */
+    bool parseSpec( string fileName );
+
+    float margin() const { return mMargin ; }
+
+    static const std::string MARGIN;
+    static const std::string GLYPHS;
+    static const std::string KERNINGS;
+
+  private:
+
+    enum parseState {
+        INIT,
+        IN_MARGIN,
+        IN_GLYPHS,
+        IN_KERNINGS,
+        END
+    };
+
+    void trim( string& line );
+
+    bool isSectionHeader( string line, enum parseState& state );
+
+    bool isCommentLine  ( string line );
+
+    size_t splitLine    ( const string& txt, vector<string>& strs, char ch );
+        
+    void handleMargin(
+        string line,
+        string filename,
+        long   lineNumber,
+        bool&  errorFlag
+    );
+        
+    void handleGlyph(
+        string line,
+        string filename,
+        long   lineNumber,
+        bool&  errorFlag
+    );
+
+    void handleKerning(
+        string line,
+        string fileName,
+        long   lineNumber,
+        bool&  errorFlag
+    );
+
+    void emitError(
+        string fileName,
+        long   lineNumber,
+        string mess,
+        bool&  errorFlag
+    );
+
+
+    float mMargin;
+
+    /** @brief used during parsing to find a node from a node number.*/
+    map< long, Glyph >& mGlyphs;
+
+
+};
+
+const std::string Parser::MARGIN   = "MARGIN";
+const std::string Parser::GLYPHS   = "GLYPHS";
+const std::string Parser::KERNINGS = "KERNINGS";
+
+
+void Parser::trim( string& line ) {
+
+    if ( !line.empty() && line[line.size() - 1] == '\n' ) {
+
+        line.erase(line.size() - 1);
+    }
+
+    if ( !line.empty() && line[line.size() - 1] == '\r' ) {
+
+        line.erase(line.size() - 1);
+    }
+}
+
+
+bool Parser::parseSpec( string fileName )
+{
+
+    ifstream        is( fileName.c_str() );
+
+    if (!is) {
+        return false;
+    }
+
+    long            lineNumber = 0;
+    bool            error      = false;
+    enum parseState state      = INIT;
+
+    while ( !is.eof() && !error ) {
+
+        string line;
+
+        getline( is, line );
+
+        trim( line );
+
+        lineNumber++;
+
+        if ( line.empty() ) {
+            continue;
+        }
+
+        if ( isCommentLine(line) ) {
+            continue;
+        }
+
+        if( isSectionHeader( line, state ) ) {
+            continue;
+        }
+
+        switch( state ) {
+
+          case INIT:
+
+            emitError     ( fileName, lineNumber, "", error );
+            break;
+
+          case IN_MARGIN:
+
+            handleMargin  ( line, fileName, lineNumber, error );
+            break;
+
+          case IN_GLYPHS:
+
+            handleGlyph   ( line, fileName, lineNumber, error );
+            break;
+
+          case IN_KERNINGS:
+
+            handleKerning ( line, fileName, lineNumber, error );
+            break;
+
+          case END:
+          default:
+
+            emitError     ( fileName, lineNumber, "", error );
+            break;
+        }
+    }
+
+    if (error) {
+        return false;
+    }
+
+    return true;
+}
+
+
+bool Parser::isSectionHeader (
+
+    string           line,
+    enum parseState& state
+
+) {
+
+    if ( line.compare( 0, MARGIN.size(), MARGIN ) == 0 ) {
+
+        state = IN_MARGIN;
+        return true;
+    }
+    else if ( line.compare( 0, GLYPHS.size(), GLYPHS ) == 0 ) {
+
+        state = IN_GLYPHS;
+        return true;
+    }
+    else if ( line.compare( 0, KERNINGS.size(), KERNINGS ) == 0 ) {
+
+        state = IN_KERNINGS;
+        return true;
+    }
+
+    return false;
+}
+
+
+void Parser::emitError(
+
+    string fileName,
+    long   lineNumber,
+    string message ,
+    bool&  errorFlag
+
+) {
+
+    cerr << "Syntax Error: "
+         << fileName
+         << " at line: "
+         << lineNumber
+         << " "
+         << message
+         << "\n";
+
+    errorFlag = true;
+}
+
+
+bool Parser::isCommentLine( std::string line )
+{
+    return line.at(0) == '#';
+}
+
+
+size_t Parser::splitLine(
+
+    const string&   txt,
+    vector<string>& strs,
+    char            ch
+
+) {
+
+    auto   pos        = txt.find( ch );
+    size_t initialPos = 0;
+
+    strs.clear();
+
+    while( pos != std::string::npos && initialPos < txt.size() ) {
+
+        if ( pos > initialPos ) {
+
+            strs.push_back( txt.substr( initialPos, pos - initialPos ) );
+        }
+
+        initialPos = pos + 1;
+
+        if ( initialPos < txt.size() ) {
+            pos = txt.find( ch, initialPos );
+        }
+
+    }
+
+    if ( initialPos < txt.size() ) {
+
+        strs.push_back( txt.substr( initialPos, txt.size() - initialPos ) );
+    }
+
+    return strs.size();
+}
+
+
+void Parser::handleMargin (
+
+    string line,
+    string filename,
+    long   lineNumber,
+    bool&  errorFlag
+
+) {
+
+    vector<std::string> fields;
+
+    if ( splitLine( line, fields, '\t' ) != 1 ) {
+
+        emitError( filename, lineNumber, "Invalid Margin", errorFlag );
+        return;
+    }
+
+    Glyph g;
+
+    mMargin = stof( fields[ 0] );
+}
+
+
+void Parser::handleGlyph (
+
+    string line,
+    string filename,
+    long   lineNumber,
+    bool&  errorFlag
+
+) {
+
+    vector<std::string> fields;
+
+    if ( splitLine( line, fields, '\t' ) != 13 ) {
+
+        emitError( filename, lineNumber, "Invalid Node", errorFlag );
+        return;
+    }
+
+    Glyph g;
+
+    g.mCodePoint          = stol( fields[ 0] );
+    g.mWidth              = stof( fields[ 1] );
+    g.mHeight             = stof( fields[ 2] );
+    g.mHorizontalBearingX = stof( fields[ 3] );
+    g.mHorizontalBearingY = stof( fields[ 4] );
+    g.mHorizontalAdvance  = stof( fields[ 5] );
+    g.mVerticalBearingX   = stof( fields[ 6] );
+    g.mVerticalBearingY   = stof( fields[ 7] );
+    g.mVerticalAdvance    = stof( fields[ 8] );
+    g.mTextureCoordX      = stof( fields[ 9] );
+    g.mTextureCoordY      = stof( fields[10] );
+    g.mTextureWidth       = stof( fields[11] );
+    g.mTextureHeight      = stof( fields[12] );
+
+    mGlyphs[ g.mCodePoint ] = g;
+
+}
+
+
+void Parser::handleKerning (
+
+    string      line,
+    string      filename,
+    long        lineNumber,
+    bool&       errorFlag
+
+) {
+
+    vector<std::string> fields;
+
+    auto numFields = splitLine( line, fields, '\t' );
+
+    if ( numFields < 3 || (numFields - 1) % 2 != 0 ) {
+
+        emitError( filename, lineNumber, "Invalid Node", errorFlag );
+    }
+
+    auto& g = mGlyphs[ stol( fields[ 0] ) ];
+
+    for ( int i = 1; i < numFields; i +=2 ) {
+
+        g.mKernings[ stol( fields[ i ]) ] = stof( fields[ i+1 ] );
+    }
+}
+
+
+
+
+
+/** @brief load a PNG image file.
+ *
+ *  @param width     (out): from png_get_IHDR(). upto 2^31
+ *  @param height    (out): from png_get_IHDR(). upto 2^31
+ *  @param color     (out): from png_get_IHDR(). One of:
+ *                          PNG_COLOR_TYPE_GRAY
+ *                          PNG_COLOR_TYPE_GRAY_ALPHA
+ *                          PNG_COLOR_TYPE_PALETTE
+ *                          PNG_COLOR_TYPE_RGB
+ *                          PNG_COLOR_TYPE_RGB_ALPHA
+ *                          PNG_COLOR_MASK_PALETTE
+ *                          PNG_COLOR_MASK_COLOR
+ *                          PNG_COLOR_MASK_ALPHA
+ *
+ *  @param interlace (out): from png_get_IHDR(). One of:
+ *                          PNG_INTERLACE_NONE
+ *                          PNG_INTERLACE_ADAM7
+ *
+ *  @param depth     (out): from png_get_IHDR(). One of 1, 2, 4, 8, 16.
+ *
+ *  @reference https://gist.github.com/mortennobel/5299151
+ */
+static bool loadPngImage(
+
+    string       filePath,
+
+    png_uint_32& width,
+    png_uint_32& height,
+    int&         color,
+    int&         interlace,
+    int&         depth,
+
+    GLubyte**    data
+
+) {
+    
+    FILE* fp = fopen( filePath.c_str(), "rb" );
+
+    if (fp == nullptr ) {
+
+        cerr << "Can not open [" << filePath << "\n";
+        return false;
+    }
+    
+    png_structp pngStruct = png_create_read_struct ( 
+
+        PNG_LIBPNG_VER_STRING,
+        NULL,
+        NULL,
+        NULL
+    );
+    
+    if ( pngStruct == nullptr ) {
+
+        cerr << "error in png_create_read_struct\n";
+        fclose(fp);
+        return false;
+    }
+
+    png_infop pngInfo = png_create_info_struct( pngStruct );
+
+    if ( pngInfo == NULL ) {
+
+        cerr << "error in png_create_info_struct\n";
+        fclose(fp);
+        png_destroy_read_struct( &pngStruct, NULL, NULL );
+        return false;
+    }
+    
+    if ( setjmp( png_jmpbuf(pngStruct) ) != 0 ) {
+
+        cerr << "error in setjmp\n";
+        png_destroy_read_struct( &pngStruct, &pngInfo, NULL );
+        fclose(fp);
+        return false;
+    }
+    
+    png_init_io( pngStruct, fp);
+
+    unsigned int sigRead = 0;
+
+    png_set_sig_bytes( pngStruct, sigRead );
+
+    png_read_png ( 
+
+        pngStruct,
+        pngInfo,
+        PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND,
+        NULL
+    );
+
+    png_get_IHDR ( 
+
+        pngStruct,
+        pngInfo,
+        &width,
+        &height,
+        &depth,
+        &color,
+        &interlace,
+        NULL,
+        NULL
+    );
+    
+    auto rowBytes = png_get_rowbytes( pngStruct, pngInfo );
+
+    *data = (unsigned char*) malloc ( rowBytes * height );
+    
+    auto rowPointers = png_get_rows( pngStruct, pngInfo );
+    
+    for ( int i = 0; i < height; i++ ) {
+
+        memcpy(
+            *data + ( rowBytes * (height - 1 - i) ), 
+            rowPointers[i],
+            rowBytes
+        );
+    }
+    
+    png_destroy_read_struct( &pngStruct, &pngInfo, NULL );
+    
+    fclose( fp );
+    
+    return true;
+}
+
+/** @class SignedDistFont
+ *
+ *  @brief Core class for the runtime to handle a signed distance font.
+ */
+
+class SignedDistFont {
+
+  public:
+
+
+    /** @brief constructor
+     *
+     *  @param fontName (in): name of the font without the extention.
+     *                        A signed distance font comes with a pair
+     *                        of files: (*.txt) for metrics, and (*.png)
+     *                        for the texture.
+     */
+    SignedDistFont(string fontName):
+        mOK          (false),
+        mTextureName (0),
+        mMargin      (0.0)
+     {
+
+        GLubyte*    bitMap;
+        png_uint_32 width;
+        png_uint_32 height;
+        int         color;
+        int         interlace;
+        int         depth;
+
+        auto res = loadPngImage(
+                       fontName + ".png",
+                       width,
+                       height,
+                       color, 
+                       interlace,
+                       depth,
+                       &bitMap
+                   );
+
+        if ( !res ){
+
+            cerr << "Can not load [" << fontName << ".png]\n";
+            return;
+        }
+
+        res = checkPNG( width, height, color, interlace, depth );
+
+        if ( !res ){
+
+            cerr << "Invalid PNG format [" << fontName << ".png]\n";
+            free ( bitMap );
+            return;
+        }
+
+        Parser p( mGlyphs );
+        res = p.parseSpec( fontName + ".txt" );
+
+        if ( !res ){
+
+            cerr << "Can not parse [" << fontName << ".txt]\n";
+            free( bitMap );
+            bitMap = nullptr;
+            return;
+        }
+
+        mMargin = p.margin();
+
+        mTextureName = generateOpenGLTexture( bitMap, width );
+
+        free( bitMap );
+
+        mOK = true;
+    }
+
+
+    /** @brief returns true if the construction of this object is 
+     *         successful and ready to be used.
+     */
+    bool isOK() const { return mOK; }
+
+
+    /** @brief returns the identifier of the OpenGL texture.
+     *         It is the number returned from glGenTextures(),
+     *         and to be given to glBindTextures();
+     */
+    GLuint textureName() const { return mTextureName; }
+
+    /** @brief 
+     *
+     *  @param c (in): code point
+     *
+     *  @return pointer to Glyph that constains the metrics.
+     *          nullptr if the given code point is not valid.
+     */
+    Glyph* getMetrics( long c )
+    {
+        auto git = mGlyphs.find( c );
+        if ( git != mGlyphs.end() ) {
+
+             return &( git->second );
+        }
+        else {
+
+            return nullptr;
+        }
+    }
+
+
+    /** @brief it generates the follogin metrics in the normalized 
+     *         texture coordinate system for the given string.
+     *
+     *         - width
+     *
+     *         - posXs  list of X positions for each code point in the given
+     *                  string. Each position is for the left side of the
+     *                  glyph rectangle. 
+     *                  I.e. The X origin + horizontal bearing.
+     *
+     *         - height (bearingY + belowBaseLineY) where bearingY is
+     *                  the height required above the base line.
+     *                  The height is given as the sum of the two terms.
+     *
+     *         - vertical advancement
+     *                  advanceY to place the base line for the next next line
+     *                  relative to the current base line.
+     *
+     *         - glyphs list of Glyphs that contain the metrics for the code
+     *                  points.
+     *
+     *  @param s (in): string to be displayed.
+     *
+     *  @param width          (out): See above.
+     *  @param posXs          (out): See above.
+     *  @param bearingY       (out): See above.
+     *  @param belowBaseLineY (out): See above.
+     *  @param advanceY       (out): See above.
+     *  @param glyphs         (out): See above.
+     */
+    void getMetrics( 
+
+        string            s,
+        float&            width,
+        vector< float >&  posXs,
+        float&            bearingY,
+        float&            belowBaseLineY,
+        float&            advanceY,
+        vector< Glyph* >& glyphs
+
+    ) {
+
+        width           = 0.0;
+        bearingY        = 0.0;
+        belowBaseLineY  = 0.0;
+        advanceY        = 0.0;
+
+        float curX      = 0.0;
+        float lastWidth = 0.0;
+        long  chPrev    = 0;
+        bool  chPrevSet = false;
+        auto  len       = s.length();
+
+        glyphs.clear();
+
+        for ( auto i = 0 ; i < len ; i++ ) {
+
+            auto ch  = s.at(i);
+            auto git = mGlyphs.find(ch);
+
+            if ( git != mGlyphs.end() ) {
+
+                auto& g = git->second;
+
+                bearingY       = max( bearingY, g.mHorizontalBearingY );
+
+                belowBaseLineY = min( belowBaseLineY, 
+                                      g.mHorizontalBearingY - g.mHeight );
+
+                advanceY       = max( advanceY, g.mVerticalAdvance );
+
+
+                if ( chPrevSet ) {
+
+                    auto& gPrev = mGlyphs[ chPrev ];
+                    auto gitKern = gPrev.mKernings.find( ch );
+
+                    if ( gitKern != gPrev.mKernings.end() ) {
+                        curX += (gitKern->second);
+                    }
+                }
+
+                posXs.push_back( curX + g.mHorizontalBearingX );
+
+                curX += g.mHorizontalAdvance;
+
+                lastWidth = g.mHorizontalBearingX + g.mWidth;
+
+                if ( !chPrevSet ) {
+
+                    chPrevSet = true ;
+                }
+                chPrev = ch;
+
+                glyphs.push_back( &g );
+
+            }
+            else {
+                posXs.push_back( 0.0 );
+                glyphs.push_back( nullptr );
+
+            }
+        }            
+
+        curX += lastWidth;
+
+        width = curX;
+
+    }
+
+
+    /** @brief generates OpenGL VBOs for the given glyph, i.e.
+     *         elements for  GL_ARRAY_BUFFER and 
+     *         indices for GL_ELEMENT_ARRAY_BUFFER.
+     *         Each element for GL_ARRAY_BUFFER consists of 8 floats as follows
+     *
+     *         float  point   X
+     *         float  point   Y
+     *         float  point   Z (constant,   Z)
+     *         float  normal  X (constant, 0.0)
+     *         float  normal  Y (constant, 0.0)
+     *         float  normal  Z (constant, 1.0)
+     *         float  texture U
+     *         float  texture V
+     *
+     *         It generates 4 elements for one glyph for the corner points
+     *         of the rectangle for the glyph in the counter clock wise.
+     *
+     *         The indices consist of 6 elements for one glyph to represent
+     *         two triangles for GL_TRIANGLES.
+     *
+     *         The glyph is drawn on the plane on the plane perpendicular to
+     *         and intersects Z axis at (0, 0, GLZ).
+     *         The positive Y-axis indicates the upward direction of the glyph.
+     *
+     *  @param g         (in): glyph to be displayed
+     *
+     *  @param leftX     (in): the left side of the glyph rectangle.
+     *                         I.e. the origin of X + horizontal bearing.
+     *  @param baseLineY (in): vertical base line.
+     *
+     *  @param scale     (in): scaling of the glyph. Specifies the size 
+     *                         of the glyph to be specified.
+     *
+     *  @param Z         (in): Z coordinate of the plane on which the glyph
+     *                         is drawn.
+     *
+     *  @param arrayBuf  (in): the start location in GL_ARRAY_BUFFER 
+     *                         where the series of values will be stored.
+     *
+     *  @param indexStart(in): the start index in the GL_ARRAY_BUFFER
+     *                         that corresponds to arrayBuf above.
+     *
+     *  @param indices   (in): the start location in GL_ELEMENT_ARRAY_BUFFER
+     *                         where the series of the indices will be stored.
+     */
+    void generateOpenGLDrawElementsForOneChar (
+
+        Glyph&  g,
+        float   leftX,
+        float   baseLineY,
+        float   scale,
+        float   Z,
+
+        float*  arrayBuf,
+        GLuint  indexStart,
+        GLuint* indices
+
+    ) {
+
+        indices[0] = indexStart;
+        indices[1] = indexStart + 1;
+        indices[2] = indexStart + 3;
+        indices[3] = indexStart + 2;
+        indices[4] = indexStart + 3;
+        indices[5] = indexStart + 1;
+
+        float scaledMargin  = mMargin * scale;
+
+        float belowBaseLine =   baseLineY
+                              + ( g.mHorizontalBearingY - g.mHeight )
+                                * scale
+                              - scaledMargin ;
+
+        float aboveBaseLine =   baseLineY
+                              + g.mHorizontalBearingY * scale
+                              + scaledMargin ;
+
+
+        float leftPos       = leftX - scaledMargin;
+
+        float rightPos      = leftX + g.mWidth * scale + scaledMargin;
+
+        arrayBuf[ 0]  = leftPos;
+        arrayBuf[ 1]  = belowBaseLine;
+        arrayBuf[ 2]  = Z ;
+        arrayBuf[ 3]  = 0.0;
+        arrayBuf[ 4]  = 0.0;
+        arrayBuf[ 5]  = 1.0;
+        arrayBuf[ 6]  = g.mTextureCoordX - mMargin;
+        arrayBuf[ 7]  = g.mTextureCoordY + g.mHeight + mMargin;
+
+        arrayBuf[ 8]  = rightPos;
+        arrayBuf[ 9]  = belowBaseLine;
+        arrayBuf[10]  = Z ;
+        arrayBuf[11]  = 0.0;
+        arrayBuf[12]  = 0.0;
+        arrayBuf[13]  = 1.0;
+        arrayBuf[14]  = g.mTextureCoordX + g.mWidth  + mMargin;
+        arrayBuf[15]  = g.mTextureCoordY + g.mHeight + mMargin;
+
+        arrayBuf[16]  = rightPos;
+        arrayBuf[17]  = aboveBaseLine;
+        arrayBuf[18]  = Z ;
+        arrayBuf[19]  = 0.0;
+        arrayBuf[20]  = 0.0;
+        arrayBuf[21]  = 1.0;
+        arrayBuf[22]  = g.mTextureCoordX + g.mWidth + mMargin;
+        arrayBuf[23]  = g.mTextureCoordY - mMargin;
+
+        arrayBuf[24]  = leftPos;
+        arrayBuf[25]  = aboveBaseLine;
+        arrayBuf[26]  = Z ;
+        arrayBuf[27]  = 0.0;
+        arrayBuf[28]  = 0.0;
+        arrayBuf[29]  = 1.0;
+        arrayBuf[30]  = g.mTextureCoordX - mMargin;
+        arrayBuf[31]  = g.mTextureCoordY - mMargin;
+
+    }
+
+
+
+    /** @brief generates OpenGL VBOs for the given glyphs, i.e.
+     *         elements for  GL_ARRAY_BUFFER and 
+     *         indices for GL_ELEMENT_ARRAY_BUFFER.
+     *         Each element for GL_ARRAY_BUFFER consists of 8 floats as follows
+     *
+     *         float  point   X
+     *         float  point   Y
+     *         float  point   Z (constant,   Z)
+     *         float  normal  X (constant, 0.0)
+     *         float  normal  Y (constant, 0.0)
+     *         float  normal  Z (constant, 1.0)
+     *         float  texture U
+     *         float  texture V
+     *
+     *         It generates 4 elements for one glyph for the corner points
+     *         of the rectangle for the glyph in the counter clock wise.
+     *
+     *         The indices consist of 6 elements for one glyph to represent
+     *         two triangles for GL_TRIANGLES.
+     *
+     *         The glyph is drawn on the plane on the plane perpendicular to
+     *         and intersects Z axis at (0, 0, GLZ).
+     *         The positive Y-axis indicates the upward direction of the glyph.
+     *
+     *  @param g         (in): glyph to be displayed
+     *
+     *  @param leftX     (in): the left side of the glyph rectangle.
+     *                         I.e. the origin of X + horizontal bearing.
+     *  @param baseLineY (in): vertical base line.
+     *
+     *  @param scale     (in): scaling of the glyph. Specifies the size 
+     *                         of the glyph to be specified.
+     *
+     *  @param distribution
+     *                   (in): extra scale factor for the horizontal placement
+     *                         of the glyphs. For example, if you want to 
+     *                         strecth the word a little bit because the line
+     *                         has too much space, then you can set this to
+     *                         1.1. On the other hand, if you want to compress
+     *                         the word a little bit to make some space for
+     *                         other words, then you can set this to a value
+     *                         like 0.95.
+     *
+     *  @param Z         (in): Z coordinate of the plane on which the glyph
+     *                         is drawn.
+     *
+     *  @param arrayBuf  (in): the start location in GL_ARRAY_BUFFER 
+     *                         where the series of values will be stored.
+     *
+     *  @param indexStart(in): the start index in the GL_ARRAY_BUFFER
+     *                         that corresponds to arrayBuf above.
+     *
+     *  @param indices   (in): the start location in GL_ELEMENT_ARRAY_BUFFER
+     *                         where the series of the indices will be stored.
+     */
+    void generateOpenGLDrawElements (
+
+        vector< Glyph* >& glyphs,
+        vector< float >&  posXs,
+        float             leftX,
+        float             baselineY,
+        float             scale,
+        float             distribution,
+        float             Z,
+        float*            arrayBuf,
+        GLuint            indexStart,
+        GLuint*           indices
+
+    ) {
+
+        for ( auto i = 0 ; i < glyphs.size() ; i++ ) {
+
+            if ( glyphs[i] != nullptr ) {
+
+                auto& g = *( glyphs[i] );
+
+                generateOpenGLDrawElementsForOneChar (
+
+                    g ,
+
+                    leftX + posXs[i] * scale * distribution ,
+
+                    baselineY ,
+
+                    scale , 
+
+                    Z ,
+
+                    &( arrayBuf[ i * NUM_FLOATS_PER_GLYPH ] ) ,
+
+                    indexStart + i * NUM_POINTS_PER_GLYPH ,
+
+                    &( indices[ i * NUM_INDICES_PER_GLYPH ] )
+                );
+            }
+        }
+    }
+
+
+
+
+    ~SignedDistFont() { ; }
+
+    static const int NUM_POINTS_PER_GLYPH;
+    static const int NUM_FLOATS_PER_POINT;
+    static const int NUM_FLOATS_PER_GLYPH;
+    static const int NUM_INDICES_PER_GLYPH;
+
+  private:
+
+
+    bool checkPNG( int width, int height, int color, int interlace, int depth )
+    {
+        if ( width != height ) {
+
+            return false;
+        }
+        
+        bool goodWidth = false ;
+
+        for ( long shift = 1 ; shift < 32 ; shift++ ) {
+
+            long power2 = ( 1 << shift ) ;
+
+            if ( width == power2 ) {
+
+                goodWidth = true;
+                break;
+            }
+        }
+
+        if (!goodWidth) {
+
+            return false;
+        }
+
+        if ( color != PNG_COLOR_TYPE_RGB_ALPHA ) {
+
+            return false;
+        }
+
+        if ( interlace != PNG_INTERLACE_NONE ) {
+
+            return false;
+        }
+
+        if ( depth != 8 ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    GLuint generateOpenGLTexture(
+        GLubyte* bitMap,
+        int      width
+    ) {
+
+        GLuint textureName;
+
+        glGenTextures( 1, &textureName );
+        glBindTexture( GL_TEXTURE_2D, textureName );
+    
+        glTexImage2D( GL_TEXTURE_2D,
+                      0,
+                      GL_RGBA,
+                      width,
+                      width,
+                      0,
+                      GL_RGBA,
+                      GL_UNSIGNED_BYTE,
+                      bitMap           );
+    
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     GL_REPEAT  );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT  );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR  );
+        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR  );
+        return textureName;
+    }
+
+    bool              mOK;
+    GLuint            mTextureName;
+    float             mMargin;
+    map< long, Glyph> mGlyphs;
+
+
+
+};
+
+
+const int SignedDistFont::NUM_POINTS_PER_GLYPH  = 4;
+const int SignedDistFont::NUM_FLOATS_PER_POINT  = 8;
+const int SignedDistFont::NUM_FLOATS_PER_GLYPH  = 4 * 8;
+const int SignedDistFont::NUM_INDICES_PER_GLYPH = 6;
+
+
+class ShaderManager {
+
+  public:
+
+    ShaderManager () : mOK(false), mProgramID(0) { /*loadShaders();*/ }
+
+    virtual ~ShaderManager () { unloadShaders(); }
+
+
+    virtual void load()
+    {
+        // glGetUniformLocation ( mProgramID, "VAR1" );
+        // glGetAttribLocation  ( mProgramID, "VAR2" );
+        // glEnableVertexAttribArray( slot );
+
+        // glUniform**()
+    }
+
+    virtual void unload()
+    {
+        // glDisableVertexAttribArray( slot );
+    }
+
+  protected:
+
+    void loadShaders( string vertexPath, string fragmentPath )
+    {
+        mOK = loadShaderPair( vertexPath, fragmentPath, mProgramID );
+    }
+
+    void unloadShaders()
+    {
+        if ( mOK ) {
+            unloadShaderPair( mProgramID );
+            mOK = false;
+        }
+
+    }
+
+    bool   mOK;
+    GLuint mProgramID;
+
+  private:
+
+    static bool loadShaderPair (
+        string  vertexPath,
+        string  fragmentPath,
+        GLuint& progID
+    );
+       
+    static string fileToString ( string path );
+
+    static bool   compile (const string& code, GLuint id );
+
+
+    static bool   link ( GLuint prog, GLuint vertex, GLuint frag );
+
+    static void   unloadShaderPair ( GLuint progID );
+
+};
+
+
+string ShaderManager::fileToString( string path )
+{
+    ifstream is( path );
+
+    if ( !is ) {
+
+        cerr << "failed to open:[" << path << "]\n";
+        return "";
+    }
+
+    string code;
+
+    string line = "";
+
+    while ( getline( is, line ) ) {
+
+        code += "\n" + line;
+    }
+
+    is.close();
+
+    return code;
+}
+
+
+bool ShaderManager::compile (const string& code, GLuint id )
+{
+    char const * strp = code.c_str();
+
+    glShaderSource  ( id, 1, &strp , NULL ) ;
+    glCompileShader ( id ) ;
+
+    GLint res = GL_FALSE;
+    glGetShaderiv( id, GL_COMPILE_STATUS, &res );
+
+    int infoLogLength;
+    glGetShaderiv( id, GL_INFO_LOG_LENGTH, &infoLogLength );
+
+    if ( res == GL_FALSE && infoLogLength > 0 ) {
+
+        char* message = new char[infoLogLength + 1];
+        if ( message != nullptr ) {
+            glGetShaderInfoLog( id, infoLogLength, NULL, message );
+            cerr << message << "\n";
+            delete[] message;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool ShaderManager::link( GLuint prog, GLuint vertex, GLuint fragment )
+{
+
+    glAttachShader( prog, vertex   );
+    glAttachShader( prog, fragment );
+    glLinkProgram ( prog );
+
+    GLint res = GL_FALSE;
+    glGetProgramiv( prog, GL_LINK_STATUS, &res );
+
+    int infoLogLength;
+    glGetProgramiv( prog, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+    if ( res == GL_FALSE && infoLogLength > 0 ) {
+
+        char* message = new char[infoLogLength + 1];
+        if ( message != nullptr ) {
+
+            glGetProgramInfoLog( prog, infoLogLength, NULL, message );
+            std::cerr << message << "\n";
+            delete[] message;
+
+        }
+
+        glDetachShader( prog, vertex   );
+        glDetachShader( prog, fragment );
+
+        return false;
+    }
+
+    glDetachShader( prog, vertex   );
+    glDetachShader( prog, fragment );
+
+    return true;
+}
+
+
+bool ShaderManager::loadShaderPair (
+    string  vertexPath,
+    string  fragmentPath,
+    GLuint& progID
+) {
+
+    string vertexShaderCode   = fileToString( vertexPath   ) ;
+    string fragmentShaderCode = fileToString( fragmentPath ) ;
+
+    if ( vertexShaderCode == "" || fragmentShaderCode == "" ) {
+        return false;
+    }
+
+    GLuint vertexShaderID   = glCreateShader( GL_VERTEX_SHADER   );
+    GLuint fragmentShaderID = glCreateShader( GL_FRAGMENT_SHADER );
+
+    if ( !compile( vertexShaderCode, vertexShaderID ) ) {
+
+        glDeleteShader( vertexShaderID   );
+        glDeleteShader( fragmentShaderID );
+        return false;
+    }
+
+    if ( !compile( fragmentShaderCode, fragmentShaderID ) ) {
+
+        glDeleteShader( vertexShaderID   );
+        glDeleteShader( fragmentShaderID );
+        return false;
+    }
+
+    progID = glCreateProgram();
+    if ( !link( progID, vertexShaderID, fragmentShaderID ) ) {
+
+        glDeleteShader( vertexShaderID   );
+        glDeleteShader( fragmentShaderID );
+        glDeleteProgram( progID );
+        return false;
+    }
+
+    glDeleteShader( vertexShaderID   );
+    glDeleteShader( fragmentShaderID );
+
+    return true;
+}
+
+
+void ShaderManager::unloadShaderPair( GLuint progID )
+{
+    glDeleteProgram( progID );
+}
+
+
+class OrthoShaderManager : public ShaderManager {
+
+  public:
+
+    OrthoShaderManager( GLuint textureObjectName, GLuint textureActiveNum ):
+
+        ShaderManager      (),
+        mTextureObjectName ( textureObjectName ),
+        mTextureUniform    ( 0                 ),
+        mTextureActiveNum  ( textureActiveNum  )
+    {
+        loadShaders( "shaders/VanillaSignedDistFontVertex.glsl", 
+                     "shaders/vanillaSignedDistFontFragment.glsl" );
+
+        glGenVertexArrays ( 1, &mVertexArray  );
+        glGenBuffers      ( 1, &mVertexBuffer );
+        glGenBuffers      ( 1, &mIndexBuffer  );
+    }
+
+
+    virtual ~OrthoShaderManager() {
+
+        glDeleteVertexArrays ( 1, &mVertexArray  );
+        glDeleteBuffers      ( 1, &mVertexBuffer );
+        glDeleteBuffers      ( 1, &mIndexBuffer  );
+
+    }
+
+
+    void load() override
+    {
+
+        glUseProgram( mProgramID );
+
+        mTextureUniform = glGetUniformLocation ( mProgramID, "fontTexture");
+
+        mVertexSlot     = glGetAttribLocation  ( mProgramID, "vertexLCS"  );
+
+        mNormalSlot     = glGetAttribLocation  ( mProgramID, "normalLCS"  );
+
+        mTexCoordSlot   = glGetAttribLocation  ( mProgramID, "TexCoordIn" );
+
+        glActiveTexture( GL_TEXTURE0 + mTextureActiveNum     );
+
+        glBindTexture  ( GL_TEXTURE_2D,   mTextureObjectName );
+
+        glUniform1i    ( mTextureUniform, mTextureActiveNum  );
+
+        mUniformEffect        = glGetUniformLocation ( mProgramID,
+                                                       "effect"           );
+        mUniformUseLight      = glGetUniformLocation ( mProgramID,
+                                                       "useLight"         );
+        mUniformLowThreshold  = glGetUniformLocation ( mProgramID, 
+                                                       "lowThreshold"     );
+        mUniformHighThreshold = glGetUniformLocation ( mProgramID,
+                                                       "highThreshold"    );
+        mUniformSmoothing     = glGetUniformLocation ( mProgramID,
+                                                       "smoothing"        );
+        mUniformBaseColor     = glGetUniformLocation ( mProgramID,
+                                                       "baseColor"        );
+        mUniformBorderColor   = glGetUniformLocation ( mProgramID,
+                                                       "borderColor"      );
+        mP                    = glGetUniformLocation ( mProgramID,
+                                                       "P"                );
+        mM                    = glGetUniformLocation ( mProgramID,
+                                                       "M"                );
+        mV                    = glGetUniformLocation ( mProgramID,
+                                                       "V"                );
+        mLightWCS             = glGetUniformLocation ( mProgramID,
+                                                       "lightWCS"         );
+    }
+
+
+    void draw(
+        float*     attributes,
+        int        attrLen,
+        GLuint*    indices,
+        int        indLen,
+        int        effect,
+        bool       useLight,
+        float      lowThreshold,
+        float      highThreshold,
+        float      smoothing,
+        glm::vec3& baseColor,
+        glm::vec3& borderColor,
+        glm::mat4& P,
+        glm::mat4& M,
+        glm::mat4& V,
+        glm::vec3& lightWCS
+
+    ) {
+
+        glUniform1i        ( mUniformEffect,        effect                );
+        glUniform1i        ( mUniformUseLight,      useLight              );
+        glUniform1f        ( mUniformLowThreshold,  lowThreshold          );
+        glUniform1f        ( mUniformHighThreshold, highThreshold         );
+        glUniform1f        ( mUniformSmoothing,     smoothing             );
+        glUniform3fv       ( mUniformBaseColor,     1, &baseColor[0]      );
+        glUniform3fv       ( mUniformBorderColor,   1, &borderColor[0]    );
+        glUniformMatrix4fv ( mP,                    1, GL_FALSE, &P[0][0] );
+        glUniformMatrix4fv ( mM,                    1, GL_FALSE, &M[0][0] );
+        glUniformMatrix4fv ( mV,                    1, GL_FALSE, &V[0][0] );
+        glUniform3fv       ( mLightWCS,             1, &lightWCS[0]       );
+
+        glBindBuffer( GL_ARRAY_BUFFER, mVertexBuffer );
+        glBindVertexArray( mVertexArray );
+
+        glBufferData( GL_ARRAY_BUFFER,
+                      sizeof(float) * attrLen,
+                      attributes,
+                      GL_STATIC_DRAW        );
+
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer );
+
+        glBufferData( GL_ELEMENT_ARRAY_BUFFER,
+                      sizeof(GLuint) * indLen,
+                      indices,
+                      GL_STATIC_DRAW        );
+
+        glEnable     ( GL_BLEND );
+
+        glDepthMask  ( GL_FALSE );
+
+        glBlendFunc  ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+        mVertexSlot     = glGetAttribLocation  ( mProgramID, "vertexLCS"  );
+
+        mNormalSlot     = glGetAttribLocation  ( mProgramID, "normalLCS"  );
+
+        mTexCoordSlot   = glGetAttribLocation  ( mProgramID, "texCoordIn" );
+
+        glEnableVertexAttribArray( mVertexSlot );
+
+        glEnableVertexAttribArray( mNormalSlot );
+
+        glEnableVertexAttribArray( mTexCoordSlot );
+
+        glVertexAttribPointer( mVertexSlot,
+                               3,
+                               GL_FLOAT,
+                               GL_FALSE,
+                               sizeof(float) * 8, 
+                               0              );
+
+        glVertexAttribPointer( mNormalSlot,
+                               3,
+                               GL_FLOAT,
+                               GL_FALSE,
+                               sizeof(float) * 8, 
+                               (GLvoid*) (sizeof(float) * 3) );
+
+
+        glVertexAttribPointer( mTexCoordSlot,
+                               2,
+                               GL_FLOAT,
+                               GL_FALSE,
+                               sizeof(float) * 8,
+                               (GLvoid*) (sizeof(float) * 6) );
+
+        glDrawElements( GL_TRIANGLES, indLen, GL_UNSIGNED_INT, (GLvoid*)0 );
+
+        glDisableVertexAttribArray( mVertexSlot   );
+        glDisableVertexAttribArray( mNormalSlot   );
+        glDisableVertexAttribArray( mTexCoordSlot );
+
+    }
+    
+
+    virtual void unload() override { }
+
+  protected:
+
+    GLuint mVertexBuffer;
+    GLuint mVertexArray;
+    GLuint mIndexBuffer;
+
+    GLuint mTextureObjectName;
+    GLuint mTextureUniform;
+    GLint  mTextureActiveNum;
+
+    GLuint mP;
+    GLuint mM;
+    GLuint mV;
+    GLuint mLightWCS;
+
+    GLuint mUniformLowThreshold;
+    GLuint mUniformHighThreshold;
+    GLuint mUniformSmoothing;
+    GLuint mUniformEffect;
+    GLuint mUniformUseLight;
+    GLuint mUniformBaseColor;
+    GLuint mUniformBorderColor;
+
+    GLuint mVertexSlot;
+    GLuint mNormalSlot;
+    GLuint mTexCoordSlot;
+
+};
+
+
+
+
+
+string prologue = "A long time ago, in a gallaxy far\nfar away....";
+string episode = "Episode IV";
+string title   = "A NEW HOPE";
+string para1 = "It is a period of civil war.\n"
+"Rebel spaceships, striking\n"
+"from a hidden base, have won\n"
+"their first victory against\n"
+"the evil Galactic Empire.";
+string para2 = "During the battle, Rebel\n"
+"spies managed to steal secret\n"
+"plans to the Empire's\n"
+"ultimate weapon, the DEATH\n"
+"STAR, an armored space\n"
+"station with enough power\n"
+"to destroy an entire planet.";
+string para3 = "Pursued by the Empire's\n"
+"sinister agents, Princess\n"
+"Leia races home aboard her\n"
+"starship, custodian of the\n"
+"stolen plans that can save her\n"
+"people and restore\n"
+"freedom to the galaxy....";
+
+int main( int argc, char* argv[] )
+{
+
+    if ( argc != 1 ) {
+
+        cerr << "Usage: test_visualizer_joints\n";
+        exit(1);
+    }
+
+    GlfwManager        glfw  ( 1024, 768 );
+
+
+    SignedDistFont     f     ( "signed_dist_font" );
+
+    OrthoShaderManager shader( f.textureName(), 0 );
+
+    glfw.configGLFW();
+
+    float            width[2];
+    float            bearingY[2];
+    float            belowBaseLineY[2];
+    float            advanceY[2];
+    vector< Glyph* > glyphs[2];
+    vector< float >  textureXs[2];
+
+    f.getMetrics(
+        para1,
+        width[0],
+        textureXs[0],
+        bearingY[0],
+        belowBaseLineY[0],
+        advanceY[0],
+        glyphs[0]         );
+
+    f.getMetrics(
+        para2,
+        width[1],
+        textureXs[1],
+        bearingY[1],
+        belowBaseLineY[1],
+        advanceY[1],
+        glyphs[1]         );
+
+    float*  GLPPPNNNTT;
+    GLuint* GLindices;
+
+    GLPPPNNNTT = (float*)malloc(   sizeof(float)
+                              * SignedDistFont::NUM_FLOATS_PER_GLYPH
+                              * ( glyphs[0].size() + glyphs[1].size() ) );
+
+
+    GLindices  = (GLuint*) malloc(   sizeof(GLuint)
+                                * SignedDistFont::NUM_INDICES_PER_GLYPH
+                                * ( glyphs[0].size() + glyphs[1].size() ) );
+
+    f.generateOpenGLDrawElements (
+
+        glyphs[0],
+        textureXs[0],
+        -0.5 * width[0] * 3.0,
+        -0.5 * advanceY[0] * 3.0,
+        3.0,
+        1.0,
+        0.0,
+        GLPPPNNNTT,
+        0,
+        GLindices
+    );
+
+    f.generateOpenGLDrawElements (
+        glyphs[1],
+        textureXs[1],
+        -0.5 * width[1] * 3.0,
+        -1.5 * advanceY[1] * 3.0,
+        3.0,
+        1.0,
+        0.0,
+
+        &( GLPPPNNNTT[SignedDistFont::NUM_FLOATS_PER_GLYPH
+                       * ( glyphs[0].size() )                  ] ) ,
+
+        SignedDistFont::NUM_POINTS_PER_GLYPH * glyphs[0].size() , 
+
+        & ( GLindices[   SignedDistFont::NUM_INDICES_PER_GLYPH
+                       * ( glyphs[0].size() )                  ] )
+    );
+
+    DeltaTime dt;
+    float val = 10.0;
+    bool  dir = true;
+    int   e   = 0;
+    do {
+        auto deltaT = dt.delta();
+//        cerr << "delta: [" << deltaT << "]\n";
+
+        glfw.update();
+
+        shader.load();
+
+        int       effect         = e;
+        float     lowThreshold   = 0.45;
+        float     highThreshold  = 0.55;
+        float     smoothing      = 4.0/16.0;
+        glm::vec3 baseColor      (1.0, 1.0, 0.0);
+        glm::vec3 borderColor    (1.0, 1.0, 0.0);
+
+        glm::mat4 M = glm::translate(
+                          glm::mat4(), 
+                          glm::vec3( 0.0, 0.0, -1.0 * val )
+                      );
+
+        glm::mat4 V = glm::lookAt(
+                          glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
+                          glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
+                          glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
+                      );          
+        glm::mat4 P = glm::perspective(
+                          glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+
+        glm::vec3 lightWCS( 0.0, 0.0, 2.0 );
+
+        glClearColor ( 0.0, 0.0, 0.0, 0.0 );
+
+        glClear      ( GL_COLOR_BUFFER_BIT );
+
+        shader.draw(
+            GLPPPNNNTT ,
+              SignedDistFont::NUM_FLOATS_PER_GLYPH
+            * ( glyphs[0].size() + glyphs[1].size() ) ,
+            GLindices ,
+              SignedDistFont::NUM_INDICES_PER_GLYPH
+            * ( glyphs[0].size() + glyphs[1].size() ) ,
+            effect,
+            false,
+            lowThreshold,
+            highThreshold,
+            smoothing,
+            baseColor,
+            borderColor,
+            P, M, V, lightWCS
+        );
+
+        shader.unload();
+
+        if (dir) {
+            val += 0.001;
+            if (val > 5.0) {
+                dir = false;
+                e = (e + 1) % 7 ;
+            }
+        }
+        else {
+            val -= 0.001;
+            if (val < 0.0) dir = true;
+        }
+
+    } while ( glfw.shouldExit() );
+
+
+    return 0;
+}
+
