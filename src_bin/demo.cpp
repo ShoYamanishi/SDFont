@@ -458,6 +458,7 @@ class DeltaTime {
         return delta;
     }
 
+
   private:
 
     double mMicroSecondsCur;
@@ -649,52 +650,602 @@ class Line {
         }
     }
 
+  private:
+
+    SDFont::RuntimeHelper& mHelper;    
+    float                  mLeftX;
+    float                  mBaselineY;
+    float                  mWidth;
+    vector<Word>           mWords;
+
+};
+
+
+
+class Paragraph {
+
+  public:
+
+    Paragraph(SDFont::RuntimeHelper& helper, string str) :
+        mHelper ( helper ),
+        mWidth  ( 1.0    )
+    {
+
+        vector<string> strs;
+
+        splitLine( str, strs, '\n' );
+        for (auto& s : strs) {
+            mLines.emplace_back(helper, s);
+        }
+    }
+
+    virtual ~Paragraph(){;}
+
+    vector<Line>& lines() { return mLines; }
+
+    long len() const { 
+        long sum = 0;
+        for ( auto& line : mLines ) {
+            sum += line.len();
+        }
+        return sum;
+    }
+
+    void setScale(float s) {
+        for ( auto& line : mLines ) {
+            line.setScale(s);
+        }
+    }
+
+    float maxWidth() const {
+
+        float width = 0.0;
+
+        for ( auto& line : mLines ) {
+
+            width = std::max ( width, line.totalWidth() );
+        }
+        return width;
+    }
+
+
+    void setWidth( float w ) { 
+
+        mWidth = w;
+        for ( auto& line : mLines ) {
+
+            line.setWidth( w );
+        }
+    }
+
+    float width() const { return mWidth; }
+
+    void setPos( float leftX, float bottomBaselineY ) {
+        mLeftX           = leftX;
+        mBottomBaselineY = bottomBaselineY;
+    }
+
+
+    float totalHeight() {   
+
+        float sum = 0.0;
+
+        sum += mLines[0].bearingY();
+
+        for ( auto i = 0; i < ( mLines.size() - 1 ) ; i++ ) {
+
+            sum += mLines[ i ].advanceY();
+        }
+        sum += mLines[ mLines.size() - 1 ].belowBaselineY();
+
+        mMinHeight = sum;
+        return sum;
+
+    }
+
+    void setHeight(float h) { mHeight = h; }
+
+    float height() { return mHeight; }
+
+    void assignPosForWords() {
+
+        float scale         = mHeight / mMinHeight;
+        float curBaselineY = mBottomBaselineY;
+
+        for ( auto i = mLines.size() - 1 ; i > 0 ; i-- ) {
+
+            auto& line = mLines[i];
+
+            line.setPos( mLeftX, curBaselineY ) ;
+            line.assignPosForWords() ;
+
+            auto& prevLine = mLines[ i - 1 ];
+
+            curBaselineY += ( prevLine.advanceY() * scale );
+            
+        }
+
+        mLines[0].setPos( mLeftX, curBaselineY ) ;
+        mLines[0].assignPosForWords() ;
+    }
+
+    void generateElements(float* elements, GLuint* indices, long startIndex) {
+        
+        for ( auto& line : mLines ) {
+
+            line.generateElements ( elements, indices, startIndex );
+            startIndex += line.len();
+        }
+    }
 
   private:
 
-    SDFont::RuntimeHelper&   mHelper;    
-    float        mLeftX;
-    float        mBaselineY;
-    float        mWidth;
-    vector<Word> mWords;    
+    SDFont::RuntimeHelper& mHelper;    
+    float                  mLeftX;
+    float                  mBottomBaselineY;
+    float                  mWidth;
+    float                  mHeight;
+    float                  mMinHeight;
+    vector<Line>           mLines;
 
 };
+
 
 
 class SequenceElement {
 
+  public:
+    SequenceElement(
+        SDFont::RuntimeHelper&        helper,
+        SDFont::VanillaShaderManager& shader 
+    ) :
+        mCurTime   ( 0.0     ),
+        mHelper    ( helper  ),    
+        mShader    ( shader  ),
+        mGLattr    ( nullptr ),
+        mGLindices ( nullptr ) {;}
+
+    virtual ~SequenceElement() {
+        if ( mGLattr != nullptr ) {
+            free(mGLattr);
+        }
+        if ( mGLindices != nullptr ) {
+            free(mGLindices);
+        }
+    }
+
+    virtual float hintConstructionTime(){ return -1;}
+    virtual float hintDesctuctionTime() { return -1;}
+
+    virtual void step(float t, float dt) { mCurTime = t; }
+
+  protected:
+
+
+    void allocAttrIndices() {        
+
+        mGLattr    = (float*)malloc (
+
+                               sizeof(float)
+                             * SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
+                             * mNumElements
+                     );
+        mGLindices = (GLuint*) malloc (
+
+                               sizeof(GLuint)
+                             * SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
+                             * mNumElements
+                     );
+
+    }
+
+    void draw() {
+        mShader.draw(
+            mGLattr ,
+            SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH  * mNumElements ,
+            mGLindices ,
+            SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH * mNumElements ,
+            mEffect ,
+            mLightingEffect,
+            mLowThreshold ,
+            mHighThreshold ,
+            mSmoothing ,
+            mBaseColor ,
+            mBorderColor ,
+            mP, mM, mV, mLightWCS
+        );
+    }
+
+    float                         mCurTime;
+    SDFont::RuntimeHelper&        mHelper;
+    SDFont::VanillaShaderManager& mShader;
+
+    int                  mEffect ;
+    bool                 mLightingEffect;
+    float                mLowThreshold ;
+    float                mHighThreshold ;
+    float                mSmoothing ;
+    glm::vec3            mBaseColor ;
+    glm::vec3            mBorderColor ;
+    glm::mat4            mM ;
+    glm::mat4            mV ;
+    glm::mat4            mP ;
+    glm::vec3            mLightWCS ;
+
+    long                 mNumElements ;
+    float*               mGLattr ;
+    GLuint*              mGLindices ;
+};
+
+
+class SeqPrologue :public SequenceElement {
+
+  public:
+
+    SeqPrologue(
+        SDFont::RuntimeHelper&        helper,
+        SDFont::VanillaShaderManager& shader 
+    ) : SequenceElement( helper, shader )
+    {
+
+        Line line1 ( mHelper, mStr1 );
+        Line line2 ( mHelper, mStr2 );
+
+        mNumElements = line1.len() + line2.len();
+
+        line1.setScale(3.0);
+        line2.setScale(3.0);
+
+        line1.setWidth( line1.totalWidth() * 1.2 );
+        line2.setWidth( line2.totalWidth() * 1.1 );
+
+        allocAttrIndices();
+
+        line1.setPos( -0.5 * line1.width(), +0.5 * line1.advanceY());
+        line1.assignPosForWords();
+        line1.generateElements( mGLattr, mGLindices, 0 );
+
+        line2.setPos( -0.5 * line1.width(), -0.5 * line2.advanceY());
+        line2.assignPosForWords();
+        line2.generateElements( mGLattr, mGLindices, line1.len() );
+
+        mEffect         = 1;
+        mLightingEffect = false;
+        mLowThreshold   = 0.45;
+        mHighThreshold  = 0.55;
+        mSmoothing      = 2.0/16.0;
+        mBaseColor      = glm::vec3( 0.0, 0.5, 1.0 );
+        mBorderColor    = glm::vec3( 0.0, 0.5, 1.0 );
+
+        mM = glm::translate(
+                             glm::mat4(), 
+                             glm::vec3( 0.0, 0.0, -4.0 )
+                           );
+
+        mV = glm::lookAt(
+                          glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
+                          glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
+                          glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
+                      );          
+
+        mP = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+
+        mLightWCS       = glm::vec3( 0.0, 0.0, 2.0 );
+
+    }
+
+    virtual ~SeqPrologue() {;}
+
+    virtual void step ( float t, float dt ) {
+
+        if (0.0 <= t && t < 1.0) {
+            mBaseColor = glm::vec3( 0.0, 0.5 * t, 1.0 * t );
+            draw();
+        }
+        else if (1.0 <= t && t < 3.0) {
+            mBaseColor = glm::vec3( 0.0, 0.5, 1.0 );
+            draw();
+        }
+        else if (3.0 <= t && t < 4.0) {
+            mBaseColor = glm::vec3( 0.0, 0.5 * (4.0 - t), 1.0 * (4.0 - t) );
+            draw();
+        }
+
+        mCurTime = t;
+
+    }
+
+  private:
+
+    static const string  mStr1 ;
+    static const string  mStr2 ;
+
+};
+
+const string SeqPrologue::mStr1 = "A long time ago, in a gallaxy far" ;
+const string SeqPrologue::mStr2 = "far away...."  ;
+
+
+
+class SeqTitle :public SequenceElement {
+
+  public:
+
+    SeqTitle(
+        SDFont::RuntimeHelper&        helper,
+        SDFont::VanillaShaderManager& shader 
+    ) : SequenceElement( helper, shader )
+    {
+
+        Line line1 ( mHelper, mStr1 );
+        Line line2 ( mHelper, mStr2 );
+
+        mNumElements = line1.len() + line2.len();
+
+        line1.setScale(5.0);
+        line2.setScale(5.0);
+
+        line1.setWidth( line1.totalWidth() * 1.0 );
+        line2.setWidth( line2.totalWidth() * 1.0 );
+
+        allocAttrIndices();
+
+        line1.setPos( -0.5 * line1.width(), +0.5 * line1.advanceY());
+        line1.assignPosForWords();
+        line1.generateElements( mGLattr, mGLindices, 0 );
+
+        line2.setPos( -0.5 * line2.width(), -0.5 * line2.advanceY());
+        line2.assignPosForWords();
+        line2.generateElements( mGLattr, mGLindices, line1.len() );
+
+        mEffect         = 5;
+        mLightingEffect = false;
+        mLowThreshold   = 0.45;
+        mHighThreshold  = 0.55;
+        mSmoothing      = 4.0/16.0;
+        mBaseColor      = glm::vec3( 1.0, 1.0, 0.0 );
+        mBorderColor    = glm::vec3( 1.0, 1.0, 0.0 );
+
+        mM = glm::translate(
+                             glm::mat4(), 
+                             glm::vec3( 0.0, 0.0, -0.0 )
+                           );
+
+        mV = glm::lookAt(
+                          glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
+                          glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
+                          glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
+                      );          
+
+        mP = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+
+        mLightWCS       = glm::vec3( 0.0, 0.0, 2.0 );
+
+    }
+
+    virtual ~SeqTitle() {;}
+
+    virtual void step ( float t, float dt ) {
+
+        if (5.0 <= t && t < 10.0) {
+
+            mM = glm::translate(
+                     glm::mat4(), 
+                     glm::vec3( 0.0, 0.0, -1.0 * (2.0* t - 10.0))
+                 );
+
+            mBaseColor = glm::vec3( 1.0, 1.0, 0.0 );
+            draw();
+
+        }
+        else if  ( 10.0 <= t && t < 12.0 ) {
+
+            mM = glm::translate(
+                     glm::mat4(), 
+                     glm::vec3( 0.0, 0.0, -1.0 * (2.0* t - 10.0))
+                 );
+
+            mBaseColor = glm::vec3( 0.5 * (12.0 - t), 0.5 * (12.0 - t), 0.0 );
+
+            draw();
+        }
+
+        mCurTime = t;
+
+
+    }
+
+  private:
+
+    static const string  mStr1 ;
+    static const string  mStr2 ;
+
+};
+
+const string SeqTitle::mStr1 = "STAR" ;
+const string SeqTitle::mStr2 = "WARS" ;
+
+
+
+class SeqMainRoll :public SequenceElement {
+
+  public:
+
+    SeqMainRoll(
+        SDFont::RuntimeHelper&        helper,
+        SDFont::VanillaShaderManager& shader 
+    ) : SequenceElement( helper, shader )
+    {
+
+        Line      line1 ( mHelper, mEpisode    );
+        Line      line2 ( mHelper, mTitle      );
+        Paragraph para1 ( mHelper, mParagraph1 );
+        Paragraph para2 ( mHelper, mParagraph2 );
+        Paragraph para3 ( mHelper, mParagraph3 );
+
+        mNumElements =   line1.len() + line2.len()
+                       + para1.len() + para2.len() + para3.len();
+
+        line1.setScale(1.3);
+        line2.setScale(3.0);
+
+        line1.setWidth( line1.totalWidth() * 1.2 );
+        line2.setWidth( line2.totalWidth() * 1.1 );
+
+        allocAttrIndices();
+        
+        line1.setPos( -0.5 * line1.width(), +0.5 * line1.advanceY());
+        line1.assignPosForWords();
+        line1.generateElements( mGLattr, mGLindices, 0 );
+
+        line2.setPos( -0.5 * line2.width(), -1.2 * line2.advanceY());
+        line2.assignPosForWords();
+        line2.generateElements( mGLattr, mGLindices, line1.len() );
+
+        para1.setScale(2.0);
+        para2.setScale(2.0);
+        para3.setScale(2.0);
+
+        para1.setWidth(2.0);
+        para2.setWidth(2.0);
+        para3.setWidth(2.0);
+
+        para1.setHeight( para1.totalHeight() * 1.2 );
+        para2.setHeight( para2.totalHeight() * 1.2 );
+        para3.setHeight( para3.totalHeight() * 1.2 );
+
+        para1.setPos( -0.5 * para1.width(), -1.2 );
+        para2.setPos( -0.5 * para2.width(), -2.7 );
+        para3.setPos( -0.5 * para3.width(), -4.0 );
+
+        para1.assignPosForWords();
+        para2.assignPosForWords();
+        para3.assignPosForWords();
+
+        para1.generateElements( mGLattr, mGLindices, 
+            line1.len() + line2.len() );
+
+        para2.generateElements( mGLattr, mGLindices, 
+            line1.len() + line2.len() + para1.len() );
+
+        para3.generateElements( mGLattr, mGLindices, 
+            line1.len() + line2.len() + para1.len() + para2.len() );
+
+        mEffect         = 1;
+        mLightingEffect = true;
+        mLowThreshold   = 0.45;
+        mHighThreshold  = 0.55;
+        mSmoothing      = 2.0/16.0;
+        mBaseColor      = glm::vec3( 1.0, 1.0, 0.0 );
+        mBorderColor    = glm::vec3( 1.0, 1.0, 0.0 );
+
+        float angle = -0.2 * M_PI;
+        glm::quat Qrot(cos(angle), sin(angle), 0.0, 0.0 );
+        mMrot = glm::toMat4(Qrot);
+
+        mM = glm::translate(
+                             mMrot,
+                             glm::vec3( 0.0, 0.5, -1.3 )
+                           );
+
+        mV = glm::lookAt(
+                          glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
+                          glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
+                          glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
+                      );          
+
+        mP = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
+
+        mLightWCS       = glm::vec3( 0.0, 0.0, 0.0 );
+
+    }
+
+    virtual ~SeqMainRoll() {;}
+
+    virtual void step ( float t, float dt ) {
+
+        if  ( 9.0 <= t && t < 30.0 ) {
+
+            mM = glm::translate( mMrot, glm::vec3( 0.0, 
+                                                   0.3 * (t - 9.0) + 0.5, 
+                                                   -1.3                    ));
+            mBaseColor      = glm::vec3( 1.0, 1.0, 0.0 );
+            draw();
+
+        }
+        else if ( 30.0 <= t && t < 40.0) {
+
+            mM = glm::translate( mMrot, glm::vec3( 0.0, 
+                                                   0.3 * (t - 9.0) + 0.5,
+                                                   -1.3                    ));
+            mBaseColor      = glm::vec3( 0.1 * (40.0 - t), 
+                                         0.1 * (40.0 - t),
+                                         0.0              );
+            draw();
+        }
+        mCurTime = t;
+
+    }
+
+  private:
+
+    static const string  mEpisode ;
+    static const string  mTitle ;
+    static const string  mParagraph1 ;
+    static const string  mParagraph2 ;
+    static const string  mParagraph3 ;
+
+    glm::mat4            mMrot;
 
 };
 
 
-string prologue = "A long time ago, in a gallaxy far\nfar away...." ;
+const string SeqMainRoll::mEpisode    = "Episode IV" ;
+const string SeqMainRoll::mTitle      = "A NEW HOPE" ;
+const string SeqMainRoll::mParagraph1 = "It is a period of civil war.\n"
+                                        "Rebel spaceships, striking\n"
+                                        "from a hidden base, have won\n"
+                                        "their first victory against\n"
+                                        "the evil Galactic Empire." ;
 
-string episode  = "Episode IV" ;
+const string SeqMainRoll::mParagraph2 = "During the battle, Rebel\n"
+                                        "spies managed to steal secret\n"
+                                        "plans to the Empire's\n"
+                                        "ultimate weapon, the DEATH\n"
+                                        "STAR, an armored space\n"
+                                        "station with enough power\n"
+                                        "to destroy an entire planet." ;
 
-string title    = "A NEW HOPE" ;
+const string SeqMainRoll::mParagraph3 = "Pursued by the Empire's\n"
+                                        "sinister agents, Princess\n"
+                                        "Leia races home aboard her\n"
+                                        "starship, custodian of the\n"
+                                        "stolen plans that can save her\n"
+                                        "people and restore\n"
+                                        "freedom to the galaxy...." ;
 
-string para1    = "It is a period of civil war.\n"
-                  "Rebel spaceships, striking\n"
-                  "from a hidden base, have won\n"
-                  "their first victory against\n"
-                  "the evil Galactic Empire." ;
 
-string para2    = "During the battle, Rebel\n"
-                  "spies managed to steal secret\n"
-                  "plans to the Empire's\n"
-                  "ultimate weapon, the DEATH\n"
-                  "STAR, an armored space\n"
-                  "station with enough power\n"
-                  "to destroy an entire planet." ;
+class WM : public GlfwManager  {
 
-string para3    = "Pursued by the Empire's\n"
-                  "sinister agents, Princess\n"
-                  "Leia races home aboard her\n"
-                  "starship, custodian of the\n"
-                  "stolen plans that can save her\n"
-                  "people and restore\n"
-                  "freedom to the galaxy...." ;
+  public:
+    WM( int width, int height ) :
+        GlfwManager ( width, height),
+        mSeqStarted ( false )
+        {;}
+  
+    void callbackKey(
+        GLFWwindow* window,
+        int         key,
+        int         scancode,
+        int         action,
+        int         mods
+    ) {
+        mSeqStarted = true;
+    }
 
+    bool mSeqStarted;
+
+};
 
 int main( int argc, char* argv[] )
 {
@@ -705,7 +1256,7 @@ int main( int argc, char* argv[] )
         exit(1);
     }
 
-    GlfwManager        glfw  ( 1024, 768 );
+    WM glfw ( 1024, 768 );
 
     SDFont::RuntimeHelper helper;
     SDFont::TextureLoader loader ( "signed_dist_font.png" );
@@ -716,112 +1267,35 @@ int main( int argc, char* argv[] )
 
     glfw.configGLFW();
 
-    Line line1 ( helper, "A long time ago, in a gallaxy far" );
-    Line line2 ( helper, "far away ...." );
-
-    line1.setScale(3.0);
-    line2.setScale(3.0);
-
-    line1.setWidth( line1.totalWidth() * 1.2 );
-    line2.setWidth( line2.totalWidth() * 1.1 );
-
-    float* GLPPPNNNTT = (float*)malloc(
-                               sizeof(float)
-                             * SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
-                             * (line1.len() + line2.len())
-                        );
-
-    GLuint* GLindices = (GLuint*) malloc(
-                               sizeof(GLuint)
-                             * SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
-                             * (line1.len() + line2.len())
-                        );
-
-
-    line1.setPos( -0.5 * line1.width(), +0.5 * line1.advanceY());
-
-    line1.assignPosForWords();
-
-    line1.generateElements( GLPPPNNNTT, GLindices, 0 );
-
-
-    line2.setPos( -0.5 * line1.width(), -0.5 * line2.advanceY());
-
-    line2.assignPosForWords();
-
-    line2.generateElements( GLPPPNNNTT, GLindices, line1.len());
+    SeqPrologue seqElem01( helper, shader );
+    SeqTitle    seqElem02( helper, shader );
+    SeqMainRoll seqElem03( helper, shader );
 
     DeltaTime dt;
-    float val = 10.0;
-    bool  dir = true;
-    int   e   = 0;
+    double    absT = 0.0;
     do {
+
         auto deltaT = dt.delta();
-//        cerr << "delta: [" << deltaT << "]\n";
 
         glfw.update();
 
         shader.load();
 
-        int       effect         = e;
-        float     lowThreshold   = 0.45;
-        float     highThreshold  = 0.55;
-        float     smoothing      = 4.0/16.0;
-        glm::vec3 baseColor      (0.0, 0.5, 1.0);
-        glm::vec3 borderColor    (0.0, 0.5, 1.0);
-
-        glm::mat4 M = glm::translate(
-                          glm::mat4(), 
-                          glm::vec3( 0.0, 0.0, -1.0 * val )
-                      );
-
-        glm::mat4 V = glm::lookAt(
-                          glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
-                          glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
-                          glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
-                      );          
-        glm::mat4 P = glm::perspective(
-                          glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
-
-        glm::vec3 lightWCS( 0.0, 0.0, 2.0 );
-
         glClearColor ( 0.0, 0.0, 0.0, 0.0 );
 
         glClear      ( GL_COLOR_BUFFER_BIT );
 
-        shader.draw(
-            GLPPPNNNTT ,
-              SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
-            * ( line1.len() + line2.len() ) ,
-            GLindices ,
-              SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
-            * ( line1.len() + line2.len() ) ,
-            effect,
-            false,
-            lowThreshold,
-            highThreshold,
-            smoothing,
-            baseColor,
-            borderColor,
-            P, M, V, lightWCS
-        );
+        seqElem01.step( absT, deltaT );
+        seqElem02.step( absT, deltaT );
+        seqElem03.step( absT, deltaT );
 
         shader.unload();
 
-        if (dir) {
-            val += 0.01;
-            if (val > 5.0) {
-                dir = false;
-                e = (e + 1) % 7 ;
-            }
-        }
-        else {
-            val -= 0.01;
-            if (val < 0.0) dir = true;
+        if ( glfw.mSeqStarted ) {
+            absT += deltaT;
         }
 
     } while ( glfw.shouldExit() );
-
 
     return 0;
 }
