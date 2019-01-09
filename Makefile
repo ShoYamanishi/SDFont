@@ -82,6 +82,7 @@ $(BIN_DIR)/%:	$(SRC_DIR_BIN)/%.cpp $(TARGET_LIB)
 
 all:	$(TARGET_LIB) $(BINS)
 
+
 clean:
 	-$(RM) $(TARGET_LIB) 
 	-$(RMR) $(OBJ_DIR_REL) $(OBJ_DIR_DBG) $(LIB_DIR) $(BIN_DIR)

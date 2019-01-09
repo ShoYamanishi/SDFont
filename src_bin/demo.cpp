@@ -35,6 +35,40 @@ using namespace std;
  *    GLM
  */
 
+static size_t splitLine(
+    const string&   txt,
+    vector<string>& strs,
+    char            ch
+) {
+
+    auto   pos        = txt.find( ch );
+    size_t initialPos = 0;
+
+    strs.clear();
+
+    while( pos != std::string::npos && initialPos < txt.size() ) {
+
+        if ( pos > initialPos ) {
+
+            strs.push_back( txt.substr( initialPos, pos - initialPos ) );
+        }
+
+        initialPos = pos + 1;
+
+        if ( initialPos < txt.size() ) {
+
+            pos = txt.find( ch, initialPos );
+        }
+
+    }
+
+    if ( initialPos < txt.size() ) {
+
+        strs.push_back( txt.substr( initialPos, txt.size() - initialPos) );
+    }
+    return strs.size();
+}
+
 
 class GlfwManager  {
 
@@ -431,44 +465,235 @@ class DeltaTime {
 };
 
 
-
-
-
-
-string prologue = "A long time ago, in a gallaxy far\nfar away....";
-string episode = "Episode IV";
-string title   = "A NEW HOPE";
-string para1 = "It is a period of civil war.\n"
-"Rebel spaceships, striking\n"
-"from a hidden base, have won\n"
-"their first victory against\n"
-"the evil Galactic Empire.";
-string para2 = "During the battle, Rebel\n"
-"spies managed to steal secret\n"
-"plans to the Empire's\n"
-"ultimate weapon, the DEATH\n"
-"STAR, an armored space\n"
-"station with enough power\n"
-"to destroy an entire planet.";
-string para3 = "Pursued by the Empire's\n"
-"sinister agents, Princess\n"
-"Leia races home aboard her\n"
-"starship, custodian of the\n"
-"stolen plans that can save her\n"
-"people and restore\n"
-"freedom to the galaxy....";
-
-
 class Word {
 
-};
+  public:
+    Word( SDFont::RuntimeHelper& helper, string str ):
+        mHelper       (helper),
+        mString       (str),
+        mLeftX        (0.0),
+        mBaselineY    (0.0),
+        mScale        (1.0),
+        mDistribution (1.0),
+        mZ            (0.0)
+    {
+        mHelper.getMetrics( mString,
+                            mWidth,
+                            mTextureXs,
+                            mFirstBearingX,
+                            mBearingY,
+                            mBelowBaselineY,
+                            mAdvanceY,
+                            mGlyphs          );
 
+    }
+
+    void setScale(float s) { mScale = s; }
+
+    long len() const { return mGlyphs.size(); }
+
+    float width() const {return mWidth * mScale; }
+
+    float firstBearingX() const {return mFirstBearingX * mScale; }
+
+    float bearingY() const {return mBearingY * mScale; }
+
+    float belowBaselineY() const {return mBelowBaselineY * mScale; }
+
+    float advanceY() const {return mAdvanceY * mScale; }
+
+    void setPos(float leftX, float baselineY) {
+        mLeftX     = leftX;
+        mBaselineY = baselineY;
+    }
+
+    void setDistribution(float s) { mDistribution = s; }
+
+    void generateElements(float* elements, GLuint* indices, long startIndex) {
+
+        mHelper.generateOpenGLDrawElements (
+            mGlyphs,
+            mTextureXs,
+            mLeftX - firstBearingX(),
+            mBaselineY,
+            mScale,
+            mDistribution,
+            mZ,
+            &( elements[   SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
+                         * startIndex                                   ] ) ,
+            SDFont::RuntimeHelper::NUM_POINTS_PER_GLYPH * startIndex,
+            & ( indices[   SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
+                         * startIndex                                   ] )
+        );
+    }
+
+    ~Word() {;}
+
+    SDFont::RuntimeHelper&   mHelper;
+    string                   mString;
+    float                    mWidth;
+    float                    mFirstBearingX;
+    float                    mBearingY;
+    float                    mBelowBaselineY;
+    float                    mAdvanceY;
+    vector< SDFont::Glyph* > mGlyphs;
+    vector< float >          mTextureXs;
+
+    float                    mLeftX;
+    float                    mBaselineY;
+    float                    mScale;
+    float                    mDistribution;
+    float                    mZ;
+};
 
 
 class Line {
 
+  public:
+
+    Line(SDFont::RuntimeHelper& helper, string str) :
+        mHelper ( helper ),
+        mWidth  ( 1.0    )
+    {
+
+        vector<string> strs;
+
+        splitLine( str, strs, ' ' );
+        for (auto& s : strs) {
+            mWords.emplace_back(helper, s);
+        }
+    }
+
+    virtual ~Line(){;}
+
+    vector<Word>& words() { return mWords; }
+
+    long len() const { 
+        long sum = 0;
+        for ( auto& w : mWords ) {
+            sum += w.len();
+        }
+        return sum;
+    }
+
+    void setScale(float s) {
+        for ( auto& w : mWords ) {
+            w.setScale(s);
+        }
+    }
+
+    float bearingY() const {
+
+        float maxBearingY = 0.0;
+        for ( auto& w : mWords ) {
+            maxBearingY = std::max(maxBearingY, w.bearingY());
+        }
+        return maxBearingY;
+    }
+
+    float belowBaselineY() const {
+
+        float maxBelowBaselineY = 0.0;
+        for ( auto& w : mWords ) {
+            maxBelowBaselineY = std::max(maxBelowBaselineY,w.belowBaselineY());
+        }
+        return maxBelowBaselineY;
+    }
+
+    float advanceY() const {
+
+        float maxAdvanceY = 0.0;
+        for ( auto& w : mWords ) {
+            maxAdvanceY = std::max( maxAdvanceY, w.advanceY() );
+        }
+        return maxAdvanceY;
+    }
+
+    float totalWidth() const {
+
+        float sum = 0.0;
+        for ( auto& w : mWords ) {
+            sum += w.width();
+        }
+        return sum;
+    }
+
+    void setWidth( float w ) { mWidth = w; }
+
+    float width() const { return mWidth; }
+
+    void setPos( float leftX, float baselineY ) {
+        mLeftX     = leftX;
+        mBaselineY = baselineY;
+    }
+
+    void assignPosForWords() {
+
+        auto minWidth = totalWidth();
+        auto margin   = mWidth - minWidth;
+        auto space    = margin / (float)(mWords.size()- 1);
+        auto leftX    = mLeftX;
+        for ( auto& w : mWords ) {
+            w.setPos(leftX, mBaselineY);
+            leftX += ( w.width() + space );
+        }
+
+    }
+
+    void generateElements(float* elements, GLuint* indices, long startIndex) {
+        
+        for ( auto& w : mWords ) {
+
+            w.generateElements ( elements, indices, startIndex );
+            startIndex += w.len();
+        }
+    }
+
+
+  private:
+
+    SDFont::RuntimeHelper&   mHelper;    
+    float        mLeftX;
+    float        mBaselineY;
+    float        mWidth;
+    vector<Word> mWords;    
+
 };
 
+
+class SequenceElement {
+
+
+};
+
+
+string prologue = "A long time ago, in a gallaxy far\nfar away...." ;
+
+string episode  = "Episode IV" ;
+
+string title    = "A NEW HOPE" ;
+
+string para1    = "It is a period of civil war.\n"
+                  "Rebel spaceships, striking\n"
+                  "from a hidden base, have won\n"
+                  "their first victory against\n"
+                  "the evil Galactic Empire." ;
+
+string para2    = "During the battle, Rebel\n"
+                  "spies managed to steal secret\n"
+                  "plans to the Empire's\n"
+                  "ultimate weapon, the DEATH\n"
+                  "STAR, an armored space\n"
+                  "station with enough power\n"
+                  "to destroy an entire planet." ;
+
+string para3    = "Pursued by the Empire's\n"
+                  "sinister agents, Princess\n"
+                  "Leia races home aboard her\n"
+                  "starship, custodian of the\n"
+                  "stolen plans that can save her\n"
+                  "people and restore\n"
+                  "freedom to the galaxy...." ;
 
 
 int main( int argc, char* argv[] )
@@ -491,75 +716,40 @@ int main( int argc, char* argv[] )
 
     glfw.configGLFW();
 
+    Line line1 ( helper, "A long time ago, in a gallaxy far" );
+    Line line2 ( helper, "far away ...." );
 
-    float            width[2];
-    float            bearingY[2];
-    float            belowBaseLineY[2];
-    float            advanceY[2];
-    vector< SDFont::Glyph* > glyphs[2];
-    vector< float >  textureXs[2];
+    line1.setScale(3.0);
+    line2.setScale(3.0);
 
-    helper.getMetrics(
-        "STAR",
-        width[0],
-        textureXs[0],
-        bearingY[0],
-        belowBaseLineY[0],
-        advanceY[0],
-        glyphs[0]         );
+    line1.setWidth( line1.totalWidth() * 1.2 );
+    line2.setWidth( line2.totalWidth() * 1.1 );
 
-    helper.getMetrics(
-        "WARS",
-        width[1],
-        textureXs[1],
-        bearingY[1],
-        belowBaseLineY[1],
-        advanceY[1],
-        glyphs[1]         );
+    float* GLPPPNNNTT = (float*)malloc(
+                               sizeof(float)
+                             * SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
+                             * (line1.len() + line2.len())
+                        );
 
-    float*  GLPPPNNNTT;
-    GLuint* GLindices;
-
-    GLPPPNNNTT = (float*)malloc(   sizeof(float)
-                              * SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
-                              * ( glyphs[0].size() + glyphs[1].size() ) );
+    GLuint* GLindices = (GLuint*) malloc(
+                               sizeof(GLuint)
+                             * SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
+                             * (line1.len() + line2.len())
+                        );
 
 
-    GLindices  = (GLuint*) malloc(   sizeof(GLuint)
-                                * SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
-                                * ( glyphs[0].size() + glyphs[1].size() ) );
+    line1.setPos( -0.5 * line1.width(), +0.5 * line1.advanceY());
 
-    helper.generateOpenGLDrawElements (
+    line1.assignPosForWords();
 
-        glyphs[0],
-        textureXs[0],
-        -0.5 * width[0] * 3.0,
-        -0.5 * advanceY[0] * 3.0,
-        3.0,
-        1.0,
-        0.0,
-        GLPPPNNNTT,
-        0,
-        GLindices
-    );
+    line1.generateElements( GLPPPNNNTT, GLindices, 0 );
 
-    helper.generateOpenGLDrawElements (
-        glyphs[1],
-        textureXs[1],
-        -0.5 * width[1] * 3.0,
-        -1.5 * advanceY[1] * 3.0,
-        3.0,
-        1.0,
-        0.0,
 
-        &( GLPPPNNNTT[SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
-                       * ( glyphs[0].size() )                  ] ) ,
+    line2.setPos( -0.5 * line1.width(), -0.5 * line2.advanceY());
 
-        SDFont::RuntimeHelper::NUM_POINTS_PER_GLYPH * glyphs[0].size() , 
+    line2.assignPosForWords();
 
-        & ( GLindices[   SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
-                       * ( glyphs[0].size() )                  ] )
-    );
+    line2.generateElements( GLPPPNNNTT, GLindices, line1.len());
 
     DeltaTime dt;
     float val = 10.0;
@@ -577,8 +767,8 @@ int main( int argc, char* argv[] )
         float     lowThreshold   = 0.45;
         float     highThreshold  = 0.55;
         float     smoothing      = 4.0/16.0;
-        glm::vec3 baseColor      (1.0, 1.0, 0.0);
-        glm::vec3 borderColor    (1.0, 1.0, 0.0);
+        glm::vec3 baseColor      (0.0, 0.5, 1.0);
+        glm::vec3 borderColor    (0.0, 0.5, 1.0);
 
         glm::mat4 M = glm::translate(
                           glm::mat4(), 
@@ -602,10 +792,10 @@ int main( int argc, char* argv[] )
         shader.draw(
             GLPPPNNNTT ,
               SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
-            * ( glyphs[0].size() + glyphs[1].size() ) ,
+            * ( line1.len() + line2.len() ) ,
             GLindices ,
               SDFont::RuntimeHelper::NUM_INDICES_PER_GLYPH
-            * ( glyphs[0].size() + glyphs[1].size() ) ,
+            * ( line1.len() + line2.len() ) ,
             effect,
             false,
             lowThreshold,
@@ -619,14 +809,14 @@ int main( int argc, char* argv[] )
         shader.unload();
 
         if (dir) {
-            val += 0.001;
+            val += 0.01;
             if (val > 5.0) {
                 dir = false;
                 e = (e + 1) % 7 ;
             }
         }
         else {
-            val -= 0.001;
+            val -= 0.01;
             if (val < 0.0) dir = true;
         }
 
