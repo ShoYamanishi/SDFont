@@ -21,7 +21,7 @@ anti-aliasing sampling in the GPUs,
 the resultant shape of the fonts is clean with little artifacts
 for most of the sizes.
 
-
+Following are some samples rendered with a signed distance field font.
 
 <a href="docs/readme/Type0.png">
     <img src="docs/readme/Thumb0.png" height="90">
@@ -45,3 +45,11 @@ for most of the sizes.
     <img src="docs/readme/Thumb6.png" height="90">
 </a>
 
+From left to right:
+- Type 0: Raw output  by a pass-thru fragment shader.
+- Type 1: Softened edge by smooth-step function.
+- Type 2: Hard-edge by threshold on alpha.
+- Type 3: Glare/Helo effect
+- Type 4: Outline by hard thresholds
+- Type 5: Hollow fonts with soft edges
+- Type 6: Correspondint quadrilaterals to which the texture is mapped.
