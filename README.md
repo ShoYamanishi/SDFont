@@ -1,10 +1,26 @@
-# SDFont
-Signed Distance Font Generator and Runtime Utility
+# SDFont : Signed Distance Font Generator and Runtime Utility
 
-Video: (Click to play.)
+
+Demo Video (Click to play)
 <a href="https://youtu.be/p1f0NFHqdbI">
     <img src="docs/readme/VideoCapture.png">
 </a>
+
+
+# Overview
+
+
+Signed Distance Field Font is a technology proposed by 
+<a href="https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf">
+Chris Green of Valve at SIGGRAPH 2007
+</a>
+It is based on the anti-aliasing processing in the GPUs.
+Each glyph is drawn as a textured quadrilateral.
+Thanks to the very clever use of alpha channel in conjunction with the 
+anti-aliasing sampling in the GPUs,
+the resultant shape of the fonts is clean with little artifacts
+for most of the sizes.
+
 
 
 <a href="docs/readme/Type0.png">
