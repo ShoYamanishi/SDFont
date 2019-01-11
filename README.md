@@ -26,5 +26,5 @@ Signed Distance Font Generator and Runtime Utility
 
 
 <a href="https://youtu.be/p1f0NFHqdbI">
-    <img src="docs/readme/VideoCapture.png" height="200">
+    <img src="docs/readme/VideoCapture.png">
 </a>
