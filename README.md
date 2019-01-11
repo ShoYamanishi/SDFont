@@ -1,6 +1,12 @@
 # SDFont
 Signed Distance Font Generator and Runtime Utility
 
+Video: (Click to play.)
+<a href="https://youtu.be/p1f0NFHqdbI">
+    <img src="docs/readme/VideoCapture.png">
+</a>
+
+
 <a href="docs/readme/Type0.png">
     <img src="docs/readme/Thumb0.png" height="90">
 </a>
@@ -23,8 +29,3 @@ Signed Distance Font Generator and Runtime Utility
     <img src="docs/readme/Thumb6.png" height="90">
 </a>
 
-
-
-<a href="https://youtu.be/p1f0NFHqdbI">
-    <img src="docs/readme/VideoCapture.png">
-</a>
