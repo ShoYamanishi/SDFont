@@ -21,6 +21,8 @@ anti-aliasing sampling in the GPUs,
 the resultant shape of the fonts is clean with little artifacts
 for most of the sizes.
 
+
+
 Following are some samples rendered with a signed distance field font.
 
 <a href="docs/readme/Type0.png">
@@ -44,6 +46,7 @@ Following are some samples rendered with a signed distance field font.
 <a href="docs/readme/Type6.png">
     <img src="docs/readme/Thumb6.png" height="90">
 </a>
+
 
 From left to right:
 - Type 0: Raw output  by a pass-thru fragment shader.
