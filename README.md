@@ -136,3 +136,27 @@ edge for the glyphs.
 User can supply their own shaders for other effects shown above from Type 0 to
 6.
 
+
+# SDFont Implementation
+
+
+# Limitations
+
+- Can’t beat the Shannon’s sampling theorem.
+When a small texture (e.g. 128x128) is used, 
+magnified glyphs will show some noticeable artifacts on the screen.
+
+- The number of different fonts shown simultaneously at realtime is limited
+to the number of active loaded Textures (usually 16 for OpenGL).
+One way to get around this is to pack multiple fonts into a single texture.
+For example a texture of size 4K x 4K can accommodate 64 512x512 SD fonts, 
+or 256 256x256 SD fonts. SDFont currently supports only one font per texture.
+Multiple fonts per texture may be supported in the future.
+This technique is not suitable for some East Asian writing systems, which have
+thousands of glyphs.
+
+- Wasted space in the texture. Only one out of 4 bytes is effectively used.
+Apparently OpenGL does not allow alpha-only texture, and there is no way
+to utilized RGB bytes.
+
+
