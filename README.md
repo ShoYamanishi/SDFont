@@ -165,3 +165,40 @@ Apparently OpenGL does not allow alpha-only texture, and there is no way
 to utilized RGB bytes.
 
 
+# Requirements
+
+Wailea should work on any platform that supports C++14, libfreetype, libpng, and OpenGL 3.3.
+However, I have tested it only on the following environment.
+  - Macbook Pro (Intel Corei5) macOS Mojave 10.14.2
+
+
+# TODO
+
+- Support on iOS
+
+- Packing multiple fonts into a single texture.
+
+
+# License
+
+
+Copyright (c) 2019 Shoichiro Yamanishi
+
+Wailea is released under MIT license. See `LICENSE` for details.
+
+
+# Contact
+
+
+For any inquiries, please contact:
+Shoichiro Yamanishi
+
+yamanishi72@gmail.com
+
+
+
+# Reference
+
+
+* [Green07]
+Chris Green. 2007. Improved alpha-tested magnification for vector textures and special effects. In ACM SIGGRAPH 2007 courses (SIGGRAPH '07). ACM, New York, NY, USA, 9-18. DOI: https://doi.org/10.1145/1281500.1281665
