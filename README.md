@@ -24,6 +24,7 @@ for most of the sizes.
 
 
 Following are some samples rendered with a signed distance field font.
+(Click to enlarge.)
 
 <a href="docs/readme/Type0.png">
     <img src="docs/readme/Thumb0.png" height="90">
