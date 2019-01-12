@@ -104,7 +104,9 @@ an unset point far from the glyph gets 0.
 signed distance into the alpha channel.
 Following figure illustrates a generated texture.
 
-<a href="sample_texture.png"><img src="sample_texture.png"></a>
+<a href="docs/readme/sample_texture.png">
+<img src="docs/readme/sample_texture.png">
+</a>
 
 6. Generate the metrics of each glyph. It inclues the position of the glyph
 in the UV texture coordinates as well as the font metrics such as bearing and
