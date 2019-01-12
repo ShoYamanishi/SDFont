@@ -103,6 +103,9 @@ an unset point far from the glyph gets 0.
 5. Pack the downsampled glyphs into a single texture map with the normalied
 signed distance into the alpha channel.
 Following figure illustrates a generated texture.
+Please note that the glyphs are drawn upside down in the figure due to the
+difference in the vertical coordinate axes between PNG (downward) and
+OpenGL Texture (upward).
 
 <a href="docs/readme/sample_texture.png">
 <img src="docs/readme/sample_texture.png">
@@ -115,4 +118,21 @@ kernings.
 
 ## Font Rendering at Runtime
 
+The glyph is drawn as a transformed textured quadrilateral on the screen.
+The user gives the coordinates of the quadrilateral together with their
+attributes such as the corresponding texture coordinates, normals and colors.
+The rest is handled by a graphic subcomponent such as OpenGL.
+The geometric transformation (either 3D or Otrhogonal 2D) and 
+rasterization are done by the hardward utilizing GPU.
+The rasterization is considered up-sampling from the texture.
+Each pixel in the screen obtains a signed-distance value in the alpha channel
+pretty accurately, thanks to the interpolation mechanism in the rasterizer.
+
+The fragment shader then use the recovered signed distance value to draw the 
+pixel there on the screen.
+For example, for Type 2 agove, a pixel is set if the recorvered signed distance
+in the normalized alpha is above the threshold 0.5 (128). This gives an clear
+edge for the glyphs.
+User can supply their own shaders for other effects shown above from Type 0 to
+6.
 
