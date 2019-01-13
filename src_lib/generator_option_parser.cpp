@@ -9,7 +9,7 @@ namespace SDFont {
 
 
 const string GeneratorOptionParser::Usage = "Usage: "
-                                            "generate_signed_distance_font "
+                                            "sdfont_generator "
                                             "-locale [Locale] "
                                             "-font_path [FontPath] "
                                             "-max_code_point [num] "

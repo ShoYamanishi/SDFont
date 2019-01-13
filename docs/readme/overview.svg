@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg879"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   sodipodi:docname="overview.svg">
+  <defs
+     id="defs873" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="340.55223"
+     inkscape:cy="585.71528"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showguides="false"
+     inkscape:snap-global="false"
+     inkscape:window-width="1445"
+     inkscape:window-height="1407"
+     inkscape:window-x="1094"
+     inkscape:window-y="180"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata876">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1696"
+       width="88.201805"
+       height="28.113367"
+       x="40.188271"
+       y="149.05867" />
+    <rect
+       y="35.906975"
+       x="71.794373"
+       height="16.727276"
+       width="40.33823"
+       id="rect1492"
+       style="opacity:1;fill:#fbcbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.4076972;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <g
+       id="g1554"
+       transform="translate(63.1073,5.4786878)">
+      <rect
+         style="opacity:1;fill:#fafbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect1549"
+         width="26.058783"
+         height="5.4790244"
+         x="14.967093"
+         y="16.500628" />
+      <text
+         id="text1434"
+         y="20.376041"
+         x="16.771164"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="20.376041"
+           x="16.771164"
+           id="tspan1432"
+           sodipodi:role="line">TrueType Font</tspan></text>
+    </g>
+    <g
+       id="g1673">
+      <rect
+         y="63.953728"
+         x="74.044395"
+         height="20.312485"
+         width="36.615929"
+         id="rect1565"
+         style="opacity:1;fill:#c6f6fb;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <text
+         id="text1438"
+         y="68.36367"
+         x="75.64801"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="68.36367"
+           x="75.64801"
+           id="tspan1436"
+           sodipodi:role="line">Signed Distance</tspan><tspan
+           id="tspan1440"
+           style="stroke-width:0.26458332"
+           y="71.891449"
+           x="75.64801"
+           sodipodi:role="line">    Field Font</tspan></text>
+      <text
+         id="text1444"
+         y="77.718102"
+         x="79.790688"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="77.718102"
+           x="79.790688"
+           id="tspan1442"
+           sodipodi:role="line">Texture File (PNG)</tspan><tspan
+           id="tspan1456"
+           style="stroke-width:0.26458332"
+           y="81.24588"
+           x="79.790688"
+           sodipodi:role="line">Metrics File (TXT)</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="58.30072"
+       y="15.792164"
+       id="text1448"><tspan
+         sodipodi:role="line"
+         id="tspan1446"
+         x="58.30072"
+         y="15.792164"
+         style="font-size:4.93888903px;stroke-width:0.26458332">Signed Distance Font Generation</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="75.714821"
+       y="43.628147"
+       id="text1452"><tspan
+         sodipodi:role="line"
+         id="tspan1450"
+         x="75.714821"
+         y="43.628147"
+         style="stroke-width:0.26458332">Command Line Tool</tspan><tspan
+         sodipodi:role="line"
+         x="75.714821"
+         y="47.155926"
+         style="stroke-width:0.26458332"
+         id="tspan1454">(sdfont_generator)</tspan></text>
+    <g
+       id="g1521"
+       transform="translate(67.897191,-22.183704)">
+      <rect
+         style="opacity:1;fill:#fafbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect1514"
+         width="19.243406"
+         height="6.1471982"
+         x="12.962571"
+         y="56.323788" />
+      <text
+         id="text1460"
+         y="60.600098"
+         x="14.566189"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="60.600098"
+           x="14.566189"
+           id="tspan1458"
+           sodipodi:role="line">libfreetype</tspan></text>
+    </g>
+    <g
+       id="g1528"
+       transform="translate(31.800267,-9.2488127)">
+      <rect
+         style="opacity:1;fill:#fafbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect1523"
+         width="12.428041"
+         height="5.7462931"
+         x="43.431297"
+         y="57.927402" />
+      <text
+         id="text1468"
+         y="61.936451"
+         x="44.366741"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="61.936451"
+           x="44.366741"
+           id="tspan1466"
+           sodipodi:role="line">libpng</tspan></text>
+    </g>
+    <g
+       id="g1563"
+       transform="translate(41.766369,6.7090774)">
+      <rect
+         style="opacity:1;fill:#fbcbc6;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect1543"
+         width="16.570713"
+         height="5.2117534"
+         x="50.513943"
+         y="42.42577" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         x="51.449383"
+         y="46.301178"
+         id="text1547"><tspan
+           sodipodi:role="line"
+           id="tspan1545"
+           x="51.449383"
+           y="46.301178"
+           style="stroke-width:0.26458332">libsdfont</tspan></text>
+    </g>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path1558"
+       d="m 93.103877,28.59178 0.03341,2.978291 h 1.737252 l -3.474504,2.372017 -3.608139,-2.3052 1.603617,-0.06682 v -2.978291 z"
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <g
+       id="g1584"
+       transform="translate(-56.696429,23.245535)">
+      <g
+         transform="translate(0.22477107,0.33408691)"
+         id="g1490">
+        <rect
+           style="opacity:1;fill:#fbcbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+           id="rect1470"
+           width="42.097324"
+           height="5.4456158"
+           x="73.900024"
+           y="6.7452927" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="75.37001"
+           y="10.821153"
+           id="text1474"><tspan
+             sodipodi:role="line"
+             id="tspan1472"
+             x="75.37001"
+             y="10.821153"
+             style="stroke-width:0.26458332">Part of SDFont Project</tspan></text>
+      </g>
+      <g
+         transform="translate(3.0898121,-2.6726953)"
+         id="g1485">
+        <rect
+           y="16.099726"
+           x="71.093689"
+           height="5.746294"
+           width="42.150307"
+           id="rect1480"
+           style="opacity:1;fill:#fafbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+           x="72.430038"
+           y="20.108768"
+           id="text1478"><tspan
+             sodipodi:role="line"
+             id="tspan1476"
+             x="72.430038"
+             y="20.108768"
+             style="stroke-width:0.26458332">External Dependency</tspan></text>
+      </g>
+      <rect
+         style="opacity:1;fill:#c6f6fb;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect1567"
+         width="42.228588"
+         height="6.2808323"
+         x="74.100479"
+         y="20.242405" />
+      <text
+         id="text1571"
+         y="24.785984"
+         x="74.63501"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="24.785984"
+           x="74.63501"
+           id="tspan1569"
+           sodipodi:role="line">File Generated by SDFont</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="27.403273"
+       y="26.747023"
+       id="text1588"><tspan
+         sodipodi:role="line"
+         id="tspan1586"
+         x="27.403273"
+         y="26.747023"
+         style="stroke-width:0.26458332">Color Codes</tspan></text>
+    <path
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 94.237806,56.751006 0.03341,2.978291 h 1.737252 l -3.474504,2.372017 -3.608139,-2.3052 1.603617,-0.06682 v -2.978291 z"
+       id="path1590"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="122.92611"
+       y="37.252075"
+       id="text1594"><tspan
+         sodipodi:role="line"
+         id="tspan1592"
+         x="122.92611"
+         y="37.252075"
+         style="stroke-width:0.26458332">User Supplied Parameters</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="126.12547"
+       y="42.244045"
+       id="text1598"><tspan
+         sodipodi:role="line"
+         id="tspan1596"
+         x="126.12547"
+         y="42.244045"
+         style="stroke-width:0.26458332">Bitmap Resolution</tspan><tspan
+         sodipodi:role="line"
+         x="126.12547"
+         y="45.771824"
+         style="stroke-width:0.26458332"
+         id="tspan1600">Texture Size</tspan><tspan
+         sodipodi:role="line"
+         x="126.12547"
+         y="49.299599"
+         style="stroke-width:0.26458332"
+         id="tspan1602">Input Font Path</tspan><tspan
+         sodipodi:role="line"
+         x="126.12547"
+         y="52.827377"
+         style="stroke-width:0.26458332"
+         id="tspan1604">Output Font Path</tspan></text>
+    <path
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 122.92355,45.510817 -2.97829,0.0334 v 1.73725 l -2.37202,-3.4745 2.3052,-3.60814 0.0668,1.60362 h 2.9783 z"
+       id="path1606"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc" />
+    <text
+       id="text1610"
+       y="106.32533"
+       x="52.317951"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       xml:space="preserve"><tspan
+         style="font-size:4.93888903px;stroke-width:0.26458332"
+         y="106.32533"
+         x="52.317951"
+         id="tspan1608"
+         sodipodi:role="line">String Rendering with Signed Distance Font</tspan></text>
+    <g
+       id="g1638"
+       transform="translate(-53.543313,62.391303)">
+      <rect
+         y="112.31563"
+         x="103.20982"
+         height="5.2117538"
+         width="70.692787"
+         id="rect1624"
+         style="opacity:1;fill:#fafbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <text
+         id="text1614"
+         y="116.19374"
+         x="104.43214"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="116.19374"
+           x="104.43214"
+           id="tspan1612"
+           sodipodi:role="line">OpenGL 3.3</tspan></text>
+    </g>
+    <g
+       transform="translate(45.458353,104.09331)"
+       id="g1622"
+       style="stroke:none">
+      <rect
+         y="42.42577"
+         x="50.513943"
+         height="20.312483"
+         width="15.63527"
+         id="rect1616"
+         style="opacity:1;fill:#fbcbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <text
+         id="text1620"
+         y="46.301178"
+         x="51.449383"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke:none;stroke-width:0.26458332"
+           y="46.301178"
+           x="51.449383"
+           id="tspan1618"
+           sodipodi:role="line">libsdfont</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="46.793472"
+       y="162.75989"
+       id="text1642"><tspan
+         sodipodi:role="line"
+         id="tspan1640"
+         x="46.793472"
+         y="162.75989"
+         style="stroke-width:0.26458332">User Supplied Inputs</tspan><tspan
+         sodipodi:role="line"
+         x="46.793472"
+         y="166.28766"
+         style="stroke-width:0.26458332"
+         id="tspan1646">String, Position, Size, etc.</tspan></text>
+    <g
+       id="g1694"
+       transform="translate(-22.265586,-77.307258)">
+      <rect
+         y="204.66899"
+         x="116.36969"
+         height="6.1471877"
+         width="46.905807"
+         id="rect1541"
+         style="opacity:1;fill:#fbcbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <text
+         id="text1656"
+         y="208.67516"
+         x="117.9546"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         xml:space="preserve"><tspan
+           style="stroke-width:0.26458332"
+           y="208.67516"
+           x="117.9546"
+           id="tspan1654"
+           sodipodi:role="line">Vertex &amp; Fragment Shaders</tspan></text>
+    </g>
+    <g
+       transform="translate(36.493498,88.782402)"
+       id="g1664">
+      <rect
+         y="57.927402"
+         x="43.431297"
+         height="5.7462931"
+         width="12.428041"
+         id="rect1658"
+         style="opacity:1;fill:#fafbc6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         x="44.366741"
+         y="61.936451"
+         id="text1662"><tspan
+           sodipodi:role="line"
+           id="tspan1660"
+           x="44.366741"
+           y="61.936451"
+           style="stroke-width:0.26458332">libpng</tspan></text>
+    </g>
+    <g
+       id="g1689"
+       transform="translate(-17.773424,49.282342)">
+      <rect
+         style="opacity:1;fill:#c6f6fb;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect1675"
+         width="36.615929"
+         height="20.312485"
+         x="74.044395"
+         y="63.953728" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         x="75.64801"
+         y="68.36367"
+         id="text1681"><tspan
+           sodipodi:role="line"
+           id="tspan1677"
+           x="75.64801"
+           y="68.36367"
+           style="stroke-width:0.26458332">Signed Distance</tspan><tspan
+           sodipodi:role="line"
+           x="75.64801"
+           y="71.891449"
+           style="stroke-width:0.26458332"
+           id="tspan1679">    Field Font</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+         x="79.790688"
+         y="77.718102"
+         id="text1687"><tspan
+           sodipodi:role="line"
+           id="tspan1683"
+           x="79.790688"
+           y="77.718102"
+           style="stroke-width:0.26458332">Texture File (PNG)</tspan><tspan
+           sodipodi:role="line"
+           x="79.790688"
+           y="81.24588"
+           style="stroke-width:0.26458332"
+           id="tspan1685">Metrics File (TXT)</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="43.324425"
+       y="153.39359"
+       id="text1700"><tspan
+         sodipodi:role="line"
+         id="tspan1698"
+         x="43.324425"
+         y="153.39359"
+         style="stroke-width:0.26458332">User Program</tspan></text>
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path1706"
+       d="m 99.549812,136.53097 0.10461,2.97829 h 5.441198 l -10.882395,2.37202 -11.30097,-2.3052 5.02266,-0.0668 v -2.9783 z"
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.4682509px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path1708"
+       d="m 105.06222,168.2024 0.0334,2.9783 h 1.73725 l -3.4745,2.37201 -3.608138,-2.3052 1.603618,-0.0668 v -2.97829 z"
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <path
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 88.589275,161.22243 2.9783,-0.0334 v -1.73725 l 2.37201,3.4745 -2.3052,3.60814 -0.0668,-1.60362 h -2.97829 z"
+       id="path1710"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:transform-center-x="-7.617185"
+       inkscape:transform-center-y="-14.298924" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="107.65701"
+       y="171.98157"
+       id="text1714"><tspan
+         sodipodi:role="line"
+         id="tspan1712"
+         x="107.65701"
+         y="171.98157"
+         style="stroke-width:0.26458332">GL VBOs</tspan></text>
+    <path
+       style="fill:#c1c1c1;fill-opacity:1;stroke:none;stroke-width:0.4682509px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 88.777495,182.45508 0.10461,2.97829 h 5.4412 l -10.8824,2.37202 -11.300971,-2.3052 5.022661,-0.0668 v -2.9783 z"
+       id="path1716"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccccc" />
+    <rect
+       y="189.8801"
+       x="66.079651"
+       height="12.238373"
+       width="37.930973"
+       id="rect1718"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;line-height:1;font-family:'.Helvetica LT MM';-inkscape-font-specification:'.Helvetica LT MM';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="75.718025"
+       y="196.55003"
+       id="text1722"><tspan
+         sodipodi:role="line"
+         id="tspan1720"
+         x="75.718025"
+         y="196.55003"
+         style="stroke-width:0.26458332">abcdefg...</tspan></text>
+  </g>
+</svg>

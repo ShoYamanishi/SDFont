@@ -64,6 +64,7 @@ class RuntimeHelper {
      *
      *  @param width          (out): See above.
      *  @param posXs          (out): See above.
+     *  @param firstBearingX  (out): See above.
      *  @param bearingY       (out): See above.
      *  @param belowBaseLineY (out): See above.
      *  @param advanceY       (out): See above.
@@ -74,6 +75,7 @@ class RuntimeHelper {
         string            s,
         float&            width,
         vector< float >&  posXs,
+        float&            firstBearingX,
         float&            bearingY,
         float&            belowBaseLineY,
         float&            advanceY,

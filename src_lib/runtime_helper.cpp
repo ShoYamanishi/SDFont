@@ -33,6 +33,7 @@ void RuntimeHelper::getMetrics(
     string            s,
     float&            width,
     vector< float >&  posXs,
+    float&            firstBearingX,
     float&            bearingY,
     float&            belowBaseLineY,
     float&            advanceY,
@@ -40,18 +41,21 @@ void RuntimeHelper::getMetrics(
 
 ) {
 
-    width           = 0.0;
-    bearingY        = 0.0;
-    belowBaseLineY  = 0.0;
-    advanceY        = 0.0;
+    width          = 0.0;
+    firstBearingX  = 0.0;
+    bearingY       = 0.0;
+    belowBaseLineY = 0.0;
+    advanceY       = 0.0;
 
-    float curX      = 0.0;
-    float lastWidth = 0.0;
-    long  chPrev    = 0;
-    bool  chPrevSet = false;
-    auto  len       = s.length();
+    bool  firstFound     = false;
+    float curX           = 0.0;
+    float lastAdjustment = 0.0;
+    long  chPrev         = 0;
+    bool  chPrevSet      = false;
+    auto  len            = s.length();
 
     glyphs.clear();
+
 
     for ( auto i = 0 ; i < len ; i++ ) {
 
@@ -61,6 +65,12 @@ void RuntimeHelper::getMetrics(
         if ( git != mGlyphs.end() ) {
 
             auto& g = git->second;
+
+            if ( !firstFound ) {
+
+                firstBearingX = g.mHorizontalBearingX ;
+                firstFound   = true;
+            }
 
             bearingY       = max( bearingY, g.mHorizontalBearingY );
 
@@ -84,7 +94,8 @@ void RuntimeHelper::getMetrics(
 
             curX += g.mHorizontalAdvance;
 
-            lastWidth = g.mHorizontalBearingX + g.mWidth;
+            lastAdjustment =   g.mHorizontalAdvance
+                             - ( g.mHorizontalBearingX + g.mWidth );
 
             if ( !chPrevSet ) {
 
@@ -102,9 +113,7 @@ void RuntimeHelper::getMetrics(
         }
     }
 
-    curX += lastWidth;
-
-    width = curX;
+    width = curX - ( firstBearingX + lastAdjustment );
 
 }
 
