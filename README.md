@@ -145,6 +145,27 @@ Here's an overview of SDFont, which consists of three parts:
 <img src="docs/readme/overview.png">
 </a>
 
+## sdfont_generator
+This is a command line tool to generate a pair of files (PNG & TXT)
+from the user-specified TrueType font. The pair of files are loaded
+to the user program at runtime.
+Following is the list of command line parameters.
+
+- -locale : Locale. The default value is 'en_US.ISO8859-1'.
+
+- -font_path : Path to a TrueType font. The default value is
+                 '/Library/Fonts/Arial.ttf'.
+
+- -max_code_point : The highest code point in the specified font.
+Used to pack the glyphs to one texture. The default is 255.
+
+- -texture_size : The width and height of the square texture.
+This must be a power of 2. The default is 4096.
+
+- output file name w/o extention : The default is 'signed_dist_font'.
+
+
+
 
 # Limitations
 
