@@ -282,6 +282,10 @@ follow face.
 - baseColor (vec3) :  Main color for the glyph.
 - borderColor (vec3) : Secondary color for the glyph.
 
+# Sample
+A sample code for the Star Wars opening is found in 
+[src_bin/demo.cpp](src_bin/demo.cpp).
+
 
 # Limitations
 
