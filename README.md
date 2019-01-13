@@ -244,8 +244,7 @@ SDFont::mShader.draw()
 ## Shaders
 SDFont provides a pair of vertex & fragment shader programs.
 The vertex shader 
-[shaders/VanillaSignedDistFontVertex.glsl]
-(shaders/VanillaSignedDistFontVertex.glsl)
+[shaders/VanillaSignedDistFontVertex.glsl](shaders/VanillaSignedDistFontVertex.glsl)
 is an orthodox 3D perspetcive projectio shader.
 
 The defined uniforms are:
@@ -263,8 +262,7 @@ SDFont::mShader.draw() has the following format.
 - texCoordIn(vec2): UV texture coordinates.
 
 The fragment shader 
-[shaders/VanillaSignedDistFontFragment.glsl]
-(shaders/VanillaSignedDistFontFragment.glsl)
+[shaders/VanillaSignedDistFontFragment.glsl](shaders/VanillaSignedDistFontFragment.glsl)
 is the main part and it takes care of the glyph rendering.
 It has the following uniforms.
 
