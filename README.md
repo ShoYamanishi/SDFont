@@ -192,8 +192,54 @@ Same as 'Width' above.
 - Texture Height : Height of the bitmap in the texture coordinates.
 Same as 'Height' above.
 
+## libsdfont
+This is the runtime library. The command line sdfont_generator is
+built on top that, too.
+
+The user program must include the following header files.
+```c++
+runtime_helper.hpp
+texture_loader.hpp
+metrics_parser.hpp
+vanilla_shader_manager.hpp
+```
+
+and then initialize libsdfont with the following idiom.
+
+```c++
+SDFont::RuntimeHelper helper;
+
+SDFont::TextureLoader loader ( "signed_dist_font.png" );
+
+SDFont::MetricsParser parser ( helper.glyphs(), helper.margin() );
+
+parser.parseSpec( "signed_dist_font.txt" );
+
+SDFont::VanillaShaderManager  shader ( loader.GLtexture(), 0 );
+```
+
+To render glyphs for a given string, use the following.
+```c++
+SDFont::RuntimeHelper::.getMetrics()
+
+```
+This takes a string and generates a list of glyph metrics.
+
+```c++
+SDFont::RuntimeHelper::generateOpenGLDrawElements()
+```
+This generates Open GL VBOs for the given list of glyphs at specific location.
 
 
+```c++
+SDFont::VanillaShaderManager.draw()
+```
+This draws the VBOs using the shader pair. It also handles the uniform
+variables defined in the shaders. The shaders are found in [shaders](shaders).
+
+```c++
+SDFont::mShader.draw()
+```
 
 
 # Limitations
