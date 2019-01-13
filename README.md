@@ -138,7 +138,8 @@ User can supply their own shaders for other effects shown above from Type 0 to
 
 
 # SDFont Implementation
-
+Here's an overview of SDFont, which consists of three parts: 
+    sdfont_generator, libsdfont, and the shader pair.
 
 <a href="docs/readme/overview.png">
 <img src="docs/readme/overview.png">
@@ -167,8 +168,10 @@ to utilized RGB bytes.
 
 # Requirements
 
-Wailea should work on any platform that supports C++14, libfreetype, libpng, and OpenGL 3.3.
-However, I have tested it only on the following environment.
+SDFont should work on any platform that supports C++14, libfreetype, libpng, 
+and OpenGL 3.3.
+
+I have tested it only on the following environment.
   - Macbook Pro (Intel Corei5) macOS Mojave 10.14.2
 
 
