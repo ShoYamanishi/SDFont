@@ -164,6 +164,35 @@ This must be a power of 2. The default is 4096.
 
 - output file name w/o extention : The default is 'signed_dist_font'.
 
+The output PNG file looks like the one shown in Font Generation above.
+It wll be loaded as a texture map at runtime.
+The output TXT file consists of three parts: Margin, Glyphs, and Kernings.
+The Margin has one value that represents the rectangular extent around each 
+glyph in which the signed distance fades out.
+In Glyphs section, each line represents a glyph metrics.
+The line consists of the following fields.
+
+- Code Point
+- Width
+- Height
+- Horizontal Bearing X
+- Horizontal Bearing Y
+- Horizontal Advance
+- Vertical Bearing X
+- Vertical Bearing Y
+- Vertical Advance
+
+The fields above are taken from the input TrueType font but scaled to the
+normalized texture coordinates.
+
+- Texture Coord X : Left side of the glyph bit map in the texture coordinates.
+- Texture Coord Y : Bottom side of the glyph bit map in the texture coordinates.
+- Texture Width : Width of the bitmap in the texture coordinates.
+Same as 'Width' above.
+- Texture Height : Height of the bitmap in the texture coordinates.
+Same as 'Height' above.
+
+
 
 
 
