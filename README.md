@@ -220,7 +220,7 @@ SDFont::VanillaShaderManager  shader ( loader.GLtexture(), 0 );
 
 To render glyphs for a given string, use the following.
 ```c++
-SDFont::RuntimeHelper::.getMetrics()
+SDFont::RuntimeHelper::getMetrics()
 
 ```
 This takes a string and generates a list of glyph metrics.
@@ -232,7 +232,7 @@ This generates Open GL VBOs for the given list of glyphs at specific location.
 
 
 ```c++
-SDFont::VanillaShaderManager.draw()
+SDFont::VanillaShaderManage::draw()
 ```
 This draws the VBOs using the shader pair. It also handles the uniform
 variables defined in the shaders. The shaders are found in [shaders](shaders).
@@ -240,6 +240,47 @@ variables defined in the shaders. The shaders are found in [shaders](shaders).
 ```c++
 SDFont::mShader.draw()
 ```
+
+## Shaders
+SDFont provides a pair of vertex & fragment shader programs.
+The vertex shader 
+[shaders/VanillaSignedDistFontVertex.glsl]
+(shaders/VanillaSignedDistFontVertex.glsl)
+is an orthodox 3D perspetcive projectio shader.
+
+The defined uniforms are:
+- P (mat4) : Projection matrix.
+- M (mat4) : Model matrix.
+- V (mat4) : View magrix.
+- lightWCS (vec3) : Light source in the world coordinate system.
+
+The VBOs for this vertex shader, which is the output from 
+SDFont::RuntimeHelper::generateOpenGLDrawElements() and input to 
+SDFont::mShader.draw() has the following format.
+
+- vertexLCS(vec3) : Point in the model coordinate system.
+- normalLCS(vec3) : Normal in the model coordinate system. Not used at moment.
+- texCoordIn(vec2): UV texture coordinates.
+
+The fragment shader 
+[shaders/VanillaSignedDistFontFragment.glsl]
+(shaders/VanillaSignedDistFontFragment.glsl)
+is the main part and it takes care of the glyph rendering.
+It has the following uniforms.
+
+- fontTexture (sampler2D) : The ID (name) of the texture created from the PNG.
+- effect (int) : type of face to be rendered. See tye types above.
+- useLight (bool) : set to true if light source specified by lightWCS is used.
+- lowThreshold (float) : The threshold for the alpha channel.
+Used by type 2,3, and 4. It is used to find the boundary beteen glyph and
+non-glyph pixels.
+- highThreshold (float) : Another threshold for the alpha channel.
+Used by type 4. It is used to find the boundary for the inner curve for the
+follow face.
+
+- smoothing (float) : Smomothing parameter for the smooth step function.
+- baseColor (vec3) :  Main color for the glyph.
+- borderColor (vec3) : Secondary color for the glyph.
 
 
 # Limitations
