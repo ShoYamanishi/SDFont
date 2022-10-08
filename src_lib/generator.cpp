@@ -370,13 +370,17 @@ bool Generator::generateTexture( bool reverseY )
 
             auto dstY    = reverseY ? ( (len - 1) - ( srcY + g.baseY() ) ) :
                                       ( srcY + g.baseY()                 ) ;
-
+            if ( dstY < 0 || len <= dstY ) {
+                continue;
+            }
             auto* curRow = mPtrArray [dstY];
 
             for ( auto srcX = 0; srcX < g.signedDistWidth(); srcX++ ) {
 
                 auto dstX  = ( srcX + g.baseX() ) * 4;
-
+                if ( dstX < 0 || len * 4 <= dstX ) {
+                    continue;
+                }
                 auto dist  = g.signedDist( srcX, srcY );
 
                 auto alpha = min ( 255, max( 0, (int)( dist * 255.0 ) ) );
