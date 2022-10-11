@@ -387,7 +387,7 @@ void InternalGlyphForGen::visualize( ostream& os ) const {
 
 void InternalGlyphForGen::emitMetrics( ostream& os ) const {
 
-    float factor =  (float) ( mConf.scale() * mConf.textureSize() ) ;
+    float factor =  (float) ( mConf.defaultResolution() );
 
     os << mCodePoint ;
 
@@ -424,7 +424,7 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
     if ( mKernings.size() > 0 ) {
 
-        float factor =  (float) ( mConf.scale() * mConf.textureSize() ) ;
+        float factor =  (float) ( mConf.defaultResolution() );
 
         os << mCodePoint ;
 
@@ -441,7 +441,7 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
 Glyph InternalGlyphForGen::generateSDGlyph() const {
 
-    float factor =  (float) ( mConf.scale() * mConf.textureSize() ) ;
+    float factor =  (float) ( mConf.defaultResolution() );
 
     Glyph g;
 
