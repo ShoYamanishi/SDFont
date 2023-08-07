@@ -1,0 +1,11 @@
+[requires]
+glfw/3.3.8
+freetype/2.13.0
+libpng/1.6.40
+glew/2.2.0
+
+[generators]
+CMakeToolchain
+CMakeDeps
+
+[options]
