@@ -74,6 +74,35 @@ a Flyweight object in a program, is represented by a textured quadrilateral
 region in a set of coordinates into the output screen space, and another set 
 of coordinates into the texture map.
 
+# How To Build
+
+## Requirements
+- conan2 package manager
+- CMake (v3.10+)
+- C++14 compiler
+
+## Build instructions
+
+Create and switch to build directory:
+```
+mkdir build
+cd build
+```
+
+Compile dependencies with conan package manager:
+```
+conan install .. --output-folder=. --build=missing
+```
+
+Initialize CMake:
+```
+cmake -DCMAKE_BUILD_TYPE=Release ..
+```
+
+Build all targets (library and executables):
+```
+make -j$(nproc)
+```
 
 # How It Works
 
@@ -303,15 +332,6 @@ thousands of glyphs.
 - Wasted space in the texture. Only one out of 4 bytes is effectively used.
 Apparently OpenGL does not allow alpha-only texture, and there is no way
 to utilized RGB bytes.
-
-
-# Requirements
-
-SDFont should work on any platform that supports C++14, libfreetype, libpng, 
-and OpenGL 3.3.
-
-I have tested it only on the following environment.
-  - Macbook Pro (Intel Corei5) macOS Mojave 10.14.2
 
 
 # TODO
