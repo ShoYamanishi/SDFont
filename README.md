@@ -154,6 +154,9 @@ They are build with the standard CMake process.
 
 ```
 $ cd <path/to>/SDFont
+# make sure you have copied FindGD.cmake.
+$ ls FindGD.cmake
+FindGD.cmake
 $ mkdir build
 $ cd build
 $ cmake ..
