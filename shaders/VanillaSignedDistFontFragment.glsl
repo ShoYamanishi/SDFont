@@ -26,7 +26,7 @@ void main (void) {
         // Raw output with interpolation.
 
         color.rgb = baseColor;
-        color.a   = texture( fontTexture, texCoordOut ).a;
+        color.a   = texture( fontTexture, texCoordOut ).r;
     }
     else if ( effect == 1 ) {
 
@@ -35,13 +35,13 @@ void main (void) {
         color.rgb = baseColor;
         color.a   = smoothstep( 0.5 - smoothing,
                                 0.5 + smoothing, 
-                                texture( fontTexture, texCoordOut ).a );
+                                texture( fontTexture, texCoordOut ).r );
     }
     else if ( effect == 2 ) {
 
         // Sharp edge.
 
-        float alpha = texture(fontTexture, texCoordOut).a;
+        float alpha = texture(fontTexture, texCoordOut).r;
 
         if ( alpha >= lowThreshold ) {
 
@@ -58,7 +58,7 @@ void main (void) {
 
         // Sharp edge with outer glow.
 
-        float alpha = texture(fontTexture, texCoordOut).a;
+        float alpha = texture(fontTexture, texCoordOut).r;
 
         if ( alpha >= lowThreshold ) {
 
@@ -75,7 +75,7 @@ void main (void) {
 
         // With border.
 
-        float alpha = texture(fontTexture, texCoordOut).a;
+        float alpha = texture(fontTexture, texCoordOut).r;
 
         if ( alpha >= lowThreshold && alpha <= highThreshold ) {
 
@@ -95,7 +95,7 @@ void main (void) {
     }
     else if ( effect == 5 ) {
         // Softened edge.
-        float alpha = texture(fontTexture, texCoordOut).a;
+        float alpha = texture(fontTexture, texCoordOut).r;
         color.rgb = baseColor;
 
         if ( alpha < 0.5) {

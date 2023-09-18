@@ -1,5 +1,5 @@
-#ifndef __GLYPH_HPP__
-#define __GLYPH_HPP__
+#ifndef __SDFONT_GLYPH_HPP__
+#define __SDFONT_GLYPH_HPP__
 
 namespace SDFont {
 
@@ -33,5 +33,5 @@ class Glyph {
 
 } // namespace SDFont
 
-#endif /*__GLYPH_HPP__*/
+#endif /*__SDFONT_GLYPH_HPP__*/
 

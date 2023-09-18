@@ -1,10 +1,10 @@
-#ifndef __VANILLA_SHADER_MANAGER_HPP__
-#define __VANILLA_SHADER_MANAGER_HPP__
+#ifndef __SDFONT_VANILLA_SHADER_MANAGER_HPP__
+#define __SDFONT_VANILLA_SHADER_MANAGER_HPP__
 
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
-#include "shader_manager.hpp"
+#include "sdfont_shader_manager.hpp"
 
 namespace SDFont {
 
@@ -66,9 +66,11 @@ class VanillaShaderManager : public ShaderManager {
     GLuint mNormalSlot;
     GLuint mTexCoordSlot;
 
+    static const char* VERTEX_STR;
+    static const char* FRAGMENT_STR;
 };
 
 
 } // namespace SDFont
 
-#endif/*__VANILLA_SHADER_MANAGER_HPP__*/
+#endif/*__SDFONT_VANILLA_SHADER_MANAGER_HPP__*/

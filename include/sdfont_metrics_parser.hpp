@@ -1,9 +1,9 @@
-#ifndef __METRICS_PARSER_HPP__
-#define __METRICS_PARSER_HPP__
+#ifndef __SDFONT_METRICS_PARSER_HPP__
+#define __SDFONT_METRICS_PARSER_HPP__
 
 #include <map>
 #include <string>
-#include "glyph.hpp"
+#include "sdfont_glyph.hpp"
 
 using namespace std;
 
@@ -18,8 +18,9 @@ class MetricsParser {
      *
      *  @param  G (in/out) graph to which nodes and edges are to be added
      */
-    MetricsParser( map< long, Glyph>& glyphs, float& margin ) :
-        mMargin(margin),
+    MetricsParser( map< long, Glyph>& glyphs, float& spreadInTexture, float& spreadInFontMetrics ):
+        mSpreadInTexture(spreadInTexture),
+        mSpreadInFontMetrics(spreadInFontMetrics),
         mGlyphs(glyphs) {;}
 
 
@@ -33,7 +34,8 @@ class MetricsParser {
      */
     bool parseSpec( string fileName );
 
-    static const string MARGIN;
+    static const string SPREAD_IN_TEXTURE;
+    static const string SPREAD_IN_FONT_METRICS;
     static const string GLYPHS;
     static const string KERNINGS;
 
@@ -41,7 +43,8 @@ class MetricsParser {
 
     enum parseState {
         INIT,
-        IN_MARGIN,
+        IN_SPREAD_IN_TEXTURE,
+        IN_SPREAD_IN_FONT_METRICS,
         IN_GLYPHS,
         IN_KERNINGS,
         END
@@ -60,13 +63,19 @@ class MetricsParser {
     size_t splitLine    ( const string& txt, vector<string>& strs, char ch );
 
 
-    void handleMargin(
+    void handleSpreadInTexture(
         string line,
         string filename,
         long   lineNumber,
         bool&  errorFlag
     );
 
+    void handleSpreadInFontMetrics(
+        string line,
+        string filename,
+        long   lineNumber,
+        bool&  errorFlag
+    );
 
     void handleGlyph(
         string line,
@@ -92,8 +101,8 @@ class MetricsParser {
     );
 
 
-    float& mMargin;
-
+    float& mSpreadInTexture;
+    float& mSpreadInFontMetrics;
 
     /** @brief used during parsing to find a node from a node number.*/
     map< long, Glyph >& mGlyphs;
@@ -103,4 +112,4 @@ class MetricsParser {
 
 } // namespace SDFont
 
-#endif /*__METRICS_PARSER_HPP__*/
+#endif /*__SDFONT_METRICS_PARSER_HPP__*/

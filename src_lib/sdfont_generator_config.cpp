@@ -1,16 +1,16 @@
-#include "generator_config.hpp"
+#include "sdfont_generator_config.hpp"
 
 namespace SDFont {
 
-const string GeneratorConfig::DefaultLocale = "en_US.ISO8859-1" ;
-const string GeneratorConfig::DefaultFontPath = "/Library/Fonts/Arial.ttf" ;
+const string GeneratorConfig::DefaultLocale = "en_US" ;
+const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;
 const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
 
 const long   GeneratorConfig::DefaultMaxCodePoint           =  255 ;
 const long   GeneratorConfig::DefaultTextureSize            =  512 ;
 const long   GeneratorConfig::DefaultScale                  =  128 ;
-const long   GeneratorConfig::DefaultSpreadInPixels         =  512 ;
-const long   GeneratorConfig::DefaultBaseResolutionInPixels = 4096 ;
+const long   GeneratorConfig::DefaultSpreadInPixels         =  128 ;
+const long   GeneratorConfig::DefaultBaseResolutionInPixels = 1024 ;
 
 
 void GeneratorConfig::emitVerbose() const {
@@ -23,8 +23,8 @@ void GeneratorConfig::emitVerbose() const {
     cerr << "Max Code Point: ["   << mMaxCodePoint       << "]\n";
     cerr << "Texture Size: ["     << mTextureSize        << "]\n";
     cerr << "Initial Scale: ["    << mScale              << "]\n";
-    cerr << "Font Resolution: ["  << defaultResolution() << "]\n";
-
+    cerr << "Font Resolution: ["  << resolution()        << "]\n";
+    cerr << "Spread In Pixels: [" << spreadInPixels()   << "]\n";
 }
 
 
@@ -37,7 +37,10 @@ void GeneratorConfig::outputMetricsHeader( ostream& os ) const  {
     os << mTextureSize;
     os << "\n";
     os << "# Original Font Resolution: ";
-    os << defaultResolution();
+    os << resolution();
+    os << "\n";
+    os << "# Spread in pixels: ";
+    os << spreadInPixels();
     os << "\n";
     os << "# Down Sampling Scale: ";
     os << mScale;

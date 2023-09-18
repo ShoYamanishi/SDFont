@@ -2,9 +2,10 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <limits>
 
-#include "generator_config.hpp"
-#include "internal_glyph_for_gen.hpp"
+#include "sdfont_generator_config.hpp"
+#include "sdfont_internal_glyph_for_generator.hpp"
 
 using namespace std;
 
@@ -41,8 +42,8 @@ InternalGlyphForGen::InternalGlyphForGen (
     mSignedDistBaseX    ( 0 ),
     mSignedDistBaseY    ( 0 )
 {
-    mSignedDistWidth  = mWidth / mConf.scale() + 2 * mConf.signedDistExtent();
-    mSignedDistHeight = mHeight/ mConf.scale() + 2 * mConf.signedDistExtent();
+    mSignedDistWidth  = mWidth  + 2 * mConf.spreadInPixels();
+    mSignedDistHeight = mHeight + 2 * mConf.spreadInPixels();
 }
 
 
@@ -229,19 +230,22 @@ float InternalGlyphForGen::getSignedDistance(
     auto xPix        = xSD * scale + hScale;
     auto yPix        = ySD * scale + hScale;
 
+    const long downSampleRate = 1;
+
     bool  curP       = isPixelSet( bm, xPix, yPix );
     float fSpread    = (float) spread ;
     float minSqDist  = fSpread * fSpread ;
-    long  nextStartI = spread + 1;
+    long  nextStartI = spread + downSampleRate;
 
-    for (auto i = 1 ; i <= spread; i++ ) {
+
+    for (auto i = 1 ; i <= spread; i += downSampleRate ) {
 
         float fi = (float)i;
 
         if ( testOrthogonalPoints( bm, curP, xPix, yPix, i ) ) {
 
             minSqDist  = min( minSqDist, fi * fi );
-            nextStartI = i + 1;
+            nextStartI = i + downSampleRate;
             break;
         }
 
@@ -253,7 +257,7 @@ float InternalGlyphForGen::getSignedDistance(
 
                 float fj   = (float) j;
                 minSqDist  = min( minSqDist, fi * fi + fj * fj );
-                nextStartI = i + 1;
+                nextStartI = i + downSampleRate;
                 breaking   = true;
                 break;
             }
@@ -267,14 +271,14 @@ float InternalGlyphForGen::getSignedDistance(
         if ( testDiagonalPoints( bm, curP, xPix, yPix, i ) ) {
 
             minSqDist  = min( minSqDist, 2 * fi * fi );
-            nextStartI = i + 1;
+            nextStartI = i + downSampleRate;
             break;
         }
     }
 
     long maxI = min( (long)(sqrt(minSqDist)) + 1, spread );
 
-    for (auto i = nextStartI ; i <= maxI; i++ ) {
+    for (auto i = nextStartI ; i <= maxI; i += downSampleRate ) {
 
         float fi = (float)i;
 
@@ -322,28 +326,23 @@ void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
     mSignedDistWidth  = mWidth / mConf.scale() + 2 * mConf.signedDistExtent();
     mSignedDistHeight = mHeight/ mConf.scale() + 2 * mConf.signedDistExtent();
 
-    size_t arraySizeInBytes =   mSignedDistWidth
-                              * mSignedDistHeight
-                              * sizeof(float)     ;
+    size_t arraySize = mSignedDistWidth * mSignedDistHeight;
 
-    mSignedDist = (float*) malloc( arraySizeInBytes );
+    mSignedDist = new float[ arraySize ];
 
-    if ( mSignedDist != nullptr ) {
+    const long offset = mConf.signedDistExtent();
 
-        long offset   = mConf.signedDistExtent();
+    for ( long i = 0 ; i < mSignedDistHeight; i++ ) {
 
-	for ( long i = 0 ; i < mSignedDistHeight; i++ ) {
+        for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
 
-	      for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
-
-                auto val = getSignedDistance( bm,
-                                              mConf.scale(),
-                                              mConf.defaultSpread(),
-                                              j - offset,
-                                              i - offset     );
-
-                mSignedDist[i * mSignedDistWidth + j] = val;
-            }
+            auto val = getSignedDistance( bm,
+                                          mConf.scale(),
+                                          mConf.spreadInPixels(),
+                                          j - offset,
+                                          i - offset
+                                        );
+            mSignedDist[i * mSignedDistWidth + j] = val;
         }
     }
 }
@@ -353,7 +352,7 @@ void InternalGlyphForGen::releaseBitmap() {
 
     if ( mSignedDist != nullptr ) {
 
-        free( mSignedDist ) ;
+        delete[] mSignedDist;
 
         mSignedDist       = nullptr;
         mSignedDistWidth  = 0;
@@ -387,7 +386,7 @@ void InternalGlyphForGen::visualize( ostream& os ) const {
 
 void InternalGlyphForGen::emitMetrics( ostream& os ) const {
 
-    float factor =  (float) ( mConf.defaultResolution() );
+    float factor =  (float) ( mConf.resolution() );
 
     os << mCodePoint ;
 
@@ -424,7 +423,7 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
     if ( mKernings.size() > 0 ) {
 
-        float factor =  (float) ( mConf.defaultResolution() );
+        float factor =  (float) ( mConf.resolution() );
 
         os << mCodePoint ;
 
@@ -441,7 +440,7 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
 Glyph InternalGlyphForGen::generateSDGlyph() const {
 
-    float factor =  (float) ( mConf.defaultResolution() );
+    float factor =  (float) ( mConf.resolution() );
 
     Glyph g;
 

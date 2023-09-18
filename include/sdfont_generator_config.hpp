@@ -1,8 +1,9 @@
-#ifndef __GENERATOR_CONFIG_HPP__
-#define __GENERATOR_CONFIG_HPP__
+#ifndef __SDFONT_GENERATOR_CONFIG_HPP__
+#define __SDFONT_GENERATOR_CONFIG_HPP__
 
 #include <string>
 #include <iostream>
+#include <cmath>
 
 namespace SDFont {
 
@@ -19,6 +20,7 @@ class GeneratorConfig {
         mMaxCodePoint           ( DefaultMaxCodePoint ),
         mTextureSize            ( DefaultTextureSize ),
         mScale                  ( DefaultScale ),
+        mResolution             ( DefaultBaseResolutionInPixels ),
         mSpreadInPixels         ( DefaultSpreadInPixels )
         {;}
 
@@ -29,11 +31,9 @@ class GeneratorConfig {
     void setOutputFileName ( string s ) { mOutputFileName = s ; }
     void setMaxCodePoint   ( long   v ) { mMaxCodePoint   = v ; }
     void setTextureSize    ( long   v ) { mTextureSize    = v ; }
-
-    void factorScale       ( float factor ) {
-
-        mScale = (long) ( (float)mScale * factor );
-    }
+    void setResolution     ( long   v ) { mResolution     = v ; }
+    void setSpreadInPixels ( long   v ) { mSpreadInPixels = v ; }
+    void setScale          ( float  v ) { mScale          = ceil( v ); }
 
     string locale()            const { return mLocale ;                       }
     string fontPath()          const { return mFontPath ;                     }
@@ -43,8 +43,10 @@ class GeneratorConfig {
     long   scale()             const { return mScale ;                        }
     float  fscale()            const { return (float)mScale ;                 }
     long   defaultSpread()     const { return DefaultSpreadInPixels ;         }
-    long   defaultScale()      const { return DefaultScale ;                  }
     long   defaultResolution() const { return DefaultBaseResolutionInPixels ; }
+    long   defaultScale()      const { return mScale ;                        }
+    long   resolution()        const { return mResolution ;                   }
+    long   spreadInPixels()    const { return mSpreadInPixels ;               }
     long   signedDistExtent()  const { return   (float)mSpreadInPixels
                                               / (float)fscale();              }
 
@@ -59,6 +61,7 @@ class GeneratorConfig {
     long   mMaxCodePoint ;
     long   mTextureSize ;
     long   mScale ;
+    long   mResolution;
     long   mSpreadInPixels ;
 
 
@@ -76,5 +79,5 @@ class GeneratorConfig {
 
 
 } // namespace SDFont
-#endif /*__GENERATOR_CONFIG_HPP__*/
+#endif /*__SDFONT_GENERATOR_CONFIG_HPP__*/
 

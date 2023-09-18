@@ -1,9 +1,8 @@
-#include "free_type_utilities.hpp"
+#include "sdfont_free_type_utilities.hpp"
 
 using namespace std;
 
-
-/** @file free_type_utilities.cpp
+/** @file sdfont_free_type_utilities.cpp
  */
 
 

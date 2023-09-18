@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "texture_loader.hpp"
+#include "sdfont_texture_loader.hpp"
 
 namespace SDFont {
 
@@ -37,11 +37,11 @@ void TextureLoader::generateOpenGLTexture()
 
     glTexImage2D( GL_TEXTURE_2D,
                   0,
-                  GL_RGBA,
+                  GL_R8,
                   mWidth,
                   mWidth,
                   0,
-                  GL_RGBA,
+                  GL_RED,
                   GL_UNSIGNED_BYTE,
                   mPixMap            );
 
@@ -52,10 +52,6 @@ void TextureLoader::generateOpenGLTexture()
 
 }
 
-
-#ifdef USE_LIBPNG
-
-#include "png.h"
 
 TextureLoader::TextureLoader( string filePath ):
     mOk             ( false   ),
@@ -102,7 +98,8 @@ bool TextureLoader::checkPNG(
         return false;
     }
 
-    if ( color != PNG_COLOR_TYPE_RGB_ALPHA ) {
+
+    if ( color != PNG_COLOR_TYPE_GRAY ) {
 
         return false;
     }
@@ -247,7 +244,5 @@ bool TextureLoader::loadPngImage(
 
     return valid;
 }
-
-#endif /* USE_LIBPNG */
 
 } // namespace SDFont

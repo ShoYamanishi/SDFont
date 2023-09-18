@@ -1,12 +1,11 @@
-#ifndef __RUNTIME_HELPER__
-#define __RUNTIME_HELPER__
+#ifndef __SDFONT_RUNTIME_HELPER__
+#define __SDFONT_RUNTIME_HELPER__
 
 #include <vector>
 #include <map>
-#include <GL/gl.h>
 
-#include "glyph.hpp"
-
+#include "sdfont_glyph.hpp"
+#include "sdfont_metrics_parser.hpp"
 using namespace std;
 
 namespace SDFont {
@@ -21,7 +20,7 @@ class RuntimeHelper {
     static const int NUM_FLOATS_PER_GLYPH;
     static const int NUM_INDICES_PER_GLYPH;
 
-    RuntimeHelper();
+    RuntimeHelper( string fileName );
 
     virtual ~RuntimeHelper();
 
@@ -32,9 +31,10 @@ class RuntimeHelper {
      *  @return pointer to Glyph that constains the metrics.
      *          nullptr if the given code point is not valid.
      */
-    Glyph* getMetrics( long c );
+    Glyph* getGlyph( long c );
 
-    float&             margin() { return mMargin; }
+    float&             spreadInTexture()     { return mSpreadInTexture;     }
+    float&             spreadInFontMetrics() { return mSpreadInFontMetrics; }
 
     map< long, Glyph>& glyphs() { return mGlyphs; }
 
@@ -73,6 +73,7 @@ class RuntimeHelper {
     void getMetrics(
 
         string            s,
+        float             fontSize,
         float&            width,
         vector< float >&  posXs,
         float&            firstBearingX,
@@ -81,6 +82,19 @@ class RuntimeHelper {
         float&            advanceY,
         vector< Glyph* >& glyphs
 
+    );
+
+
+    void getMetricsNormalized(
+
+        string            s,
+        float&            width,
+        vector< float >&  posXs,
+        float&            firstBearingX,
+        float&            bearingY,
+        float&            belowBaseLineY,
+        float&            advanceY,
+        vector< Glyph* >& glyphs
     );
 
 
@@ -114,8 +128,9 @@ class RuntimeHelper {
      *                         I.e. the origin of X + horizontal bearing.
      *  @param baseLineY (in): vertical base line.
      *
-     *  @param scale     (in): scaling of the glyph. Specifies the size
-     *                         of the glyph to be specified.
+     *  @param fontSize  (in): font size in pixels.
+     *
+     *  @param spreadRatio (in): how much spread to allocate around the glyph.
      *
      *  @param Z         (in): Z coordinate of the plane on which the glyph
      *                         is drawn.
@@ -131,15 +146,15 @@ class RuntimeHelper {
      */
     void generateOpenGLDrawElementsForOneChar (
 
-        Glyph&  g,
-        float   leftX,
-        float   baseLineY,
-        float   scale,
-        float   Z,
-        float*  arrayBuf,
-        GLuint  indexStart,
-        GLuint* indices
-
+        Glyph&        g,
+        float         leftX,
+        float         baseLineY,
+        float         fontSize,
+        float         spreadRatio,
+        float         Z,
+        float*        arrayBuf,
+        unsigned int  indexStart,
+        unsigned int* indices
     );
 
 
@@ -173,8 +188,9 @@ class RuntimeHelper {
      *                         I.e. the origin of X + horizontal bearing.
      *  @param baseLineY (in): vertical base line.
      *
-     *  @param scale     (in): scaling of the glyph. Specifies the size
-     *                         of the glyph to be specified.
+     *  @param fontSize  (in): font size in pixels.
+     *
+     *  @param spreadRatio (in): how much spread to allocate around the glyph.
      *
      *  @param distribution
      *                   (in): extra scale factor for the horizontal placement
@@ -204,23 +220,22 @@ class RuntimeHelper {
         vector< float >&  posXs,
         float             leftX,
         float             baselineY,
-        float             scale,
+        float             fontSize,
+        float             spreadRatio,
         float             distribution,
         float             Z,
         float*            arrayBuf,
-        GLuint            indexStart,
-        GLuint*           indices
-
+        unsigned int      indexStart,
+        unsigned int*     indices
     );
 
-
   private:
-    float             mMargin;
+    float             mSpreadInTexture;
+    float             mSpreadInFontMetrics;
     map< long, Glyph> mGlyphs;
-
 };
 
 
 } // namespace SDFont
 
-#endif/*__RUNTIME_HELPER__*/
+#endif/*__SDFONT_RUNTIME_HELPER__*/

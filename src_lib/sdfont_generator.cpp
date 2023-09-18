@@ -2,14 +2,9 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>
-
-#ifdef USE_LIBPNG
 #include <png.h>
-#endif
 
-#include "generator.hpp"
-
-
+#include "sdfont_generator.hpp"
 
 namespace SDFont {
 
@@ -84,7 +79,7 @@ bool Generator::initializeFreeType()
         return false;
     }
 
-    ftError = FT_Set_Pixel_Sizes ( mFtFace, 0, mConf.defaultResolution() );
+    ftError = FT_Set_Pixel_Sizes ( mFtFace, 0, mConf.resolution() );
 
     if ( ftError != FT_Err_Ok ) {
 
@@ -133,16 +128,16 @@ long Generator::fitGlyphsToTexture()
         cerr << "Area [X: " << X << " , Y: " << Y << "]\n";
     }
 
-    auto  factor = max( (float)X, (float)Y ) / (float)mConf.textureSize() ;
+    auto factor = max( (float)X, (float)Y ) / (float)mConf.textureSize() ;
 
-    mConf.factorScale( factor );
+    mConf.setScale( factor );
 
     findDimension ( numItemsPerRow, X, Y );
 
     if ( mVerbose ) {
 
         cerr << "Scale is adjusted to " << mConf.scale() << ".\n";
-        cerr << "Area [X: " << X << " , Y: " << Y << "]\n";
+        cerr << "Area [X: " << X/mConf.scale() << " , Y: " << Y/mConf.scale() << "]\n";
     }
 
     return numItemsPerRow;
@@ -216,7 +211,7 @@ float Generator::findDimension ( long itemsPerRow, long& X, long& Y )
     long totalX      = 0;
     long totalY      = 0;
 
-    for ( auto i = 0; i <= mGlyphs.size() / itemsPerRow ; i++ ) {
+    for ( auto i = 0; i < ( mGlyphs.size() + itemsPerRow - 1 ) / itemsPerRow ; i++ ) {
 
         long totalXrow = 0;
         long maxY      = 0;
@@ -279,7 +274,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
     long glyphNum = 0;
     long maxY     = 0;
 
-    long numFontsProcessed = 1;
+    long numGlyphsProcessed = 1;
 
     for ( auto& g : mGlyphs ) {
 
@@ -308,7 +303,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
         if ( mVerbose ) {
 
             g.visualize(cerr);
-            cerr << numFontsProcessed << "/" << mGlyphs.size() << "\n";
+            cerr << "Num Glyphs Processed: " << numGlyphsProcessed << "/" << mGlyphs.size() << "\n";
             cerr << "Base:[" << baseX << " , " << baseY << "]\n";
             cerr << "\n";
         }
@@ -327,7 +322,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
         else {
             baseX += g.signedDistWidth();
         }
-        numFontsProcessed++;
+        numGlyphsProcessed++;
     }
 
     return true;
@@ -361,7 +356,7 @@ bool Generator::generateTexture( bool reverseY )
 
     for (auto i = 0; i < len; i++ ) {
 
-        mPtrArray[i] = &( mPtrMain[ sizeof(unsigned char) * 4 * len * i ] );
+        mPtrArray[i] = &( mPtrMain[ sizeof(unsigned char) * len * i ] );
     }
 
     for ( auto& g : mGlyphs ) {
@@ -377,18 +372,15 @@ bool Generator::generateTexture( bool reverseY )
 
             for ( auto srcX = 0; srcX < g.signedDistWidth(); srcX++ ) {
 
-                auto dstX  = ( srcX + g.baseX() ) * 4;
-                if ( dstX < 0 || len * 4 <= dstX ) {
+                auto dstX  = ( srcX + g.baseX() );
+                if ( dstX < 0 || len <= dstX ) {
                     continue;
                 }
                 auto dist  = g.signedDist( srcX, srcY );
 
                 auto alpha = min ( 255, max( 0, (int)( dist * 255.0 ) ) );
 
-                curRow [ dstX     ] = (unsigned char) 255;
-                curRow [ dstX + 1 ] = (unsigned char) 255;
-                curRow [ dstX + 2 ] = (unsigned char) 255;
-                curRow [ dstX + 3 ] = (unsigned char) alpha;
+                curRow [ dstX ] = (unsigned char) alpha;
             }
         }
     }
@@ -490,7 +482,7 @@ bool Generator::emitFilePNG()
                   mConf.textureSize(),
                   mConf.textureSize(),
                   8,
-                  PNG_COLOR_TYPE_RGB_ALPHA,
+                  PNG_COLOR_TYPE_GRAY,
                   PNG_INTERLACE_NONE,
                   PNG_COMPRESSION_TYPE_BASE,
                   PNG_FILTER_TYPE_BASE
@@ -541,10 +533,12 @@ bool Generator::emitFileMetrics()
 
     mConf.outputMetricsHeader( osMetrics );
 
-    osMetrics << "MARGIN\n";
+    osMetrics << "SPREAD IN TEXTURE\n";
     osMetrics << (float)mConf.signedDistExtent() / (float) mConf.textureSize();
     osMetrics << "\n";
-
+    osMetrics << "SPREAD IN FONT METRICS\n";
+    osMetrics << (float)mConf.signedDistExtent() / (float) mConf.textureSize() * mConf.fscale();
+    osMetrics << "\n";
     osMetrics << "GLYPHS\n";
 
     for ( auto& g : mGlyphs ) {

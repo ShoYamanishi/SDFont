@@ -1,5 +1,5 @@
-#ifndef __FREE_TYPE_UTILITIES_HPP__
-#define __FREE_TYPE_UTILITIES_HPP__
+#ifndef __SDFONT_FREE_TYPE_UTILITIES_HPP__
+#define __SDFONT_FREE_TYPE_UTILITIES_HPP__
 
 #include <iostream>
 #include <fstream>
@@ -27,4 +27,4 @@ void FTUtilPrintPixels ( FT_Bitmap& bm ,ostream& os ) ;
 
 void FTUtilPrintGlyphMetrics( FT_Glyph_Metrics& m, ostream& os );
 
-#endif /*__FREE_TYPE_UTILITIES_HPP__*/
+#endif /*__SDFONT_FREE_TYPE_UTILITIES_HPP__*/

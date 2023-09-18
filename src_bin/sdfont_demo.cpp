@@ -17,14 +17,14 @@
 #include <glm/gtx/norm.hpp>
 #include <png.h>
 
-#include "metrics_parser.hpp"
-#include "texture_loader.hpp"
-#include "runtime_helper.hpp"
-#include "vanilla_shader_manager.hpp"
+#include "sdfont_metrics_parser.hpp"
+#include "sdfont_texture_loader.hpp"
+#include "sdfont_runtime_helper.hpp"
+#include "sdfont_vanilla_shader_manager.hpp"
 
 using namespace std;
 
-/** @file demo.cpp
+/** @file sdfont_demo.cpp
  *
  *  @brief visual demo for signed distant fonts.
  *
@@ -200,7 +200,7 @@ GlfwManager::GlfwManager(
 
                   requestedWindowWidth,
                   requestedWindowHeight,
-                  "Test Visualiser Convex Hull",
+                  "SDFont Demo",
                   NULL,
                   NULL
 
@@ -222,7 +222,6 @@ GlfwManager::GlfwManager(
 
     );
 
-
     glfwGetWindowSize( mWindow, &mWindowWidth, &mWindowHeight );
 
     glewExperimental = true;
@@ -237,7 +236,7 @@ GlfwManager::GlfwManager(
     glViewport(
         0,
         0,
-        (GLsizei)mWindowWidthInPixel, 
+        (GLsizei)mWindowWidthInPixel,
         (GLsizei)mWindowHeightInPixel
     );
 
@@ -469,16 +468,18 @@ class DeltaTime {
 class Word {
 
   public:
-    Word( SDFont::RuntimeHelper& helper, string str ):
+    Word( SDFont::RuntimeHelper& helper, string str, float fontSize, float spreadRatio ):
         mHelper       (helper),
         mString       (str),
         mLeftX        (0.0),
         mBaselineY    (0.0),
-        mScale        (1.0),
+        mFontSize     (fontSize),
         mDistribution (1.0),
+        mSpreadRatio  (spreadRatio),
         mZ            (0.0)
     {
         mHelper.getMetrics( mString,
+                            mFontSize,
                             mWidth,
                             mTextureXs,
                             mFirstBearingX,
@@ -489,19 +490,17 @@ class Word {
 
     }
 
-    void setScale(float s) { mScale = s; }
-
     long len() const { return mGlyphs.size(); }
 
-    float width() const {return mWidth * mScale; }
+    float width() const {return mWidth; }
 
-    float firstBearingX() const {return mFirstBearingX * mScale; }
+    float firstBearingX() const {return mFirstBearingX; }
 
-    float bearingY() const {return mBearingY * mScale; }
+    float bearingY() const {return mBearingY; }
 
-    float belowBaselineY() const {return mBelowBaselineY * mScale; }
+    float belowBaselineY() const {return mBelowBaselineY; }
 
-    float advanceY() const {return mAdvanceY * mScale; }
+    float advanceY() const {return mAdvanceY; }
 
     void setPos(float leftX, float baselineY) {
         mLeftX     = leftX;
@@ -517,7 +516,8 @@ class Word {
             mTextureXs,
             mLeftX - firstBearingX(),
             mBaselineY,
-            mScale,
+            mFontSize,
+            mSpreadRatio,
             mDistribution,
             mZ,
             &( elements[   SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
@@ -542,8 +542,9 @@ class Word {
 
     float                    mLeftX;
     float                    mBaselineY;
-    float                    mScale;
+    float                    mFontSize;
     float                    mDistribution;
+    float                    mSpreadRatio;
     float                    mZ;
 };
 
@@ -552,7 +553,7 @@ class Line {
 
   public:
 
-    Line(SDFont::RuntimeHelper& helper, string str) :
+    Line(SDFont::RuntimeHelper& helper, string str, float fontSize, float spreadRatio ) :
         mHelper ( helper ),
         mWidth  ( 1.0    )
     {
@@ -561,7 +562,7 @@ class Line {
 
         splitLine( str, strs, ' ' );
         for (auto& s : strs) {
-            mWords.emplace_back(helper, s);
+            mWords.emplace_back(helper, s, fontSize, spreadRatio );
         }
     }
 
@@ -575,12 +576,6 @@ class Line {
             sum += w.len();
         }
         return sum;
-    }
-
-    void setScale(float s) {
-        for ( auto& w : mWords ) {
-            w.setScale(s);
-        }
     }
 
     float bearingY() const {
@@ -657,16 +652,14 @@ class Line {
     float                  mBaselineY;
     float                  mWidth;
     vector<Word>           mWords;
-
 };
-
 
 
 class Paragraph {
 
   public:
 
-    Paragraph(SDFont::RuntimeHelper& helper, string str) :
+    Paragraph(SDFont::RuntimeHelper& helper, string str, float fontSize, float spreadRatio) :
         mHelper ( helper ),
         mWidth  ( 1.0    )
     {
@@ -675,7 +668,7 @@ class Paragraph {
 
         splitLine( str, strs, '\n' );
         for (auto& s : strs) {
-            mLines.emplace_back(helper, s);
+            mLines.emplace_back(helper, s, fontSize, spreadRatio);
         }
     }
 
@@ -689,12 +682,6 @@ class Paragraph {
             sum += line.len();
         }
         return sum;
-    }
-
-    void setScale(float s) {
-        for ( auto& line : mLines ) {
-            line.setScale(s);
-        }
     }
 
     float maxWidth() const {
@@ -749,7 +736,7 @@ class Paragraph {
 
     void assignPosForWords() {
 
-        float scale         = mHeight / mMinHeight;
+        float scale        = mHeight / mMinHeight;
         float curBaselineY = mBottomBaselineY;
 
         for ( auto i = mLines.size() - 1 ; i > 0 ; i-- ) {
@@ -884,17 +871,16 @@ class SeqPrologue :public SequenceElement {
 
     SeqPrologue(
         SDFont::RuntimeHelper&        helper,
-        SDFont::VanillaShaderManager& shader 
+        SDFont::VanillaShaderManager& shader,
+        float                         fontSize,
+        float                         spreadRatio
     ) : SequenceElement( helper, shader )
     {
 
-        Line line1 ( mHelper, mStr1 );
-        Line line2 ( mHelper, mStr2 );
+        Line line1 ( mHelper, mStr1, fontSize, spreadRatio );
+        Line line2 ( mHelper, mStr2, fontSize, spreadRatio );
 
         mNumElements = line1.len() + line2.len();
-
-        line1.setScale(3.0);
-        line2.setScale(3.0);
 
         line1.setWidth( line1.totalWidth() * 1.2 );
         line2.setWidth( line2.totalWidth() * 1.1 );
@@ -918,7 +904,7 @@ class SeqPrologue :public SequenceElement {
         mBorderColor    = glm::vec3( 0.0, 0.5, 1.0 );
 
         mM = glm::translate(
-                             glm::mat4(), 
+                             glm::mat4(1.0),
                              glm::vec3( 0.0, 0.0, -4.0 )
                            );
 
@@ -926,7 +912,7 @@ class SeqPrologue :public SequenceElement {
                           glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
                           glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
                           glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
-                      );          
+                      );
 
         mP = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
@@ -962,7 +948,7 @@ class SeqPrologue :public SequenceElement {
 
 };
 
-const string SeqPrologue::mStr1 = "A long time ago, in a gallaxy far" ;
+const string SeqPrologue::mStr1 = "A long time ago, in a galaxy far" ;
 const string SeqPrologue::mStr2 = "far away...."  ;
 
 
@@ -973,17 +959,16 @@ class SeqTitle :public SequenceElement {
 
     SeqTitle(
         SDFont::RuntimeHelper&        helper,
-        SDFont::VanillaShaderManager& shader 
+        SDFont::VanillaShaderManager& shader,
+        float                         fontSize,
+        float                         spreadRatio
     ) : SequenceElement( helper, shader )
     {
 
-        Line line1 ( mHelper, mStr1 );
-        Line line2 ( mHelper, mStr2 );
+        Line line1 ( mHelper, mStr1, fontSize, spreadRatio );
+        Line line2 ( mHelper, mStr2, fontSize, spreadRatio );
 
         mNumElements = line1.len() + line2.len();
-
-        line1.setScale(5.0);
-        line2.setScale(5.0);
 
         line1.setWidth( line1.totalWidth() * 1.0 );
         line2.setWidth( line2.totalWidth() * 1.0 );
@@ -1007,20 +992,19 @@ class SeqTitle :public SequenceElement {
         mBorderColor    = glm::vec3( 1.0, 1.0, 0.0 );
 
         mM = glm::translate(
-                             glm::mat4(), 
-                             glm::vec3( 0.0, 0.0, -0.0 )
+                             glm::mat4(1.0),
+                             glm::vec3( 0.0, 0.0, 0.0 )
                            );
 
         mV = glm::lookAt(
                           glm::vec3(  0.0f,  0.0f,  1.0f ), // Cam pos
                           glm::vec3(  0.0f,  0.0f,  0.0f ), // and looks here
                           glm::vec3(  0.0f,  1.0f,  0.0f )  // Head is up
-                      );          
+                      );
 
         mP = glm::perspective(glm::radians(45.0f), 4.0f / 4.0f, 0.1f, 100.0f);
 
         mLightWCS       = glm::vec3( 0.0, 0.0, 2.0 );
-
     }
 
     virtual ~SeqTitle() {;}
@@ -1030,7 +1014,7 @@ class SeqTitle :public SequenceElement {
         if (5.0 <= t && t < 10.0) {
 
             mM = glm::translate(
-                     glm::mat4(), 
+                     glm::mat4(1.0),
                      glm::vec3( 0.0, 0.0, -1.0 * (2.0* t - 10.0))
                  );
 
@@ -1041,7 +1025,7 @@ class SeqTitle :public SequenceElement {
         else if  ( 10.0 <= t && t < 12.0 ) {
 
             mM = glm::translate(
-                     glm::mat4(), 
+                     glm::mat4(1.0),
                      glm::vec3( 0.0, 0.0, -1.0 * (2.0* t - 10.0))
                  );
 
@@ -1051,15 +1035,13 @@ class SeqTitle :public SequenceElement {
         }
 
         mCurTime = t;
-
-
     }
 
   private:
 
     static const string  mStr1 ;
     static const string  mStr2 ;
-
+    glm::mat4            mMrot;
 };
 
 const string SeqTitle::mStr1 = "STAR" ;
@@ -1073,21 +1055,20 @@ class SeqMainRoll :public SequenceElement {
 
     SeqMainRoll(
         SDFont::RuntimeHelper&        helper,
-        SDFont::VanillaShaderManager& shader 
+        SDFont::VanillaShaderManager& shader ,
+        float                         fontSize,
+        float                         spreadRatio
     ) : SequenceElement( helper, shader )
     {
 
-        Line      line1 ( mHelper, mEpisode    );
-        Line      line2 ( mHelper, mTitle      );
-        Paragraph para1 ( mHelper, mParagraph1 );
-        Paragraph para2 ( mHelper, mParagraph2 );
-        Paragraph para3 ( mHelper, mParagraph3 );
+        Line      line1 ( mHelper, mEpisode   , fontSize, spreadRatio );
+        Line      line2 ( mHelper, mTitle     , fontSize, spreadRatio );
+        Paragraph para1 ( mHelper, mParagraph1, fontSize, spreadRatio );
+        Paragraph para2 ( mHelper, mParagraph2, fontSize, spreadRatio );
+        Paragraph para3 ( mHelper, mParagraph3, fontSize, spreadRatio );
 
         mNumElements =   line1.len() + line2.len()
                        + para1.len() + para2.len() + para3.len();
-
-        line1.setScale(1.3);
-        line2.setScale(3.0);
 
         line1.setWidth( line1.totalWidth() * 1.2 );
         line2.setWidth( line2.totalWidth() * 1.1 );
@@ -1101,10 +1082,6 @@ class SeqMainRoll :public SequenceElement {
         line2.setPos( -0.5 * line2.width(), -1.2 * line2.advanceY());
         line2.assignPosForWords();
         line2.generateElements( mGLattr, mGLindices, line1.len() );
-
-        para1.setScale(2.0);
-        para2.setScale(2.0);
-        para3.setScale(2.0);
 
         para1.setWidth(2.0);
         para2.setWidth(2.0);
@@ -1199,7 +1176,6 @@ class SeqMainRoll :public SequenceElement {
 
 };
 
-
 const string SeqMainRoll::mEpisode    = "Episode IV" ;
 const string SeqMainRoll::mTitle      = "A NEW HOPE" ;
 const string SeqMainRoll::mParagraph1 = "It is a period of civil war.\n"
@@ -1223,7 +1199,6 @@ const string SeqMainRoll::mParagraph3 = "Pursued by the Empire's\n"
                                         "stolen plans that can save her\n"
                                         "people and restore\n"
                                         "freedom to the galaxy...." ;
-
 
 class WM : public GlfwManager  {
 
@@ -1250,31 +1225,32 @@ class WM : public GlfwManager  {
 int main( int argc, char* argv[] )
 {
 
-    if ( argc != 1 ) {
+    if ( argc != 2 ) {
 
-        cerr << "Usage: test_visualizer_joints\n";
+        cerr << "Usage: sdfont_demo <font_file_name_without_extention>\n";
         exit(1);
     }
 
     WM glfw ( 1024, 768 );
 
-    SDFont::RuntimeHelper helper;
-    SDFont::TextureLoader loader ( "signed_dist_font.png" );
-    SDFont::MetricsParser parser ( helper.glyphs(), helper.margin() );
-    parser.parseSpec( "signed_dist_font.txt" );
+    string baseFilePathWOExt( argv[1] );
+    string extTXT(".txt");
+    string extPNG(".png");
 
-    SDFont::VanillaShaderManager  shader ( loader.GLtexture(), 0 );
+    SDFont::RuntimeHelper helper ( baseFilePathWOExt + extTXT );
+    SDFont::TextureLoader loader ( baseFilePathWOExt + extPNG );
+
+    SDFont::VanillaShaderManager shader ( loader.GLtexture(), 0 );
 
     glfw.configGLFW();
 
-    SeqPrologue seqElem01( helper, shader );
-    SeqTitle    seqElem02( helper, shader );
-    SeqMainRoll seqElem03( helper, shader );
+    SeqPrologue seqElem01( helper, shader, 0.2, 0.1 );
+    SeqTitle    seqElem02( helper, shader, 1.0, 0.4 );
+    SeqMainRoll seqElem03( helper, shader, 0.15, 0.1 );
 
     DeltaTime dt;
     double    absT = 0.0;
     do {
-
         auto deltaT = dt.delta();
 
         glfw.update();

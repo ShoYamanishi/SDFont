@@ -1,8 +1,14 @@
-#include "generator_option_parser.hpp"
-#include "generator_config.hpp"
-#include "generator.hpp"
+#include "sdfont_generator_option_parser.hpp"
+#include "sdfont_generator_config.hpp"
+#include "sdfont_generator.hpp"
 
 using namespace std;
+
+
+/** @file sdfont_generator.cpp
+ *
+ *  @brief command line tool to invoke SDFont::Generator
+ */
 
 int main ( int argc, char* argv[] )
 {

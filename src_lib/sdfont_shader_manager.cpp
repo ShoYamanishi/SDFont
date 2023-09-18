@@ -3,7 +3,7 @@
 #include <sstream>
 #include <GL/glew.h>
 
-#include "shader_manager.hpp"
+#include "sdfont_shader_manager.hpp"
 
 
 namespace SDFont {
@@ -102,16 +102,11 @@ bool ShaderManager::link( GLuint prog, GLuint vertex, GLuint fragment )
     return true;
 }
 
-
-bool ShaderManager::loadShaderPair (
-    string  vertexPath,
-    string  fragmentPath,
+bool ShaderManager::loadShaderPairFromStrings (
+    string  vertexShaderCode,
+    string  fragmentShaderCode,
     GLuint& progID
 ) {
-
-    string vertexShaderCode   = fileToString( vertexPath   ) ;
-    string fragmentShaderCode = fileToString( fragmentPath ) ;
-
     if ( vertexShaderCode == "" || fragmentShaderCode == "" ) {
         return false;
     }
@@ -148,6 +143,16 @@ bool ShaderManager::loadShaderPair (
     return true;
 }
 
+bool ShaderManager::loadShaderPair (
+    string  vertexPath,
+    string  fragmentPath,
+    GLuint& progID
+) {
+    string vertexShaderCode   = fileToString( vertexPath   ) ;
+    string fragmentShaderCode = fileToString( fragmentPath ) ;
+
+    return loadShaderPairFromStrings( vertexShaderCode, fragmentShaderCode, progID );
+}
 
 void ShaderManager::unloadShaderPair( GLuint progID )
 {

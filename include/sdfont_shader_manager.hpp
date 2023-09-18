@@ -1,8 +1,18 @@
-#ifndef __SHADER_MANAGER_HPP__
-#define __SHADER_MANAGER_HPP__
+#ifndef __SDFONT_SHADER_MANAGER_HPP__
+#define __SDFONT_SHADER_MANAGER_HPP__
 
 #include <string>
-#include <GL/gl.h>
+
+#ifdef __MAC_LIB__
+
+  #define GL_SILENCE_DEPRECATION
+  #include <gl.h>
+
+#else
+
+  #include <GL/gl.h>
+
+#endif
 
 using namespace std;
 
@@ -38,6 +48,11 @@ class ShaderManager {
         mOK = loadShaderPair( vertexPath, fragmentPath, mProgramID );
     }
 
+    void loadShadersFromStrings( string vertexStr, string fragmentStr )
+    {
+        mOK = loadShaderPairFromStrings( vertexStr, fragmentStr, mProgramID );
+    }
+
     void unloadShaders()
     {
         if ( mOK ) {
@@ -58,6 +73,12 @@ class ShaderManager {
         GLuint& progID
     );
 
+    static bool loadShaderPairFromStrings (
+        string  vertexShaderCode,
+        string  fragmentShaderCode,
+        GLuint& progID
+    );
+
     static string fileToString ( string path );
 
     static bool   compile (const string& code, GLuint id );
@@ -71,4 +92,4 @@ class ShaderManager {
 
 } // namespace SDFont
 
-#endif/*__SHADER_MANAGER_HPP__*/
+#endif/*__SDFONT_SHADER_MANAGER_HPP__*/

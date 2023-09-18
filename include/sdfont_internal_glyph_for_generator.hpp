@@ -1,17 +1,17 @@
-#ifndef __INTERNAL_GLYPH_FOR_GEN_HPP__
-#define __INTERNAL_GLYPH_FOR_GEN_HPP__
+#ifndef __SDFONT_INTERNAL_GLYPH_FOR_GENERATOR_HPP__
+#define __SDFONT_INTERNAL_GLYPH_FOR_GENERATOR_HPP__
 
 #include <map>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include "generator_config.hpp"
-#include "glyph.hpp"
+#include "sdfont_generator_config.hpp"
+#include "sdfont_glyph.hpp"
 
 using namespace std;
 
 namespace SDFont {
 
-/** @file internal_glyph_for_gen.hpp
+/** @file sdfont_internal_glyph_for_gen.hpp
  *
  *  @brief per glyph object to generate signed distant font from the 
  *         corresponding FreeType's bitmap font.
@@ -311,4 +311,4 @@ bool InternalGlyphForGen::isPixelSet( FT_Bitmap& bm, long x, long y ) {
 
 } // namespace SDFont
 
-#endif /*__INTERNAL_GLYPH_FOR_GEN_HPP__*/
+#endif /*__SDFONT_INTERNAL_GLYPH_FOR_GENERATOR_HPP__*/

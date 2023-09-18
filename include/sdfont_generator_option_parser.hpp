@@ -1,8 +1,8 @@
-#ifndef __GENERATOR_OPTION_PARSE_HPP__
-#define __GENERATOR_OPTION_PARSE_HPP__
+#ifndef __SDFONT_GENERATOR_OPTION_PARSE_HPP__
+#define __SDFONT_GENERATOR_OPTION_PARSE_HPP__
 
 #include <string>
-#include "generator_config.hpp"
+#include "sdfont_generator_config.hpp"
 
 namespace SDFont {
 
@@ -29,6 +29,8 @@ class GeneratorOptionParser {
     void processFontPath       ( const string s ) ;
     void processMaxCodePoint   ( const string s ) ;
     void processTextureSize    ( const string s ) ;
+    void processResolution     ( const string s ) ;
+    void processSpreadInPixels ( const string s ) ;
     void processOutputFileName ( const string s ) ;
     bool doesFileExist         ( const string s ) const ;
     bool isValidFileName       ( const string s ) const ;
@@ -42,6 +44,8 @@ class GeneratorOptionParser {
     static const string   FontPath;
     static const string   MaxCodePoint;
     static const string   TextureSize;
+    static const string   Resolution;
+    static const string   SpreadInPixels;
     static const string   Help;
     static const string   DashH;
     static const string   Verbose;
@@ -50,7 +54,7 @@ class GeneratorOptionParser {
 
 } // namespace SDFont
 
-#endif /*__GENERATOR_OPTION_PARSE_HPP__*/
+#endif /*__SDFONT_GENERATOR_OPTION_PARSE_HPP__*/
 
 
 

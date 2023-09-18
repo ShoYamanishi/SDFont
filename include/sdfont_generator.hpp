@@ -1,5 +1,5 @@
-#ifndef __GENERATOR_HPP__
-#define __GENERATOR_HPP__
+#ifndef __SDFONT_GENERATOR_HPP__
+#define __SDFONT_GENERATOR_HPP__
 
 #include <vector>
 
@@ -7,8 +7,8 @@
 #include FT_FREETYPE_H
 
 
-#include "internal_glyph_for_gen.hpp"
-#include "generator_config.hpp"
+#include "sdfont_internal_glyph_for_generator.hpp"
+#include "sdfont_generator_config.hpp"
 
 namespace SDFont {
 
@@ -51,5 +51,5 @@ class Generator {
 } // namespace SDFont
 
 
-#endif /*__GENERATOR_HPP__*/
+#endif /*__SDFONT_GENERATOR_HPP__*/
 

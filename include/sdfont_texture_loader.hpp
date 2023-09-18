@@ -1,12 +1,20 @@
-#ifndef __TEXTURE_LOADER_HPP__
-#define __TEXTURE_LOADER_HPP__
+#ifndef __SDFONT_TEXTURE_LOADER_HPP__
+#define __SDFONT_TEXTURE_LOADER_HPP__
 
 #include <string>
-#include <GL/gl.h>
 
-#ifdef USE_LIBPNG
-#include <png.h>
+#ifdef __MAC_LIB__
+
+  #define GL_SILENCE_DEPRECATION
+  #include <gl.h>
+
+#else
+
+  #include <GL/gl.h>
+
 #endif
+
+#include <png.h>
 
 using namespace std;
 
@@ -16,10 +24,7 @@ class TextureLoader {
 
   public:
 
-#ifdef USE_LIBPNG
     TextureLoader ( string filePath );
-#endif
-
     TextureLoader ( GLubyte* pixMap, int width );
 
     virtual ~TextureLoader();
@@ -29,8 +34,6 @@ class TextureLoader {
     int    size() const { return mWidth ; }
 
   private:
-
-#ifdef USE_LIBPNG
 
     static bool checkPNG(
         int width,
@@ -46,8 +49,6 @@ class TextureLoader {
         GLubyte**      data
     );
 
-#endif
-
     void generateOpenGLTexture();
 
     bool          mOk ;
@@ -60,4 +61,4 @@ class TextureLoader {
 
 } // namespace SDFont
 
-#endif /*__TEXTURE_LOADER_HPP__*/
+#endif /*__SDFONT_TEXTURE_LOADER_HPP__*/

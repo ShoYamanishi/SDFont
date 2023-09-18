@@ -1,6 +1,180 @@
-#include "vanilla_shader_manager.hpp"
+#include "sdfont_vanilla_shader_manager.hpp"
 
 namespace SDFont {
+
+
+const char* VanillaShaderManager::VERTEX_STR = "#version 330 core\n\
+\n\
+in vec3 vertexLCS;\n\
+in vec3 normalLCS;\n\
+in vec2 texCoordIn;\n\
+\n\
+uniform mat4 P;\n\
+uniform mat4 M;\n\
+uniform mat4 V;\n\
+uniform vec3 lightWCS;\n\
+\n\
+out vec3 vertexWCS;\n\
+out vec2 texCoordOut;\n\
+out vec3 normalECS;\n\
+out vec3 vertexToEyeECS;\n\
+out vec3 vertexToLightECS;\n\
+\n\
+\n\
+void main() {\n\
+\n\
+    mat4 MV  = V * M;\n\
+\n\
+    mat4 MVP = P * MV;\n\
+\n\
+    gl_Position      = ( MVP * vec4( vertexLCS, 1.0 ) );\n\
+\n\
+    texCoordOut      = texCoordIn;\n\
+\n\
+    vertexWCS        = ( M   * vec4( vertexLCS, 1.0 ) ).xyz;\n\
+\n\
+    vec3 vertexECS   = ( MV  * vec4( vertexLCS, 1.0 ) ).xyz;\n\
+\n\
+    normalECS        = ( MV  * vec4( normalLCS, 0.0 ) ).xyz;\n\
+\n\
+    vec3 lightECS    = ( V   * vec4( lightWCS,  1.0 ) ).xyz;\n\
+\n\
+    vertexToEyeECS   = vec3(0,0,0) - vertexECS;\n\
+\n\
+    vertexToLightECS = lightECS - vertexECS;\n\
+\n\
+}\n\
+";
+
+
+const char* VanillaShaderManager::FRAGMENT_STR = "#version 330 core\n\
+\n\
+precision mediump float;\n\
+\n\
+in vec2 texCoordOut;\n\
+in vec3 vertexWCS;\n\
+in vec3 normalECS;\n\
+in vec3 vertexToEyeECS;\n\
+in vec3 vertexToLightECS;\n\
+\n\
+out vec4 color;\n\
+\n\
+uniform sampler2D fontTexture;\n\
+uniform int       effect;\n\
+uniform bool      useLight;\n\
+uniform float     lowThreshold;\n\
+uniform float     highThreshold;\n\
+uniform float     smoothing;\n\
+uniform vec3      baseColor;\n\
+uniform vec3      borderColor;\n\
+\n\
+void main (void) {\n\
+\n\
+    if ( effect == 0 ) {\n\
+\n\
+        // Raw output with interpolation.\n\
+\n\
+        color.rgb = baseColor;\n\
+        color.a   = texture( fontTexture, texCoordOut ).r;\n\
+    }\n\
+    else if ( effect == 1 ) {\n\
+\n\
+        // Softened edge.\n\
+\n\
+        color.rgb = baseColor;\n\
+        color.a   = smoothstep( 0.5 - smoothing,\n\
+                                0.5 + smoothing,\n\
+                                texture( fontTexture, texCoordOut ).r );\n\
+    }\n\
+    else if ( effect == 2 ) {\n\
+\n\
+        // Sharp edge.\n\
+\n\
+        float alpha = texture(fontTexture, texCoordOut).r;\n\
+\n\
+        if ( alpha >= lowThreshold ) {\n\
+\n\
+            color.rgb = baseColor;\n\
+            color.a   = 1.0;\n\
+        }\n\
+        else {\n\
+\n\
+            color.rgb = baseColor;\n\
+            color.a   = 0.0;\n\
+        }\n\
+    }\n\
+    else if ( effect == 3 ) {\n\
+\n\
+        // Sharp edge with outer glow.\n\
+\n\
+        float alpha = texture(fontTexture, texCoordOut).r;\n\
+\n\
+        if ( alpha >= lowThreshold ) {\n\
+\n\
+            color.rgb = baseColor;\n\
+            color.a   = 1.0;\n\
+        }\n\
+        else {\n\
+\n\
+            color.rgb = borderColor;\n\
+            color.a   = alpha;\n\
+        }\n\
+    }\n\
+    else if ( effect == 4 ) {\n\
+\n\
+        // With border.\n\
+\n\
+        float alpha = texture(fontTexture, texCoordOut).r;\n\
+\n\
+        if ( alpha >= lowThreshold && alpha <= highThreshold ) {\n\
+\n\
+            color.rgb = borderColor;\n\
+            color.a   = 1.0;\n\
+        }\n\
+        else if ( alpha >= highThreshold ) {\n\
+\n\
+            color.rgb = baseColor;\n\
+            color.a   = 1.0;\n\
+        }\n\
+        else {\n\
+\n\
+            color.rgb = baseColor;\n\
+            color.a = 0.0;\n\
+        }\n\
+    }\n\
+    else if ( effect == 5 ) {\n\
+        // Softened edge.\n\
+        float alpha = texture(fontTexture, texCoordOut).r;\n\
+        color.rgb = baseColor;\n\
+\n\
+        if ( alpha < 0.5) {\n\
+            color.a = smoothstep( 0.5 - smoothing,\n\
+                                  0.5 + smoothing, \n\
+                                  alpha            );\n\
+        }\n\
+        else {\n\
+            color.a = 0.5 -  smoothstep( 0.5 - smoothing,\n\
+                                         0.5 + smoothing,\n\
+                                         0.75 * alpha     ); \n\
+        }\n\
+    }\n\
+    else {\n\
+\n\
+        // Rect box for debugging\n\
+\n\
+        color.rgb = baseColor;\n\
+        color.a   = 1.0;\n\
+\n\
+    }\n\
+\n\
+    float dist = distance( vertexToLightECS, vec3( 0.0, 0.0, 0.0 ) );\n\
+\n\
+    if ( useLight ) {\n\
+\n\
+        color.rgb = color.rgb / sqrt(dist);\n\
+    }\n\
+}\n\
+";
 
 
 VanillaShaderManager::VanillaShaderManager(
@@ -14,9 +188,7 @@ VanillaShaderManager::VanillaShaderManager(
     mTextureActiveNum  ( textureActiveNum  )
 
 {
-
-    loadShaders( "shaders/VanillaSignedDistFontVertex.glsl",
-                 "shaders/VanillaSignedDistFontFragment.glsl" );
+    loadShadersFromStrings( VERTEX_STR, FRAGMENT_STR );
 
     glGenVertexArrays ( 1, &mVertexArray  );
     glGenBuffers      ( 1, &mVertexBuffer );
@@ -60,7 +232,6 @@ void VanillaShaderManager::load()
     mUniformM             = glGetUniformLocation( mProgramID, "M"            );
     mUniformV             = glGetUniformLocation( mProgramID, "V"            );
     mUniformLightWCS      = glGetUniformLocation( mProgramID, "lightWCS"     );
-
 }
 
 

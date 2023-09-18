@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "metrics_parser.hpp"
+#include "sdfont_metrics_parser.hpp"
 
 namespace SDFont {
 
-const std::string MetricsParser::MARGIN   = "MARGIN";
+const std::string MetricsParser::SPREAD_IN_TEXTURE = "SPREAD IN TEXTURE";
+const std::string MetricsParser::SPREAD_IN_FONT_METRICS = "SPREAD IN FONT METRICS";
 const std::string MetricsParser::GLYPHS   = "GLYPHS";
 const std::string MetricsParser::KERNINGS = "KERNINGS";
 
@@ -69,9 +70,14 @@ bool MetricsParser::parseSpec( string fileName )
             emitError     ( fileName, lineNumber, "", error );
             break;
 
-          case IN_MARGIN:
+          case IN_SPREAD_IN_TEXTURE:
 
-            handleMargin  ( line, fileName, lineNumber, error );
+            handleSpreadInTexture( line, fileName, lineNumber, error );
+            break;
+
+          case IN_SPREAD_IN_FONT_METRICS:
+
+            handleSpreadInFontMetrics( line, fileName, lineNumber, error );
             break;
 
           case IN_GLYPHS:
@@ -107,9 +113,14 @@ bool MetricsParser::isSectionHeader (
 
 ) {
 
-    if ( line.compare( 0, MARGIN.size(), MARGIN ) == 0 ) {
+    if ( line.compare( 0, SPREAD_IN_TEXTURE.size(), SPREAD_IN_TEXTURE ) == 0 ) {
 
-        state = IN_MARGIN;
+        state = IN_SPREAD_IN_TEXTURE;
+        return true;
+    }
+    else if ( line.compare( 0, SPREAD_IN_FONT_METRICS.size(), SPREAD_IN_FONT_METRICS ) == 0 ) {
+
+        state = IN_SPREAD_IN_FONT_METRICS;
         return true;
     }
     else if ( line.compare( 0, GLYPHS.size(), GLYPHS ) == 0 ) {
@@ -191,8 +202,7 @@ size_t MetricsParser::splitLine(
 }
 
 
-
-void MetricsParser::handleMargin (
+void MetricsParser::handleSpreadInTexture (
 
     string line,
     string filename,
@@ -205,13 +215,36 @@ void MetricsParser::handleMargin (
 
     if ( splitLine( line, fields, '\t' ) != 1 ) {
 
-        emitError( filename, lineNumber, "Invalid Margin", errorFlag );
+        emitError( filename, lineNumber, "Invalid Spread in Texture", errorFlag );
         return;
     }
 
     Glyph g;
 
-    mMargin = stof( fields[ 0] );
+    mSpreadInTexture = stof( fields[ 0] );
+}
+
+
+void MetricsParser::handleSpreadInFontMetrics (
+
+    string line,
+    string filename,
+    long   lineNumber,
+    bool&  errorFlag
+
+) {
+
+    vector<std::string> fields;
+
+    if ( splitLine( line, fields, '\t' ) != 1 ) {
+
+        emitError( filename, lineNumber, "Invalid Spread in Font Metrics", errorFlag );
+        return;
+    }
+
+    Glyph g;
+
+    mSpreadInFontMetrics = stof( fields[ 0] );
 }
 
 
