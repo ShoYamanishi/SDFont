@@ -10,6 +10,7 @@ namespace SDFont {
 
 const string GeneratorOptionParser::Usage = "Usage: "
                                             "sdfont_generator "
+                                            "-verbose "
                                             "-locale [Locale] "
                                             "-font_path [FontPath] "
                                             "-max_code_point [num] "

@@ -2,7 +2,7 @@
 
 namespace SDFont {
 
-const string GeneratorConfig::DefaultLocale = "en_US" ;
+const string GeneratorConfig::DefaultLocale = "C" ;
 const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;
 const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
 

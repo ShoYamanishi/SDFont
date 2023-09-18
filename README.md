@@ -183,7 +183,9 @@ To run the Star Wars demo, run the following command.
 ```
 Usage: sdfont_generator -locale [Locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -resolution [num] -spread_in_pixels [num] [output file name w/o ext]
 ```
-* -locale: Locale used for the string. FreeType requires this. The default value is "en_US".
+* -verbose : Switch to turn on the verbose output.
+
+* -locale : Locale used for the string. FreeType requires this. The default value is "C".
 
 * -font_path : Path to the true type font including the extention.
 
