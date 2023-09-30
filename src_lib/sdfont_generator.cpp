@@ -537,7 +537,7 @@ bool Generator::emitFileMetrics()
     osMetrics << (float)mConf.signedDistExtent() / (float) mConf.textureSize();
     osMetrics << "\n";
     osMetrics << "SPREAD IN FONT METRICS\n";
-    osMetrics << (float)mConf.signedDistExtent() / (float) mConf.textureSize() * mConf.fscale();
+    osMetrics << (float)mConf.signedDistExtent() * mConf.fscale() / (float) mConf.resolution();
     osMetrics << "\n";
     osMetrics << "GLYPHS\n";
 
