@@ -168,7 +168,7 @@ Please specify a correct path to a truetype font to the option *-font_path* belo
 The fonts are usually found in `/usr/share/fonts, /usr/local/fonts` etc on Linux, and `/System/Library/Fonts/` on MacOS.
 
 ```
-./sdfont_generator -locale en_US -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 1024 -glyph_size_for_sampling 1024 -ratio_spread_to_glyph 0.2 signed_dist_font
+./sdfont_commandline -locale en_US -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 1024 -glyph_size_for_sampling 1024 -ratio_spread_to_glyph 0.2 signed_dist_font
 ```
 
 This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for type setting.
@@ -181,7 +181,7 @@ To run the Star Wars demo, run the following command.
 
 # Usage of the Command-Line Tool
 ```
-Usage: sdfont_generator -locale [Locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -resolution [num] -spread_in_pixels [num] [output file name w/o ext]
+Usage: sdfont_commandline -locale [Locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -resolution [num] -spread_in_pixels [num] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
@@ -279,7 +279,7 @@ User can supply their own shaders for other effects shown above from Type 0 to
 
 # SDFont Implementation
 Here's an overview of SDFont, which consists of three parts: 
-    sdfont_generator, libsdfont, and the shader pair.
+    sdfont_commandline, libsdfont_gen, and libsdfont_rt.
 
 <a href="docs/readme/overview.png">
 <img src="docs/readme/overview.png">
@@ -352,11 +352,6 @@ follow face.
 - smoothing (float) : Smomothing parameter for the smooth step function.
 - baseColor (vec3) :  Main color for the glyph.
 - borderColor (vec3) : Secondary color for the glyph.
-
-# Sample
-A sample code for the opening crawl of Star Wars is found in 
-[src_bin/sdfont_demo.cpp](src_bin/sdfont_demo.cpp).
-
 
 # Limitations
 
