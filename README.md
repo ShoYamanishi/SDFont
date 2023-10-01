@@ -217,73 +217,15 @@ of coordinates into the texture map.
 
 # How It Works
 
-## Font Generation
-
-
-1. For each glyph, generate glyph bitmap in big enough size, (e.g. 4096 * 4096)
-
-2. Generate signed distance for each point in the bitmap.
-
-Signed distance is the distance to the closest point of the opposite bit.
-
-For example, if the current point is set and it finds the closest unset point
- at 4 points away, then the signed distance is 4.
-
-On the other hand, if the current point is unset and it finds the closest set
-point at 2 points away, then the signed distance is -2.
-
-3. Down-sample the points in the signed distance field (e.g. 10x10 for low res
-and 40x40 for high res).
-
-4. Clamp the signed distance value of each sampled pixel into a limited range
-[-spread, spread], and normalize it into [0, 255].
-This means the pixel on the boundary of the glypy gets the value of 128, and
-an unset point far from the glyph gets 0.
-
-5. Pack the downsampled glyphs into a single texture map with the normalied
-signed distance into the alpha channel.
-Following figure illustrates a generated texture.
-Please note that the glyphs are drawn upside down in the figure due to the
-difference in the vertical coordinate axes between PNG (downward) and
-OpenGL Texture (upward).
-
-<a href="docs/readme/sample_texture.png">
-<img src="docs/readme/sample_texture.png">
-</a>
-
-6. Generate the metrics of each glyph. It inclues the position of the glyph
-in the UV texture coordinates as well as the font metrics such as bearing and
-kernings.
-
-
-## Font Rendering at Runtime
-
-The glyph is drawn as a transformed textured quadrilateral on the screen.
-The user gives the coordinates of the quadrilateral together with their
-attributes such as the corresponding texture coordinates, normals and colors.
-The rest is handled by a graphic subcomponent such as OpenGL.
-The geometric transformation (either 3D or Otrhogonal 2D) and 
-rasterization are done by the hardward utilizing GPU.
-The rasterization is considered up-sampling from the texture.
-Each pixel in the screen obtains a signed-distance value in the alpha channel
-pretty accurately, thanks to the interpolation mechanism in the rasterizer.
-
-The fragment shader then use the recovered signed distance value to draw the 
-pixel there on the screen.
-For example, for Type 2 agove, a pixel is set if the recorvered signed distance
-in the normalized alpha is above the threshold 0.5 (128). This gives an clear
-edge for the glyphs.
-User can supply their own shaders for other effects shown above from Type 0 to
-6.
-
-
-# SDFont Implementation
+## Overview
 Here's an overview of SDFont, which consists of three parts: 
     sdfont_commandline, libsdfont_gen, and libsdfont_rt.
 
 <a href="docs/readme/overview.png">
 <img src="docs/readme/overview.png">
 </a>
+
+## Output PNG and TXT Files
 
 The output PNG file looks like the one shown in Font Generation above.
 The format is PNG_COLOR_TYPE_GRAY with the depth of 8 bits.
@@ -329,6 +271,81 @@ The actual positioning of the glyph is done in RuntimeHelper::generateOpenGLDraw
 <a href="docs/readme/typeset.png">
 <img src="docs/readme/typeset.png">
 </a>
+
+
+
+# SDFont Implementation
+
+## Class Diagrams
+
+<a href="docs/readme/class_diagram.png">
+<img src="docs/readme/class_diagram.png">
+</a>
+
+
+
+## Font Generation
+
+<a href="docs/readme/ft_bitmap_format.png">
+<img src="docs/readme/ft_bitmap_format.png">
+</a>
+
+1. For each glyph, generate glyph bitmap in big enough size, (e.g. 4096 * 4096)
+
+2. Generate signed distance for each point in the bitmap.
+
+Signed distance is the distance to the closest point of the opposite bit.
+
+For example, if the current point is set and it finds the closest unset point
+ at 4 points away, then the signed distance is 4.
+
+On the other hand, if the current point is unset and it finds the closest set
+point at 2 points away, then the signed distance is -2.
+
+3. Down-sample the points in the signed distance field (e.g. 10x10 for low res
+and 40x40 for high res).
+
+4. Clamp the signed distance value of each sampled pixel into a limited range
+[-spread, spread], and normalize it into [0, 255].
+This means the pixel on the boundary of the glypy gets the value of 128, and
+an unset point far from the glyph gets 0.
+
+5. Pack the downsampled glyphs into a single texture map with the normalied
+signed distance into the alpha channel.
+Following figure illustrates a generated texture.
+Please note that the glyphs are drawn upside down in the figure due to the
+difference in the vertical coordinate axes between PNG (downward) and
+OpenGL Texture (upward).
+
+<a href="docs/readme/sample_texture.png">
+<img src="docs/readme/sample_texture.png">
+</a>
+
+6. Generate the metrics of each glyph. It inclues the position of the glyph
+in the UV texture coordinates as well as the font metrics such as bearing and
+kernings.
+
+
+
+## Font Rendering at Runtime
+
+The glyph is drawn as a transformed textured quadrilateral on the screen.
+The user gives the coordinates of the quadrilateral together with their
+attributes such as the corresponding texture coordinates, normals and colors.
+The rest is handled by a graphic subcomponent such as OpenGL.
+The geometric transformation (either 3D or Otrhogonal 2D) and 
+rasterization are done by the hardward utilizing GPU.
+The rasterization is considered up-sampling from the texture.
+Each pixel in the screen obtains a signed-distance value in the alpha channel
+pretty accurately, thanks to the interpolation mechanism in the rasterizer.
+
+The fragment shader then use the recovered signed distance value to draw the 
+pixel there on the screen.
+For example, for Type 2 agove, a pixel is set if the recorvered signed distance
+in the normalized alpha is above the threshold 0.5 (128). This gives an clear
+edge for the glyphs.
+User can supply their own shaders for other effects shown above from Type 0 to
+6.
 
 
 ## Sample Shaders
