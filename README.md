@@ -168,7 +168,7 @@ Please specify a correct path to a truetype font to the option *-font_path* belo
 The fonts are usually found in `/usr/share/fonts, /usr/local/fonts` etc on Linux, and `/System/Library/Fonts/` on MacOS.
 
 ```
-./sdfont_generator -locale en_US -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 1024  -resolution 1024 -spread_in_pixels 128 signed_dist_font
+./sdfont_generator -locale en_US -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 1024 -glyph_size_for_sampling 1024 -ratio_spread_to_glyph 0.2 signed_dist_font
 ```
 
 This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for type setting.
@@ -193,9 +193,9 @@ Usage: sdfont_generator -locale [Locale] -font_path [FontPath] -max_code_point [
 
 * -texture_size [num] : The height and width of the PNG files in pixels. The default value is 512.
 
-* -resolution [num] : The font size in pixels. The generator draws each glyph to a bitmap of this size to sample the signed distance. It affects the visual quality of the resultant signed distance font. The default value is 1024.
+* -glyph_size_for_sampling [num] : The font size in pixels. The generator draws each glyph to a bitmap of this size to sample the signed distance. It affects the visual quality of the resultant signed distance font. The default value is 1024.
 
-* -spread_in_pixels [num] : The extra margin around each glyph to sample the signed distance values. An appropriate range is 1/10 to 1/5 of the resolution. The default is 128.
+* -ration_spread_to_glyph [num] : The extra margin around each glyph to sample the signed distance values. An appropriate range is 1/10 to 1/5 of the resolution. The default is 128.
 
 
 # Benefits

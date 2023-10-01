@@ -42,8 +42,8 @@ InternalGlyphForGen::InternalGlyphForGen (
     mSignedDistBaseX    ( 0 ),
     mSignedDistBaseY    ( 0 )
 {
-    mSignedDistWidth  = mWidth  + 2 * mConf.spreadInPixels();
-    mSignedDistHeight = mHeight + 2 * mConf.spreadInPixels();
+    mSignedDistWidth  = ceil( (float)mWidth  * ( 1.0f + 2.0f * mConf.ratioSpreadToGlyph() ) );
+    mSignedDistHeight = ceil( (float)mHeight * ( 1.0f + 2.0f * mConf.ratioSpreadToGlyph() ) );
 }
 
 
@@ -61,14 +61,15 @@ void InternalGlyphForGen::setBaseXY( long x, long y ) {
     mSignedDistBaseX = x;
     mSignedDistBaseY = y;
 
-    auto fDim        = (float) mConf.textureSize() ;
+    auto fDim        = (float) mConf.outputTextureSize() ;
 
     mTextureCoordX   = (float) ( x + mConf.signedDistExtent() ) / fDim ;
     mTextureCoordY   = (float) ( y + mConf.signedDistExtent() ) / fDim ;
 
-    mTextureWidth    = (float) mWidth  / ( (float)mConf.scale() * fDim ) ;
-    mTextureHeight   = (float) mHeight / ( (float)mConf.scale() * fDim ) ;
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
 
+    mTextureWidth    = (float) mWidth  * scale / fDim ;
+    mTextureHeight   = (float) mHeight * scale / fDim ;
 }
 
 
@@ -219,26 +220,24 @@ bool InternalGlyphForGen::testDiagonalPoints(
 float InternalGlyphForGen::getSignedDistance(
 
     FT_Bitmap& bm,
-    long       scale,
-    long       spread,
+    float      scaling,
+    long       spreadInGlyphPixelsForSampling,
     long       xSD,
     long       ySD
 
 ) {
-
-    auto hScale      = scale / 2;
-    auto xPix        = xSD * scale + hScale;
-    auto yPix        = ySD * scale + hScale;
+    auto pixelOffset = 0.5f / scaling;
+    auto xPix        = (long) ( (float)xSD / scaling + pixelOffset );
+    auto yPix        = (long) ( (float)ySD / scaling + pixelOffset );
 
     const long downSampleRate = 1;
 
     bool  curP       = isPixelSet( bm, xPix, yPix );
-    float fSpread    = (float) spread ;
+    float fSpread    = (float) spreadInGlyphPixelsForSampling ;
     float minSqDist  = fSpread * fSpread ;
-    long  nextStartI = spread + downSampleRate;
+    long  nextStartI = spreadInGlyphPixelsForSampling + downSampleRate;
 
-
-    for (auto i = 1 ; i <= spread; i += downSampleRate ) {
+    for (auto i = 1 ; i <= spreadInGlyphPixelsForSampling; i += downSampleRate ) {
 
         float fi = (float)i;
 
@@ -276,7 +275,7 @@ float InternalGlyphForGen::getSignedDistance(
         }
     }
 
-    long maxI = min( (long)(sqrt(minSqDist)) + 1, spread );
+    long maxI = min( (long)(sqrt(minSqDist)) + 1, spreadInGlyphPixelsForSampling );
 
     for (auto i = nextStartI ; i <= maxI; i += downSampleRate ) {
 
@@ -323,8 +322,12 @@ float InternalGlyphForGen::getSignedDistance(
 
 void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
 
-    mSignedDistWidth  = mWidth / mConf.scale() + 2 * mConf.signedDistExtent();
-    mSignedDistHeight = mHeight/ mConf.scale() + 2 * mConf.signedDistExtent();
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    const long spreadInBitmapPixels = (long)( mConf.ratioSpreadToGlyph() * (float)mConf.glyphBitmapSizeForSampling() );
+
+    mSignedDistWidth  = mWidth  * scale + 2 * mConf.signedDistExtent();
+    mSignedDistHeight = mHeight * scale + 2 * mConf.signedDistExtent();
 
     size_t arraySize = mSignedDistWidth * mSignedDistHeight;
 
@@ -337,8 +340,8 @@ void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
         for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
 
             auto val = getSignedDistance( bm,
-                                          mConf.scale(),
-                                          mConf.spreadInPixels(),
+                                          scale,
+                                          spreadInBitmapPixels,
                                           j - offset,
                                           i - offset
                                         );
@@ -386,7 +389,7 @@ void InternalGlyphForGen::visualize( ostream& os ) const {
 
 void InternalGlyphForGen::emitMetrics( ostream& os ) const {
 
-    float factor =  (float) ( mConf.resolution() );
+    float factor =  (float) ( mConf.glyphBitmapSizeForSampling() );
 
     os << mCodePoint ;
 
@@ -423,7 +426,7 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
     if ( mKernings.size() > 0 ) {
 
-        float factor =  (float) ( mConf.resolution() );
+        float factor =  (float) ( mConf.glyphBitmapSizeForSampling() );
 
         os << mCodePoint ;
 
@@ -440,7 +443,7 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
 Glyph InternalGlyphForGen::generateSDGlyph() const {
 
-    float factor =  (float) ( mConf.resolution() );
+    float factor =  (float) ( mConf.glyphBitmapSizeForSampling() );
 
     Glyph g;
 

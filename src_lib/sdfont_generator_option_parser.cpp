@@ -15,20 +15,20 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "-font_path [FontPath] "
                                             "-max_code_point [num] "
                                             "-texture_size [num] "
-                                            "-resolution [num] "
-                                            "-spread_in_pixels [num] "
+                                            "-glyph_size_for_sampling [num] "
+                                            "-ratio_spread_to_glyph [float] "
                                             "[output file name w/o ext]"
                                             "\n";
 
-const string GeneratorOptionParser::Locale       = "-locale" ;
-const string GeneratorOptionParser::FontPath     = "-font_path" ;
-const string GeneratorOptionParser::MaxCodePoint = "-max_code_point" ;
-const string GeneratorOptionParser::TextureSize  = "-texture_size" ;
-const string GeneratorOptionParser::Resolution   = "-resolution" ;
-const string GeneratorOptionParser::SpreadInPixels = "-spread_in_pixels" ;
-const string GeneratorOptionParser::Help         = "-help" ;
-const string GeneratorOptionParser::DashH        = "-h" ;
-const string GeneratorOptionParser::Verbose      = "-verbose" ;
+const string GeneratorOptionParser::Locale               = "-locale" ;
+const string GeneratorOptionParser::FontPath             = "-font_path" ;
+const string GeneratorOptionParser::MaxCodePoint         = "-max_code_point" ;
+const string GeneratorOptionParser::TextureSize          = "-texture_size" ;
+const string GeneratorOptionParser::GlyphSizeForSampling = "-glyph_size_for_sampling" ;
+const string GeneratorOptionParser::RatioSpreadToGlyph   = "-ratio_spread_to_glyph" ;
+const string GeneratorOptionParser::Help                 = "-help" ;
+const string GeneratorOptionParser::DashH                = "-h" ;
+const string GeneratorOptionParser::Verbose              = "-verbose" ;
 
 
 GeneratorOptionParser::GeneratorOptionParser( GeneratorConfig& config ):
@@ -103,24 +103,24 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
                 break;
             }
         }
-        else if ( arg.compare ( Resolution ) == 0 ) {
+        else if ( arg.compare ( GlyphSizeForSampling ) == 0 ) {
 
             if ( i < argc - 1 ) {
 
                 string arg2( argv[++i] );
-                processResolution( arg2 );
+                processGlyphSizeForSampling( arg2 );
             }
             else {
                 mError = true;
                 break;
             }
         }
-        else if ( arg.compare ( SpreadInPixels ) == 0 ) {
+        else if ( arg.compare ( RatioSpreadToGlyph ) == 0 ) {
 
             if ( i < argc - 1 ) {
 
                 string arg2( argv[++i] );
-                processSpreadInPixels( arg2 );
+                processRatioSpreadToGlyph( arg2 );
             }
             else {
                 mError = true;
@@ -187,37 +187,37 @@ void GeneratorOptionParser::processTextureSize( const string s ) {
     }
     else {
 
-        mConfig.setTextureSize( textureSize );
+        mConfig.setOutputTextureSize( textureSize );
     }
 }
 
 
-void GeneratorOptionParser::processResolution( const string s ) {
+void GeneratorOptionParser::processGlyphSizeForSampling( const string s ) {
 
-    long resolution = atoi( s.c_str() ) ;
+    long glyphSizeForSampling = atoi( s.c_str() ) ;
 
-    if ( resolution < 0 || resolution > 8192) {
+    if ( glyphSizeForSampling < 0 || glyphSizeForSampling > 8192) {
 
         mError = true;
     }
     else {
 
-        mConfig.setResolution( resolution );
+        mConfig.setGlyphBitmapSizeForSampling( glyphSizeForSampling );
     }
 }
 
 
-void GeneratorOptionParser::processSpreadInPixels( const string s ) {
+void GeneratorOptionParser::processRatioSpreadToGlyph( const string s ) {
 
-    long spreadInPixels = atoi( s.c_str() ) ;
+    float ratio = atof( s.c_str() ) ;
 
-    if ( spreadInPixels < 0 || spreadInPixels > 8192) {
+    if ( ratio <= 0.0f || ratio > 1.0f) {
 
         mError = true;
     }
     else {
 
-        mConfig.setSpreadInPixels( spreadInPixels );
+        mConfig.setRatioSpreadToGlyph( ratio );
     }
 }
 

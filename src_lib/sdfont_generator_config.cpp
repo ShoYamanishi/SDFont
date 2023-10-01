@@ -7,11 +7,9 @@ const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;
 const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
 
 const long   GeneratorConfig::DefaultMaxCodePoint           =  255 ;
-const long   GeneratorConfig::DefaultTextureSize            =  512 ;
-const long   GeneratorConfig::DefaultScale                  =  128 ;
-const long   GeneratorConfig::DefaultSpreadInPixels         =  128 ;
-const long   GeneratorConfig::DefaultBaseResolutionInPixels = 1024 ;
-
+const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
+const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
+const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
 
 void GeneratorConfig::emitVerbose() const {
 
@@ -21,10 +19,10 @@ void GeneratorConfig::emitVerbose() const {
     cerr << "Font Path: ["        << mFontPath           << "]\n";
     cerr << "Output File Name: [" << mOutputFileName     << "]\n";
     cerr << "Max Code Point: ["   << mMaxCodePoint       << "]\n";
-    cerr << "Texture Size: ["     << mTextureSize        << "]\n";
-    cerr << "Initial Scale: ["    << mScale              << "]\n";
-    cerr << "Font Resolution: ["  << resolution()        << "]\n";
-    cerr << "Spread In Pixels: [" << spreadInPixels()   << "]\n";
+    cerr << "Output Texture Size: ["     << mOutputTextureSize        << "]\n";
+    cerr << "Initial Glyph Scaling from Sampling oo Packed Signed Dist: ["    << mGlyphScalingFromSamplingToPackedSignedDist << "]\n";
+    cerr << "Glyph Bitmap Size for Sampling: ["  << glyphBitmapSizeForSampling()        << "]\n";
+    cerr << "Ratio Spread to Glyph: [" << ratioSpreadToGlyph()   << "]\n";
 }
 
 
@@ -33,17 +31,17 @@ void GeneratorConfig::outputMetricsHeader( ostream& os ) const  {
     os << "# Source Font Path: ";
     os << mFontPath;
     os << "\n";
-    os << "# Texture Size: ";
-    os << mTextureSize;
+    os << "# Output Texture Size: ";
+    os << mOutputTextureSize;
     os << "\n";
-    os << "# Original Font Resolution: ";
-    os << resolution();
+    os << "# Glyph Bitmap Size for Sampling: ";
+    os << glyphBitmapSizeForSampling();
     os << "\n";
-    os << "# Spread in pixels: ";
-    os << spreadInPixels();
+    os << "# Ratio Spread to Glyph: ";
+    os << ratioSpreadToGlyph();
     os << "\n";
-    os << "# Down Sampling Scale: ";
-    os << mScale;
+    os << "# Glyph Scaling from Sampling to Packed Signed Dist: ";
+    os << mGlyphScalingFromSamplingToPackedSignedDist;
     os << "\n";
     os << "# Associated Texture File: ";
     os << mOutputFileName << ".png\n";

@@ -8,11 +8,10 @@
 
 namespace SDFont {
 
-const std::string MetricsParser::SPREAD_IN_TEXTURE = "SPREAD IN TEXTURE";
+const std::string MetricsParser::SPREAD_IN_TEXTURE      = "SPREAD IN TEXTURE";
 const std::string MetricsParser::SPREAD_IN_FONT_METRICS = "SPREAD IN FONT METRICS";
-const std::string MetricsParser::GLYPHS   = "GLYPHS";
-const std::string MetricsParser::KERNINGS = "KERNINGS";
-
+const std::string MetricsParser::GLYPHS                 = "GLYPHS";
+const std::string MetricsParser::KERNINGS               = "KERNINGS";
 
 void MetricsParser::trim( string& line ) {
 
@@ -26,7 +25,6 @@ void MetricsParser::trim( string& line ) {
         line.erase(line.size() - 1);
     }
 }
-
 
 bool MetricsParser::parseSpec( string fileName )
 {

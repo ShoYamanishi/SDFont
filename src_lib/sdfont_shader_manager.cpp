@@ -68,7 +68,6 @@ bool ShaderManager::compile (const string& code, GLuint id )
 
 bool ShaderManager::link( GLuint prog, GLuint vertex, GLuint fragment )
 {
-
     glAttachShader( prog, vertex   );
     glAttachShader( prog, fragment );
     glLinkProgram ( prog );

@@ -31,7 +31,6 @@ TextureLoader::~TextureLoader ()
 
 void TextureLoader::generateOpenGLTexture()
 {
-
     glGenTextures( 1, &mGLtexture );
 
     glBindTexture( GL_TEXTURE_2D, mGLtexture );
@@ -50,7 +49,6 @@ void TextureLoader::generateOpenGLTexture()
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     GL_REPEAT  );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR  );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR  );
-
 }
 
 

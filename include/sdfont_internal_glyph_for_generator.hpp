@@ -77,9 +77,9 @@ class InternalGlyphForGen {
 
     /** @brief calculates the signed distance value from the current point
      *
-     *  @param bm     (in): FreeType bitmap info.
-     *  @param scale  (in): Scale value for down sampling.
-     *  @param spread (in): Size of the extra region around the glyph
+     *  @param bm      (in): FreeType bitmap info.
+     *  @param scaling (in): Scaling from the size of the bitmap for sampling to the size for signed distances to pack.
+     *  @param spread  (in): Size of the extra region around the glyph
      *                      that are included in the signed distance 
      *                      calculation
      *  @param xSD    (in): x position in the downsampled local coordinate
@@ -104,7 +104,7 @@ class InternalGlyphForGen {
     float getSignedDistance(
 
         FT_Bitmap& bm, 
-        long       scale, 
+        float      scaling,
         long       spread, 
         long       xSD, 
         long       ySD

@@ -79,7 +79,7 @@ bool Generator::initializeFreeType()
         return false;
     }
 
-    ftError = FT_Set_Pixel_Sizes ( mFtFace, 0, mConf.resolution() );
+    ftError = FT_Set_Pixel_Sizes ( mFtFace, 0, mConf.glyphBitmapSizeForSampling() );
 
     if ( ftError != FT_Err_Ok ) {
 
@@ -128,16 +128,15 @@ long Generator::fitGlyphsToTexture()
         cerr << "Area [X: " << X << " , Y: " << Y << "]\n";
     }
 
-    auto factor = max( (float)X, (float)Y ) / (float)mConf.textureSize() ;
-
-    mConf.setScale( factor );
+    auto factor = (float)mConf.outputTextureSize() / max( (float)X, (float)Y );
+    mConf.setGlyphScalingFromSamplingToPackedSignedDist( factor );
 
     findDimension ( numItemsPerRow, X, Y );
 
     if ( mVerbose ) {
-
-        cerr << "Scale is adjusted to " << mConf.scale() << ".\n";
-        cerr << "Area [X: " << X/mConf.scale() << " , Y: " << Y/mConf.scale() << "]\n";
+        const auto s = mConf.glyphScalingFromSamplingToPackedSignedDist();
+        cerr << "Scale is adjusted to " << s << ".\n";
+        cerr << "Area [X: " << (long)((float)X * s) << " , Y: " << (long)((float)Y * s) << "]\n";
     }
 
     return numItemsPerRow;
@@ -332,7 +331,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
 bool Generator::generateTexture( bool reverseY )
 {
 
-    auto len = mConf.textureSize();
+    auto len = mConf.outputTextureSize();
 
     mPtrMain = (unsigned char*) malloc (sizeof(unsigned char) * 4 * len * len);
 
@@ -479,8 +478,8 @@ bool Generator::emitFilePNG()
 
     png_set_IHDR( pngWritePtr,
                   pngInfoPtr,
-                  mConf.textureSize(),
-                  mConf.textureSize(),
+                  mConf.outputTextureSize(),
+                  mConf.outputTextureSize(),
                   8,
                   PNG_COLOR_TYPE_GRAY,
                   PNG_INTERLACE_NONE,
@@ -534,10 +533,10 @@ bool Generator::emitFileMetrics()
     mConf.outputMetricsHeader( osMetrics );
 
     osMetrics << "SPREAD IN TEXTURE\n";
-    osMetrics << (float)mConf.signedDistExtent() / (float) mConf.textureSize();
+    osMetrics << (float)mConf.signedDistExtent() / (float) mConf.outputTextureSize();
     osMetrics << "\n";
     osMetrics << "SPREAD IN FONT METRICS\n";
-    osMetrics << (float)mConf.signedDistExtent() * mConf.fscale() / (float) mConf.resolution();
+    osMetrics << (float)mConf.signedDistExtent() / mConf.glyphScalingFromSamplingToPackedSignedDist() / (float) mConf.glyphBitmapSizeForSampling();
     osMetrics << "\n";
     osMetrics << "GLYPHS\n";
 
@@ -576,7 +575,7 @@ void Generator::generateMetrics(float& margin, vector<Glyph>& glyphs)
 
     glyphs.clear();
 
-    margin =  (float)mConf.signedDistExtent() / (float) mConf.textureSize();
+    margin =  (float)mConf.signedDistExtent() / (float) mConf.outputTextureSize();
 
     for ( auto& g : mGlyphs ) {
 
