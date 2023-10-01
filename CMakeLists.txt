@@ -19,76 +19,77 @@ find_package( GLEW     REQUIRED )
 find_package( OpenGL   REQUIRED )
 find_package( glfw3    REQUIRED )
 
-# SDFONT_LIB
+# SDFONT_GENERATOR_LIB
 
-add_library( sdfont_lib 
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_free_type_utilities.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_generator.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_generator_config.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_generator_option_parser.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_internal_glyph_for_generator.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_metrics_parser.cpp
+add_library( sdfont_gen
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_free_type_utilities.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_generator.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_generator_config.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_generator_option_parser.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_internal_glyph_for_generator.cpp
 )
 
-target_compile_features( sdfont_lib PRIVATE cxx_std_17 )
+target_compile_features( sdfont_gen PRIVATE cxx_std_17 )
 
-target_include_directories( sdfont_lib PUBLIC ${PROJECT_SOURCE_DIR}/include )
+target_include_directories( sdfont_gen PUBLIC ${PROJECT_SOURCE_DIR}/include )
 
-target_include_directories( sdfont_lib PRIVATE ${GD_INCLUDE_DIR}        )
-target_include_directories( sdfont_lib PRIVATE ${FREETYPE_INCLUDE_DIRS} )
-target_include_directories( sdfont_lib PRIVATE ${PNG_INCLUDE_DIR}       )
+target_include_directories( sdfont_gen PRIVATE ${GD_INCLUDE_DIR}        )
+target_include_directories( sdfont_gen PRIVATE ${FREETYPE_INCLUDE_DIRS} )
+target_include_directories( sdfont_gen PRIVATE ${PNG_INCLUDE_DIR}       )
 
-target_link_directories( sdfont_lib PRIVATE "/usr/local/lib" )
+target_link_directories( sdfont_gen PRIVATE "/usr/local/lib" )
 
-target_link_libraries( sdfont_lib ${GD_LIBRARIES}       )
-target_link_libraries( sdfont_lib ${FREETYPE_LIBRARIES} )
-target_link_libraries( sdfont_lib ${PNG_LIBRARIES}      )
-#target_link_libraries( sdfont_lib GLEW::glew )
+target_link_libraries( sdfont_gen ${GD_LIBRARIES}       )
+target_link_libraries( sdfont_gen ${FREETYPE_LIBRARIES} )
+target_link_libraries( sdfont_gen ${PNG_LIBRARIES}      )
 
-# SDFONT_GENERATOR
+# SDFONT_GENERATOR_COMMANDLINE
 
-add_executable( sdfont_generator ${PROJECT_SOURCE_DIR}/src_bin/sdfont_generator.cpp )
-target_include_directories( sdfont_generator PRIVATE ${FREETYPE_INCLUDE_DIRS} )
-target_include_directories( sdfont_generator PRIVATE ${PROJECT_SOURCE_DIR}/include )
-target_compile_features( sdfont_generator PRIVATE cxx_std_17 )
-target_link_libraries( sdfont_generator sdfont_lib )
+add_executable( sdfont_commandline ${PROJECT_SOURCE_DIR}/src_commandline/sdfont_generator.cpp )
+target_include_directories( sdfont_commandline PRIVATE ${FREETYPE_INCLUDE_DIRS} )
+target_include_directories( sdfont_commandline PRIVATE ${PROJECT_SOURCE_DIR}/include )
+target_compile_features( sdfont_commandline PRIVATE cxx_std_17 )
+target_link_libraries( sdfont_commandline sdfont_gen )
 
-# SDFONT_RUNTIME
+# SDFONT_RUNTIME_HELPER_LIB
 
-add_library( sdfont_runtime
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_runtime_helper.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_metrics_parser.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_texture_loader.cpp
+add_library( sdfont_rt
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_runtime_helper.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_metrics_parser.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_texture_loader.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_shader_manager.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_vanilla_shader_manager.cpp
 )
 
-target_compile_features( sdfont_runtime PRIVATE cxx_std_17 )
-target_include_directories( sdfont_runtime PUBLIC ${PROJECT_SOURCE_DIR}/include )
-target_include_directories( sdfont_runtime PRIVATE ${PNG_INCLUDE_DIR}       )
-target_link_libraries( sdfont_runtime ${PNG_LIBRARIES}      )
-target_link_libraries( sdfont_runtime GLEW::glew )
+target_compile_features( sdfont_rt PRIVATE cxx_std_17 )
+target_include_directories( sdfont_rt PUBLIC ${PROJECT_SOURCE_DIR}/include )
+target_include_directories( sdfont_rt PRIVATE ${PNG_INCLUDE_DIR}       )
+target_link_libraries( sdfont_rt ${PNG_LIBRARIES}      )
+target_link_libraries( sdfont_rt GLEW::glew )
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES Darwin )
-    target_include_directories( sdfont_runtime PRIVATE ${OPENGL_INCLUDE_DIR}/Headers )
-    target_compile_definitions( sdfont_runtime PRIVATE __MAC_LIB__ )
-    target_link_libraries( sdfont_runtime "-framework OpenGL" )
+
+    target_include_directories( sdfont_rt PRIVATE ${OPENGL_INCLUDE_DIR}/Headers )
+    target_compile_definitions( sdfont_rt PRIVATE __MAC_LIB__ )
+    target_link_libraries( sdfont_rt "-framework OpenGL" )
 
 else()
-    target_link_libraries( sdfont_runtime OpenGL )
+
+    target_link_libraries( sdfont_rt OpenGL )
+
 endif()
 
 # DEMO
 
 add_executable( sdfont_demo 
-    ${PROJECT_SOURCE_DIR}/src_bin/sdfont_demo.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_shader_manager.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib/sdfont_vanilla_shader_manager.cpp
+    ${PROJECT_SOURCE_DIR}/src_demo/sdfont_demo.cpp
 )
+
 target_include_directories( sdfont_demo PRIVATE ${PROJECT_SOURCE_DIR}/include )
 target_compile_features( sdfont_demo PRIVATE cxx_std_17 )
-target_link_libraries( sdfont_demo sdfont_runtime )
+target_link_libraries( sdfont_demo sdfont_rt )
 
 target_link_libraries( sdfont_demo GLEW::glew )
-
 
 if( ${CMAKE_SYSTEM_NAME} MATCHES Darwin )
    

@@ -1,6 +1,6 @@
-#include "sdfont_generator_option_parser.hpp"
-#include "sdfont_generator_config.hpp"
-#include "sdfont_generator.hpp"
+#include "sdfont/generator/sdfont_generator_option_parser.hpp"
+#include "sdfont/generator/sdfont_generator_config.hpp"
+#include "sdfont/generator/sdfont_generator.hpp"
 
 using namespace std;
 

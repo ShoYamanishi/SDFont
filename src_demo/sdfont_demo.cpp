@@ -17,10 +17,10 @@
 #include <glm/gtx/norm.hpp>
 #include <png.h>
 
-#include "sdfont_metrics_parser.hpp"
-#include "sdfont_texture_loader.hpp"
-#include "sdfont_runtime_helper.hpp"
-#include "sdfont_vanilla_shader_manager.hpp"
+#include "sdfont/runtime_helper/sdfont_metrics_parser.hpp"
+#include "sdfont/runtime_helper/sdfont_texture_loader.hpp"
+#include "sdfont/runtime_helper/sdfont_runtime_helper.hpp"
+#include "sdfont/runtime_helper/sdfont_vanilla_shader_manager.hpp"
 
 using namespace std;
 

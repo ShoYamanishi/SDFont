@@ -4,7 +4,7 @@
 #include <math.h>
 #include <png.h>
 
-#include "sdfont_generator.hpp"
+#include "sdfont/generator/sdfont_generator.hpp"
 
 namespace SDFont {
 

@@ -3,8 +3,7 @@
 #include <sstream>
 #include <GL/glew.h>
 
-#include "sdfont_shader_manager.hpp"
-
+#include "sdfont/runtime_helper/sdfont_shader_manager.hpp"
 
 namespace SDFont {
 

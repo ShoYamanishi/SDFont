@@ -4,8 +4,8 @@
 #include <math.h>
 #include <limits>
 
-#include "sdfont_generator_config.hpp"
-#include "sdfont_internal_glyph_for_generator.hpp"
+#include "sdfont/generator/sdfont_generator_config.hpp"
+#include "sdfont/generator/sdfont_internal_glyph_for_generator.hpp"
 
 using namespace std;
 

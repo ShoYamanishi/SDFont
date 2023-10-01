@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "sdfont_generator_option_parser.hpp"
+#include "sdfont/generator/sdfont_generator_option_parser.hpp"
 
 
 namespace SDFont {

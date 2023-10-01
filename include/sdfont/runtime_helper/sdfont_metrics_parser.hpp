@@ -3,7 +3,7 @@
 
 #include <map>
 #include <string>
-#include "sdfont_glyph.hpp"
+#include "sdfont/sdfont_glyph.hpp"
 
 using namespace std;
 

@@ -4,8 +4,8 @@
 #include <map>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include "sdfont_generator_config.hpp"
-#include "sdfont_glyph.hpp"
+#include "sdfont/generator/sdfont_generator_config.hpp"
+#include "sdfont/sdfont_glyph.hpp"
 
 using namespace std;
 

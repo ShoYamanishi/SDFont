@@ -1,4 +1,4 @@
-#include "sdfont_vanilla_shader_manager.hpp"
+#include "sdfont/runtime_helper/sdfont_vanilla_shader_manager.hpp"
 
 namespace SDFont {
 
