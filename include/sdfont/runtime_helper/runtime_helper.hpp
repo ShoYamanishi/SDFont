@@ -61,8 +61,8 @@ class RuntimeHelper {
      *         - glyphs list of Glyphs that contain the metrics for the code
      *                  points.
      *
-     *  @param s (in): string to be displayed.
-     *
+     *  @param s              (in): string to be displayed.
+     *  @param fontSize       (in): font size in pixels.
      *  @param width          (out): See above.
      *  @param posXs          (out): See above.
      *  @param firstBearingX  (out): See above.

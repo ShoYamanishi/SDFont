@@ -286,11 +286,20 @@ Here's an overview of SDFont, which consists of three parts:
 </a>
 
 The output PNG file looks like the one shown in Font Generation above.
+The format is PNG_COLOR_TYPE_GRAY with the depth of 8 bits.
 It wll be loaded as a texture map at runtime.
 
+
 The output TXT file consists of three parts: Margin, Glyphs, and Kernings.
-The Margin has one value that represents the rectangular extent around each 
-glyph in which the signed distance fades out.
+The Margin has the following two values that represent the orthogonal extent around each 
+glyph in which the signed distance values taper off.
+```
+SPREAD IN TEXTURE
+0.00488281      <= In the normalized texture coordinate system.
+SPREAD IN FONT METRICS
+0.0973368       <= In the font metrics coordinate system where the font size is assumed to be 1.0.
+```
+
 In Glyphs section, each line represents a glyph metrics.
 The line consists of the following fields.
 
@@ -304,15 +313,23 @@ The line consists of the following fields.
 - Vertical Bearing Y
 - Vertical Advance
 
-The fields above are taken from the input TrueType font but scaled to the
-normalized texture coordinates.
+The fields above are taken from the input TrueType font assuming the font size is 1.0.
 
 - Texture Coord X : Left side of the glyph bit map in the texture coordinates.
 - Texture Coord Y : Bottom side of the glyph bit map in the texture coordinates.
 - Texture Width : Width of the bitmap in the texture coordinates.
 Same as 'Width' above.
 - Texture Height : Height of the bitmap in the texture coordinates.
-Same as 'Height' above.
+
+## Typeset Info. from RuntimeHelper::getMetrics()
+This is usually called per word. This function gives the user some hints 
+about the location and the horizontal positioning of each glyph.
+The actual positioning of the glyph is done in RuntimeHelper::generateOpenGLDrawElements().
+
+<a href="docs/readme/typeset.png">
+<img src="docs/readme/typeset.png">
+</a>
+
 
 ## Sample Shaders
 SDFont provides a pair of vertex & fragment shader programs.
