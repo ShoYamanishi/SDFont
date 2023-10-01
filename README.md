@@ -134,7 +134,7 @@ $ git clone https://github.com/glfw/glfw.git
 $ cd glfw
 $ mkdir build
 $ cd build
-$ cmake .. 2>&1 | tee cmake_console_out.txt
+$ cmake -DCMAKE_BUILD_TYPE=Release .. 2>&1 | tee cmake_console_out.txt
 $ VERBOSE=1 make 2>&1 | tee make.log
 $ VERBOSE=1 sudo make install 2>&1 | tee make_install.log
 ```
@@ -142,11 +142,11 @@ $ VERBOSE=1 sudo make install 2>&1 | tee make_install.log
 # Build & Try
 SDFont comes with the two libraries and executables.
 
-* **libsdfont_lib** : library to generate signed distance fonts from the truetype fonts.
+* **libsdfont_gen** : library to generate signed distance fonts from the truetype fonts.
 
-* **libsdfont_runtime** : small library to parse the font metrics and load the signed distance font glyph bitmap into a OpenGL texture.
+* **libsdfont_rt** : small library to parse the font metrics and load the signed distance font glyph bitmap into a OpenGL texture.
 
-* **sdfont_generator** : a command-line tool to generate signed distance fonts. It interacts with libsdfont_lib.
+* **sdfont_commandline** : a command-line tool to generate signed distance fonts. It interacts with libsdfont_lib.
 
 * **sdfont_demo** : a demo program that shows the opening crawl of Star Wars.
 
@@ -159,7 +159,7 @@ $ ls FindGD.cmake
 FindGD.cmake
 $ mkdir build
 $ cd build
-$ cmake ..
+$ cmake -DCMAKE_BUILD_TYPE=Release ..
 $ VERBOSE=1 make
 ```
 

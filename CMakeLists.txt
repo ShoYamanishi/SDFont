@@ -22,11 +22,11 @@ find_package( glfw3    REQUIRED )
 # SDFONT_GENERATOR_LIB
 
 add_library( sdfont_gen
-    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_free_type_utilities.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_generator.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_generator_config.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_generator_option_parser.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_generator/sdfont_internal_glyph_for_generator.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/free_type_utilities.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/generator.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/generator_config.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/generator_option_parser.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/internal_glyph_for_generator.cpp
 )
 
 target_compile_features( sdfont_gen PRIVATE cxx_std_17 )
@@ -45,7 +45,7 @@ target_link_libraries( sdfont_gen ${PNG_LIBRARIES}      )
 
 # SDFONT_GENERATOR_COMMANDLINE
 
-add_executable( sdfont_commandline ${PROJECT_SOURCE_DIR}/src_commandline/sdfont_generator.cpp )
+add_executable( sdfont_commandline ${PROJECT_SOURCE_DIR}/src_commandline/generator.cpp )
 target_include_directories( sdfont_commandline PRIVATE ${FREETYPE_INCLUDE_DIRS} )
 target_include_directories( sdfont_commandline PRIVATE ${PROJECT_SOURCE_DIR}/include )
 target_compile_features( sdfont_commandline PRIVATE cxx_std_17 )
@@ -54,11 +54,11 @@ target_link_libraries( sdfont_commandline sdfont_gen )
 # SDFONT_RUNTIME_HELPER_LIB
 
 add_library( sdfont_rt
-    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_runtime_helper.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_metrics_parser.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_texture_loader.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_shader_manager.cpp
-    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/sdfont_vanilla_shader_manager.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/runtime_helper.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/metrics_parser.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/texture_loader.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/shader_manager.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_runtime_helper/vanilla_shader_manager.cpp
 )
 
 target_compile_features( sdfont_rt PRIVATE cxx_std_17 )
@@ -82,7 +82,7 @@ endif()
 # DEMO
 
 add_executable( sdfont_demo 
-    ${PROJECT_SOURCE_DIR}/src_demo/sdfont_demo.cpp
+    ${PROJECT_SOURCE_DIR}/src_demo/demo.cpp
 )
 
 target_include_directories( sdfont_demo PRIVATE ${PROJECT_SOURCE_DIR}/include )

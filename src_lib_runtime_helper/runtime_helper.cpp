@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 
-#include "sdfont/runtime_helper/sdfont_runtime_helper.hpp"
+#include "sdfont/runtime_helper/runtime_helper.hpp"
 
 namespace SDFont {
 

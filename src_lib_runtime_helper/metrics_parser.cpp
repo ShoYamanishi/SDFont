@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "sdfont/runtime_helper/sdfont_metrics_parser.hpp"
+#include "sdfont/runtime_helper/metrics_parser.hpp"
 
 namespace SDFont {
 

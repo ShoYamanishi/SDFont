@@ -3,7 +3,7 @@
 #include <sstream>
 #include <cstring>
 
-#include "sdfont/runtime_helper/sdfont_texture_loader.hpp"
+#include "sdfont/runtime_helper/texture_loader.hpp"
 
 namespace SDFont {
 

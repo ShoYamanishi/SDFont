@@ -2,7 +2,7 @@
 #define __SDFONT_GENERATOR_OPTION_PARSE_HPP__
 
 #include <string>
-#include "sdfont/generator/sdfont_generator_config.hpp"
+#include "sdfont/generator/generator_config.hpp"
 
 namespace SDFont {
 

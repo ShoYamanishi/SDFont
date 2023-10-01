@@ -4,8 +4,8 @@
 #include <vector>
 #include <map>
 
-#include "sdfont/sdfont_glyph.hpp"
-#include "sdfont/runtime_helper/sdfont_metrics_parser.hpp"
+#include "sdfont/glyph.hpp"
+#include "sdfont/runtime_helper/metrics_parser.hpp"
 
 using namespace std;
 

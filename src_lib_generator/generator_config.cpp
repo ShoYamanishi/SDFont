@@ -1,4 +1,4 @@
-#include "sdfont/generator/sdfont_generator_config.hpp"
+#include "sdfont/generator/generator_config.hpp"
 
 namespace SDFont {
 
