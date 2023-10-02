@@ -8,42 +8,40 @@ Demo Video (Click to play)
 
 # Overview
 
-Signed Distance Field Font is a technology proposed by 
+Signed Distance Field Font is a technique for rendering fonts proposed by 
 <a href="https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf">
 Chris Green of Valve at SIGGRAPH 2007
 </a>
 It is based on the anti-aliasing processing in the GPUs.
 Each glyph is drawn as a textured quadrilateral.
-Thanks to the very clever use of alpha channel in conjunction with the 
+Thanks to the very clever use of the sampler in the fragment shader in conjunction with the 
 anti-aliasing sampling in the GPUs,
-the resultant shape of the fonts is clean with little artifacts
-for most of the sizes.
-
+the resultant shape of the fonts is clean with little artifacts for most of the sizes.
 
 
 Following are some samples rendered with a signed distance field font.
 (Click to enlarge.)
 
 <a href="docs/readme/Type0.png">
-    <img src="docs/readme/Thumb0.png" height="90">
+    <img src="docs/readme/Thumb0.png" height="80">
 </a>
 <a href="docs/readme/Type1.png">
-    <img src="docs/readme/Thumb1.png" height="90">
+    <img src="docs/readme/Thumb1.png" height="80">
 </a>
 <a href="docs/readme/Type2.png">
-    <img src="docs/readme/Thumb2.png" height="90">
+    <img src="docs/readme/Thumb2.png" height="80">
 </a>
 <a href="docs/readme/Type3.png">
-    <img src="docs/readme/Thumb3.png" height="90">
+    <img src="docs/readme/Thumb3.png" height="80">
 </a>
 <a href="docs/readme/Type4.png">
-    <img src="docs/readme/Thumb4.png" height="90">
+    <img src="docs/readme/Thumb4.png" height="80">
 </a>
 <a href="docs/readme/Type5.png">
-    <img src="docs/readme/Thumb5.png" height="90">
+    <img src="docs/readme/Thumb5.png" height="80">
 </a>
 <a href="docs/readme/Type6.png">
-    <img src="docs/readme/Thumb6.png" height="90">
+    <img src="docs/readme/Thumb6.png" height="80">
 </a>
 
 
@@ -55,6 +53,16 @@ From left to right:
 - Type 4: Outline by hard thresholds
 - Type 5: Hollow fonts with soft edges
 - Type 6: Correspondint quadrilaterals to which the texture is mapped.
+
+
+# Benefits
+
+- Continuously scalable font size, maintaing the clean edges without major
+artefacts.
+- Handle unlimited number of sizes at the same time without memory and
+processing overhead.
+- Ability to dynamically change the size and shape of each glyph at runtime
+without memory and processing overhead.
 
 # Supported Environment
 
@@ -140,11 +148,12 @@ $ VERBOSE=1 sudo make install 2>&1 | tee make_install.log
 ```
 
 # Build & Try
-SDFont comes with the two libraries and executables.
+SDFont comes with the two libraries and two executables.
 
 * **libsdfont_gen** : library to generate signed distance fonts from the truetype fonts.
 
 * **libsdfont_rt** : small library to parse the font metrics and load the signed distance font glyph bitmap into a OpenGL texture.
+It also contains a bare-bone convenience OpenGL shader.
 
 * **sdfont_commandline** : a command-line tool to generate signed distance fonts. It interacts with libsdfont_lib.
 
@@ -171,9 +180,9 @@ The fonts are usually found in `/usr/share/fonts, /usr/local/fonts` etc on Linux
 ./sdfont_commandline -locale en_US -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 1024 -glyph_size_for_sampling 1024 -ratio_spread_to_glyph 0.2 signed_dist_font
 ```
 
-This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for type setting.
+This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance in the gray scale 8-bit PNG format. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for type setting.
 
-To run the Star Wars demo, run the following command.
+To run the Star Wars demo, run the following command, and hit 'space'.
 
 ```
 ./sdfont_demo signed_dist_font
@@ -181,7 +190,7 @@ To run the Star Wars demo, run the following command.
 
 # Usage of the Command-Line Tool
 ```
-Usage: sdfont_commandline -locale [Locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -resolution [num] -spread_in_pixels [num] [output file name w/o ext]
+Usage: sdfont_commandline -verbose -locale [locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
@@ -189,48 +198,23 @@ Usage: sdfont_commandline -locale [Locale] -font_path [FontPath] -max_code_point
 
 * -font_path : Path to the true type font including the extention.
 
-* -max_code_point [num] : The upper limit to process the glyphs. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-num, then you can specify num to reduce the sizes of the PNG file. For example, many fonts contains thousands of glyphs, but the used ones are usually within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
+* -max_code_point [num] : The upper limit to process the glyphs. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-num, then you can specify num to reduce the sizes of the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
 
 * -texture_size [num] : The height and width of the PNG files in pixels. The default value is 512.
 
 * -glyph_size_for_sampling [num] : The font size in pixels. The generator draws each glyph to a bitmap of this size to sample the signed distance. It affects the visual quality of the resultant signed distance font. The default value is 1024.
 
-* -ration_spread_to_glyph [num] : The extra margin around each glyph to sample the signed distance values. An appropriate range is 1/10 to 1/5 of the resolution. The default is 128.
-
-
-# Benefits
-
-
-- Continuously scalable font size, maintaing the clean edges without major
-artefacts.
-- Handle unlimited number of sizes at the same time without memory and
-processing overhead.
-- Ability to dynamically change the size and shape of each glyph at runtime
-without memory and processing overhead.
-
-These benefits come form the fact that each glyph, which is usually in 
-a Flyweight object in a program, is represented by a textured quadrilateral
-region in a set of coordinates into the output screen space, and another set 
-of coordinates into the texture map.
-
-
-
-# How It Works
-
-## Overview
-Here's an overview of SDFont, which consists of three parts: 
-    sdfont_commandline, libsdfont_gen, and libsdfont_rt.
-
-<a href="docs/readme/overview.png">
-<img src="docs/readme/overview.png">
-</a>
+* -ratio_spread_to_glyph [float] : The extra margin around each glyph to sample and to accommodate the signed distance values tapering off. An appropriate range is 0.1 to 0.2. The default is 0.2.
 
 ## Output PNG and TXT Files
 
-The output PNG file looks like the one shown in Font Generation above.
+The output PNG file looks like the one shown below.
 The format is PNG_COLOR_TYPE_GRAY with the depth of 8 bits.
 It wll be loaded as a texture map at runtime.
 
+<a href="docs/readme/sample_texture.png">
+<img src="docs/readme/sample_texture.png">
+</a>
 
 The output TXT file consists of three parts: Margin, Glyphs, and Kernings.
 The Margin has the following two values that represent the orthogonal extent around each 
@@ -263,69 +247,6 @@ The fields above are taken from the input TrueType font assuming the font size i
 Same as 'Width' above.
 - Texture Height : Height of the bitmap in the texture coordinates.
 
-## Typeset Info. from RuntimeHelper::getMetrics()
-This is usually called per word. This function gives the user some hints 
-about the location and the horizontal positioning of each glyph.
-The actual positioning of the glyph is done in RuntimeHelper::generateOpenGLDrawElements().
-
-<a href="docs/readme/typeset.png">
-<img src="docs/readme/typeset.png">
-</a>
-
-
-
-# SDFont Implementation
-
-## Class Diagrams
-
-<a href="docs/readme/class_diagram.png">
-<img src="docs/readme/class_diagram.png">
-</a>
-
-
-
-## Font Generation
-
-<a href="docs/readme/ft_bitmap_format.png">
-<img src="docs/readme/ft_bitmap_format.png">
-</a>
-
-1. For each glyph, generate glyph bitmap in big enough size, (e.g. 4096 * 4096)
-
-2. Generate signed distance for each point in the bitmap.
-
-Signed distance is the distance to the closest point of the opposite bit.
-
-For example, if the current point is set and it finds the closest unset point
- at 4 points away, then the signed distance is 4.
-
-On the other hand, if the current point is unset and it finds the closest set
-point at 2 points away, then the signed distance is -2.
-
-3. Down-sample the points in the signed distance field (e.g. 10x10 for low res
-and 40x40 for high res).
-
-4. Clamp the signed distance value of each sampled pixel into a limited range
-[-spread, spread], and normalize it into [0, 255].
-This means the pixel on the boundary of the glypy gets the value of 128, and
-an unset point far from the glyph gets 0.
-
-5. Pack the downsampled glyphs into a single texture map with the normalied
-signed distance into the alpha channel.
-Following figure illustrates a generated texture.
-Please note that the glyphs are drawn upside down in the figure due to the
-difference in the vertical coordinate axes between PNG (downward) and
-OpenGL Texture (upward).
-
-<a href="docs/readme/sample_texture.png">
-<img src="docs/readme/sample_texture.png">
-</a>
-
-6. Generate the metrics of each glyph. It inclues the position of the glyph
-in the UV texture coordinates as well as the font metrics such as bearing and
-kernings.
-
-
 
 ## Font Rendering at Runtime
 
@@ -348,11 +269,22 @@ User can supply their own shaders for other effects shown above from Type 0 to
 6.
 
 
+## Typeset Info. from RuntimeHelper::getMetrics()
+This is usually called per word. This function gives the user some hints 
+about the location and the horizontal positioning of each glyph.
+The actual positioning of the glyph is done in RuntimeHelper::generateOpenGLDrawElements().
+
+<a href="docs/readme/typeset.png">
+<img src="docs/readme/typeset.png" width="600">
+</a>
+
+
+
 ## Sample Shaders
 SDFont provides a pair of vertex & fragment shader programs.
 The vertex shader 
 [shaders/VanillaSignedDistFontVertex.glsl](shaders/VanillaSignedDistFontVertex.glsl)
-is an orthodox 3D perspetcive projectio shader.
+is a standard 3D perspetcive projection shader.
 
 The defined uniforms are:
 - P (mat4) : Projection matrix.
@@ -386,6 +318,67 @@ follow face.
 - smoothing (float) : Smomothing parameter for the smooth step function.
 - baseColor (vec3) :  Main color for the glyph.
 - borderColor (vec3) : Secondary color for the glyph.
+
+
+
+
+# SDFont Implementation [WORK IN PROGRESS]
+
+## Overview
+Here's an overview of SDFont, which consists of three parts: 
+    sdfont_commandline, libsdfont_gen, and libsdfont_rt.
+
+<a href="docs/readme/overview.png">
+<img src="docs/readme/overview.png" width="600">
+</a>
+
+
+
+## Class Diagrams
+
+<a href="docs/readme/class_diagram.png">
+<img src="docs/readme/class_diagram.png" width="400">
+</a>
+
+
+
+## Font Generation
+
+<a href="docs/readme/ft_bitmap_format.png">
+<img src="docs/readme/ft_bitmap_format.png" width="400">
+</a>
+
+1. For each glyph, generate glyph bitmap in big enough size, (e.g. 4096 * 4096)
+
+2. Generate signed distance for each point in the bitmap.
+
+Signed distance is the distance to the closest point of the opposite bit.
+
+For example, if the current point is set and it finds the closest unset point
+ at 4 points away, then the signed distance is 4.
+
+On the other hand, if the current point is unset and it finds the closest set
+point at 2 points away, then the signed distance is -2.
+
+3. Down-sample the points in the signed distance field (e.g. 10x10 for low res
+and 40x40 for high res).
+
+4. Clamp the signed distance value of each sampled pixel into a limited range
+[-spread, spread], and normalize it into [0, 255].
+This means the pixel on the boundary of the glypy gets the value of 128, and
+an unset point far from the glyph gets 0.
+
+5. Pack the downsampled glyphs into a single texture map with the normalied
+signed distance into the alpha channel.
+Following figure illustrates a generated texture.
+Please note that the glyphs are drawn upside down in the figure due to the
+difference in the vertical coordinate axes between PNG (downward) and
+OpenGL Texture (upward).
+
+6. Generate the metrics of each glyph. It inclues the position of the glyph
+in the UV texture coordinates as well as the font metrics such as bearing and
+kernings.
+
 
 # Limitations
 
