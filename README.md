@@ -348,7 +348,7 @@ For each glyph, 6 structs and 4 indices are generated for two triangles.
 
 
 ## Sample Shaders
-**sdfont_rt** provides a pair of vertex & fragment shaders.
+**libsdfont_rt** provides a pair of vertex & fragment shaders.
 
 ### The vertex shader 
 [shaders/VanillaSignedDistFontVertex.glsl](shaders/VanillaSignedDistFontVertex.glsl)
@@ -378,6 +378,8 @@ It is used to find the boundary for the inner curve for the hollow face.
 - baseColor (vec3) :  Main color for the glyph.
 
 - borderColor (vec3) : Secondary color for the glyph.
+
+**NOTE:** Those shaders are baked into **libsdfont_rt as strings so that you don't have to read them as files at runtime.
 
 # SDFont Implementation [WORK IN PROGRESS]
 
