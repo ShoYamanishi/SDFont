@@ -1,74 +1,80 @@
 # SDFont : Signed Distance Font Generator and Runtime Utility
 
-Demo Video (Click to play)
-<a href="https://youtu.be/p1f0NFHqdbI">
-    <img src="docs/readme/VideoCapture.png">
-</a>
+<a href="https://youtu.be/p1f0NFHqdbI"> <img src="docs/readme/VideoCapture.png" width="300"></a>
 
+A signed distant font generator and a runtime helper for OpenGL on Linux.
+It utilizes TrueType fonts and FreeType library. SDFont comes with the following components:
+
+* **libsdfont_gen**: The main library to generate signed distance fonts in PNG and the relevant metrics in TXT.
+
+* **sdfont_commandline**: A small commandline tool that invokes the functionalities of **libsdfont_gen**.
+
+* **libsdfont_rt**: The runtime helper library that loads the PNG file into OpenGL texture, parses the metrics TXT file into an array of *Glyph*s, typesets words. It also contains a bare-bone OpenGL shaders for convenience.
+
+* **sdfont_demo**: A demo program that shows the opening roll of Star Wars.
+
+[Demo Video](https://youtu.be/p1f0NFHqdbI) : A video capture of the opening crawl of Star Wars implemented in the demo program *sdfont_demo*.
+
+**[For iOS and macOS](https://github.com/ShoYamanishi/SDFontApple)** :
+another version of SDFont for iOS & macOS with Metal and CoreText can be found [here](https://github.com/ShoYamanishi/SDFontApple).
 
 # Overview
 
-Signed Distance Field Font is a technique for rendering fonts proposed by 
-<a href="https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf">
-Chris Green of Valve at SIGGRAPH 2007
-</a>
-It is based on the anti-aliasing processing in the GPUs.
-Each glyph is drawn as a textured quadrilateral.
-Thanks to the very clever use of the sampler in the fragment shader in conjunction with the 
-anti-aliasing sampling in the GPUs,
-the resultant shape of the fonts is clean with little artifacts for most of the sizes.
+This is an awesome technique for rendering typefaces by GPU.
+It was originally proposed by Chris Green of Valve at SIGGRAPH 2007 [[PDF]](https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf).
+In the normal font rendering by CPU, say, with FreeType, the shapes of the glyphs are stored in the vector graphics format (Bezier curves),
+and at runtime, they are converted to a bitmap for a specific font size.
 
+On the contrary, the technique for the signed distant fonts generates a texture for the glyphs in the signed distance representation,
+in which the value of each pixel represents the distance from the closest glyph boundary.
+The glyphs of the same typeface are usually packed into a single texture,
+and each glyph gets the corresponding rectangular bounding box in the texture coordinates.
+This texture generation is usually done as an off-line processing.
+At runtime, the glyphs are rendered simply by quads specifying the bounding boxes in the texture uv-coordinates to the GPU.
+
+There is another technique worth noting for rendering type faces in various sizes. 
+This technique was proposed by Charles Loop and Jim Blinn of Microsoft
+([paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2005/01/p1000-loop.pdf)),
+and used by [Figma](https://medium.com/@evanwallace/easy-scalable-text-rendering-on-the-gpu-c3f4d782c5ac).
+With this technique, at runtime, each point in the glyph to be rendered by GPU is assigned a triangular region and the local coordinates (u,v) for the region.
+The region defines a piece of bezier curve, and the GPU performs the in/on/out test of the curved region defined by bezier curve for each point.
+It seems the runtime performance is pretty good, but the off-line processing of each glyph seems rather complicated, involving appropriate triangulation of each glyph.
+This technique is on my to-do list, but it seems signed distance font performs as good as this technique.
 
 Following are some samples rendered with a signed distance field font.
 (Click to enlarge.)
 
 <a href="docs/readme/Type0.png">
-    <img src="docs/readme/Thumb0.png" height="80">
+    <img src="docs/readme/Thumb0.png" height="100">
 </a>
 <a href="docs/readme/Type1.png">
-    <img src="docs/readme/Thumb1.png" height="80">
-</a>
-<a href="docs/readme/Type2.png">
-    <img src="docs/readme/Thumb2.png" height="80">
-</a>
-<a href="docs/readme/Type3.png">
-    <img src="docs/readme/Thumb3.png" height="80">
-</a>
-<a href="docs/readme/Type4.png">
-    <img src="docs/readme/Thumb4.png" height="80">
-</a>
-<a href="docs/readme/Type5.png">
-    <img src="docs/readme/Thumb5.png" height="80">
+    <img src="docs/readme/Thumb1.png" height="100">
 </a>
 <a href="docs/readme/Type6.png">
-    <img src="docs/readme/Thumb6.png" height="80">
+    <img src="docs/readme/Thumb6.png" height="100">
 </a>
-
 
 From left to right:
 - Type 0: Raw output  by a pass-thru fragment shader.
 - Type 1: Softened edge by smooth-step function.
-- Type 2: Hard-edge by threshold on alpha.
-- Type 3: Glare/Helo effect
-- Type 4: Outline by hard thresholds
-- Type 5: Hollow fonts with soft edges
-- Type 6: Correspondint quadrilaterals to which the texture is mapped.
+- Type 2: The quads to which the signed distance glyphs are rendered.
 
 
 # Benefits
 
-- Continuously scalable font size, maintaing the clean edges without major
-artefacts.
-- Handle unlimited number of sizes at the same time without memory and
-processing overhead.
-- Ability to dynamically change the size and shape of each glyph at runtime
-without memory and processing overhead.
+* ✅Good visual quality for the wide range of font sizes with a single texture file. No noticeable jagged edges when magnified.
+
+* ✅ Little overhead for rendering at runtime. No need to convert the vector graphics to a bitmap, as the glyphs have been in a way already rendered to the texture.
+
+* ✅ Dynamic transformation of the typefaces at runtime. You can move, scale, rotate, sheer the typefaces just like the geometric transfomation for the other rendered objects.
+
+* ✅ Typographic effects by the fragment shader. They can be achieved by applying a function to the sampled value from the signed distance texture. In the following sub-section you can see some sample effects with their corresponding fragment functions.
 
 # Supported Environment
 
 * Linux
 
-* MacOS (tested with Mac mini M1 2020 & Ventura 13.5.2)
+* macOS (tested with Mac mini M1 2020 & Ventura 13.5.2)
 
 # Reuirements
 
@@ -182,13 +188,16 @@ The fonts are usually found in `/usr/share/fonts, /usr/local/fonts` etc on Linux
 
 This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance in the gray scale 8-bit PNG format. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for type setting.
 
-To run the Star Wars demo, run the following command, and hit 'space'.
+To run the Star Wars demo, run the following command, and hit '*space*'.
 
 ```
 ./sdfont_demo signed_dist_font
 ```
 
-# Usage of the Command-Line Tool
+# Usage
+
+## Offline Font Generation with the Command-Line Tool
+
 ```
 Usage: sdfont_commandline -verbose -locale [locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] [output file name w/o ext]
 ```
@@ -196,9 +205,9 @@ Usage: sdfont_commandline -verbose -locale [locale] -font_path [FontPath] -max_c
 
 * -locale : Locale used for the string. FreeType requires this. The default value is "C".
 
-* -font_path : Path to the true type font including the extention.
+* -font_path : Path to the true type font including the extention. The fonts are usually found in `/usr/share/fonts`, `/usr/local/fonts` etc. on Linux, and `/System/Library/Fonts/` on MacOS.
 
-* -max_code_point [num] : The upper limit to process the glyphs. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-num, then you can specify num to reduce the sizes of the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
+* -max_code_point [num] : The highest glyph index to process. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-num, then you can specify num to reduce the number of glyphs to pack in the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
 
 * -texture_size [num] : The height and width of the PNG files in pixels. The default value is 512.
 
@@ -208,23 +217,44 @@ Usage: sdfont_commandline -verbose -locale [locale] -font_path [FontPath] -max_c
 
 ## Output PNG and TXT Files
 
+### PNG Files
+
 The output PNG file looks like the one shown below.
 The format is PNG_COLOR_TYPE_GRAY with the depth of 8 bits.
 It wll be loaded as a texture map at runtime.
 
 <a href="docs/readme/sample_texture.png">
-<img src="docs/readme/sample_texture.png">
+<img src="docs/readme/sample_texture.png" width="400">
 </a>
 
-The output TXT file consists of three parts: Margin, Glyphs, and Kernings.
+### TXT Files
+
+The output TXT file consists of three parts:
+
+* Margin
+
+* Glyphs
+
+* Kernings.
+
+
+**Margin**
+
 The Margin has the following two values that represent the orthogonal extent around each 
 glyph in which the signed distance values taper off.
 ```
 SPREAD IN TEXTURE
-0.00488281      <= In the normalized texture coordinate system.
-SPREAD IN FONT METRICS
-0.0973368       <= In the font metrics coordinate system where the font size is assumed to be 1.0.
+0.00488281
 ```
+This value is in the normalized texture coordinate system.
+
+```
+SPREAD IN FONT METRICS
+0.0973368
+```
+This value is in the font metrics coordinate system where the font size is assumed to be 1.0.
+
+**Glyphs**
 
 In Glyphs section, each line represents a glyph metrics.
 The line consists of the following fields.
@@ -244,83 +274,110 @@ The fields above are taken from the input TrueType font assuming the font size i
 - Texture Coord X : Left side of the glyph bit map in the texture coordinates.
 - Texture Coord Y : Bottom side of the glyph bit map in the texture coordinates.
 - Texture Width : Width of the bitmap in the texture coordinates.
-Same as 'Width' above.
 - Texture Height : Height of the bitmap in the texture coordinates.
 
+**Kernings**
 
-## Font Rendering at Runtime
+This section represents the list of kernings for consecutive pairs of glyphs.
+Each line represents the list of kearning for a particular preceeding glyph, which is specified in the first field in code points.
+The rest of the line consists of the pairs of the succeeding glyph and the kerning.
+The kerning values are taken from the input TrueType font assuming the font size is 1.0.
 
-The glyph is drawn as a transformed textured quadrilateral on the screen.
+## Using the Signed Distance Fonts for Rendering.
+
+At runtime, each glyph is drawn as a transformed textured quadrilateral (two triangles) on the screen by OpenGL.
 The user gives the coordinates of the quadrilateral together with their
 attributes such as the corresponding texture coordinates, normals and colors.
-The rest is handled by a graphic subcomponent such as OpenGL.
-The geometric transformation (either 3D or Otrhogonal 2D) and 
-rasterization are done by the hardward utilizing GPU.
-The rasterization is considered up-sampling from the texture.
-Each pixel in the screen obtains a signed-distance value in the alpha channel
-pretty accurately, thanks to the interpolation mechanism in the rasterizer.
 
-The fragment shader then use the recovered signed distance value to draw the 
-pixel there on the screen.
-For example, for Type 2 agove, a pixel is set if the recorvered signed distance
-in the normalized alpha is above the threshold 0.5 (128). This gives an clear
-edge for the glyphs.
-User can supply their own shaders for other effects shown above from Type 0 to
-6.
+Therefore, you need to arrange buffer contents for GL_ARRAY_BUFFER and GL_ELEMENT_ARRAY_BUFFER for the draw call per frame, just like rendering the standard textured triangles.
 
+You can make the buffer contents manually by consulting each Glyph object with `RuntimeHelper::getGlyph( long c )`.
+Alternatively you can use a convenience type setter `RuntimeHelper::getMetrics()` for each word you want to render.
 
-## Typeset Info. from RuntimeHelper::getMetrics()
-This is usually called per word. This function gives the user some hints 
-about the location and the horizontal positioning of each glyph.
-The actual positioning of the glyph is done in RuntimeHelper::generateOpenGLDrawElements().
+### Typesetting a Word with RuntimeHelper::getMetrics()
+
+```
+void RuntimeHelper::getMetrics(
+
+    string            s,              // (in) word
+    float             fontSize,       // (in) font size
+    float&            width,          // (out) see below
+    vector< float >&  posXs,          // (out) see below
+    float&            firstBearingX,  // (out) see below
+    float&            bearingY,       // (out) see below
+    float&            belowBaseLineY, // (out) see below
+    float&            advanceY,       // (out) see below
+    vector< Glyph* >& glyphs          // (out) list of glyphs that corresponds the word.
+);
+```
+
+This function gives the user some hints about the assignment of each glyph in the word local coordinate system.
+It returns the data shown in the figure below.
 
 <a href="docs/readme/typeset.png">
 <img src="docs/readme/typeset.png" width="600">
 </a>
 
+The positions above are for the glyph boundaries. However, when you render the glyphs you have to take the margin around each glyph in to account, in which the smooth transition from the inside of the glyph to the outside is handled.
+
+### Generation of the OpenGL buffer contents with RuntimeHelper::generateOpenGLDrawElements()
+
+```
+void RuntimeHelper::generateOpenGLDrawElements (
+
+    vector< Glyph* >& glyphs,         // (in) from getMetrics()
+    vector< float >&  posXs,          // (in) from getMetrics()
+    float             leftX,          // (in) the X position in the global coordinate system that corresponds to (0,0) in the figure above.
+    float             baselineY,      // (in) the Y position in the global coordinate system that corresponds to (0,0) in the figure above.
+    float             fontSize,       // (in) font size
+    float             spreadRatio,    // (in) how much margin to give in the range if 0.0 to 1.0. This must be manually adjusted to get the best aesthetics.
+    float             distribution,   // (in) horizontal distribution of each glyph. The value greater than 1.0 will elongate the positioning of each glyph, not the glyphs themselves.
+    float             Z,              // (in) the Z-coordinate value.
+    float*            arrayBuf,       // (out) the start address to which the buffer contents will be written.
+    unsigned int      indexStart,     // (in) start index for the triangles for this word.
+    unsigned int*     indices         // (out) the start address to which the indices will be written.
+);
+```
+The contents of `arrayBuf` consist of the list of the following conceptual packed struct.
+```
+float3 pos    (x, y, Z)
+float3 normal (0, 0, 1)
+float2 uv texture-coordinates
+```
+For each glyph, 6 structs and 4 indices are generated for two triangles.
 
 
 ## Sample Shaders
-SDFont provides a pair of vertex & fragment shader programs.
-The vertex shader 
+**sdfont_rt** provides a pair of vertex & fragment shaders.
+
+### The vertex shader 
 [shaders/VanillaSignedDistFontVertex.glsl](shaders/VanillaSignedDistFontVertex.glsl)
-is a standard 3D perspetcive projection shader.
+is a small 3D perspetcive projection shader.
+This is a small function and it is easy to understand by looking at the code.
 
-The defined uniforms are:
-- P (mat4) : Projection matrix.
-- M (mat4) : Model matrix.
-- V (mat4) : View magrix.
-- lightWCS (vec3) : Light source in the world coordinate system.
 
-The VBOs for this vertex shader, which is the output from 
-SDFont::RuntimeHelper::generateOpenGLDrawElements() and input to 
-SDFont::mShader.draw() has the following format.
-
-- vertexLCS(vec3) : Point in the model coordinate system.
-- normalLCS(vec3) : Normal in the model coordinate system. Not used at moment.
-- texCoordIn(vec2): UV texture coordinates.
-
-The fragment shader 
+### The fragment shader 
 [shaders/VanillaSignedDistFontFragment.glsl](shaders/VanillaSignedDistFontFragment.glsl)
 is the main part and it takes care of the glyph rendering.
 It has the following uniforms.
 
 - fontTexture (sampler2D) : The ID (name) of the texture created from the PNG.
-- effect (int) : type of face to be rendered. See tye types above.
+
+- effect (int) : type of face to be rendered. See the code above.
+
 - useLight (bool) : set to true if light source specified by lightWCS is used.
-- lowThreshold (float) : The threshold for the alpha channel.
-Used by type 2,3, and 4. It is used to find the boundary beteen glyph and
-non-glyph pixels.
-- highThreshold (float) : Another threshold for the alpha channel.
-Used by type 4. It is used to find the boundary for the inner curve for the
-follow face.
+
+- lowThreshold (float) : The threshold for the signed distance value used by type 2,3, and 4.
+It is used to find the boundary between glyph and non-glyph pixels.
+
+- highThreshold (float) : Another threshold used by type 4.
+It is used to find the boundary for the inner curve for the hollow face.
 
 - smoothing (float) : Smomothing parameter for the smooth step function.
+
 - baseColor (vec3) :  Main color for the glyph.
+
 - borderColor (vec3) : Secondary color for the glyph.
-
-
-
 
 # SDFont Implementation [WORK IN PROGRESS]
 
@@ -331,8 +388,6 @@ Here's an overview of SDFont, which consists of three parts:
 <a href="docs/readme/overview.png">
 <img src="docs/readme/overview.png" width="600">
 </a>
-
-
 
 ## Class Diagrams
 
@@ -348,60 +403,11 @@ Here's an overview of SDFont, which consists of three parts:
 <img src="docs/readme/ft_bitmap_format.png" width="400">
 </a>
 
-1. For each glyph, generate glyph bitmap in big enough size, (e.g. 4096 * 4096)
-
-2. Generate signed distance for each point in the bitmap.
-
-Signed distance is the distance to the closest point of the opposite bit.
-
-For example, if the current point is set and it finds the closest unset point
- at 4 points away, then the signed distance is 4.
-
-On the other hand, if the current point is unset and it finds the closest set
-point at 2 points away, then the signed distance is -2.
-
-3. Down-sample the points in the signed distance field (e.g. 10x10 for low res
-and 40x40 for high res).
-
-4. Clamp the signed distance value of each sampled pixel into a limited range
-[-spread, spread], and normalize it into [0, 255].
-This means the pixel on the boundary of the glypy gets the value of 128, and
-an unset point far from the glyph gets 0.
-
-5. Pack the downsampled glyphs into a single texture map with the normalied
-signed distance into the alpha channel.
-Following figure illustrates a generated texture.
-Please note that the glyphs are drawn upside down in the figure due to the
-difference in the vertical coordinate axes between PNG (downward) and
-OpenGL Texture (upward).
-
-6. Generate the metrics of each glyph. It inclues the position of the glyph
-in the UV texture coordinates as well as the font metrics such as bearing and
-kernings.
-
-
-# Limitations
-
-- Can’t beat the Shannon’s sampling theorem.
-When a small texture (e.g. 128x128) is used, 
-magnified glyphs will show some noticeable artifacts on the screen.
-
-- The number of different fonts shown simultaneously at realtime is limited
-to the number of active loaded Textures (usually 16 for OpenGL).
-One way to get around this is to pack multiple fonts into a single texture.
-For example a texture of size 4K x 4K can accommodate 64 512x512 SD fonts, 
-or 256 256x256 SD fonts. SDFont currently supports only one font per texture.
-Multiple fonts per texture may be supported in the future.
-This technique is not suitable for some East Asian writing systems, which have
-thousands of glyphs.
-
 # TODO
 
-- Add API documentation for the libraries.
-- Packing multiple fonts into a single texture.
+- Refine Implementation section.
 
 # License
-
 
 Copyright (c) 2019 Shoichiro Yamanishi
 
@@ -414,10 +420,7 @@ Shoichiro Yamanishi
 
 yamanishi72@gmail.com
 
-
-
 # Reference
-
 
 * [Green07]
 Chris Green. 2007. Improved alpha-tested magnification for vector textures and special effects. In ACM SIGGRAPH 2007 courses (SIGGRAPH '07). ACM, New York, NY, USA, 9-18. DOI: https://doi.org/10.1145/1281500.1281665
