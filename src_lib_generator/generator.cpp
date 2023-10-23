@@ -128,7 +128,11 @@ long Generator::fitGlyphsToTexture()
         cerr << "Area [X: " << X << " , Y: " << Y << "]\n";
     }
 
-    auto factor = (float)mConf.outputTextureSize() / max( (float)X, (float)Y );
+    // Consider a 1 pixel margin per glyph, to account for rounding errors
+    auto factorX = (float)(mConf.outputTextureSize() - numItemsPerRow) / (float)X;
+    auto nbRows = (mGlyphs.size() + numItemsPerRow - 1) / numItemsPerRow;
+    auto factorY = (float)(mConf.outputTextureSize() - nbRows) / (float)Y;
+    auto factor = min(factorX, factorY);
     mConf.setGlyphScalingFromSamplingToPackedSignedDist( factor );
 
     findDimension ( numItemsPerRow, X, Y );
