@@ -42,8 +42,8 @@ InternalGlyphForGen::InternalGlyphForGen (
     mSignedDistBaseX    ( 0 ),
     mSignedDistBaseY    ( 0 )
 {
-    mSignedDistWidth  = ceil( (float)mWidth  * ( 1.0f + 2.0f * mConf.ratioSpreadToGlyph() ) );
-    mSignedDistHeight = ceil( (float)mHeight * ( 1.0f + 2.0f * mConf.ratioSpreadToGlyph() ) );
+    mSignedDistWidth  = ceil( (float)mWidth + 2.0f * mConf.signedDistExtent() );
+    mSignedDistHeight = ceil( (float)mHeight + 2.0f * mConf.signedDistExtent() );
 }
 
 
@@ -326,8 +326,8 @@ void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
 
     const long spreadInBitmapPixels = (long)( mConf.ratioSpreadToGlyph() * (float)mConf.glyphBitmapSizeForSampling() );
 
-    mSignedDistWidth  = mWidth  * scale + 2 * mConf.signedDistExtent();
-    mSignedDistHeight = mHeight * scale + 2 * mConf.signedDistExtent();
+    mSignedDistWidth  = ceil(mWidth  * scale + 2 * mConf.signedDistExtent());
+    mSignedDistHeight = ceil(mHeight * scale + 2 * mConf.signedDistExtent());
 
     size_t arraySize = mSignedDistWidth * mSignedDistHeight;
 
