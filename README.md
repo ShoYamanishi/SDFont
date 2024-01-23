@@ -199,15 +199,27 @@ To run the Star Wars demo, run the following command, and hit '*space*'.
 ## Offline Font Generation with the Command-Line Tool
 
 ```
-Usage: sdfont_commandline -verbose -locale [locale] -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] [output file name w/o ext]
+Usage: sdfont_generator -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -codepoint_range_file_path [FilePath] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
-* -locale : Locale used for the string. FreeType requires this. The default value is "C".
-
 * -font_path : Path to the TrueType font including the extention. The fonts are usually found in `/usr/share/fonts`, `/usr/local/fonts` etc. on Linux, and `/System/Library/Fonts/` on MacOS.
 
-* -max_code_point [num] : The highest glyph index to process. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-num, then you can specify num to reduce the number of glyphs to pack in the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
+* -max_code_point [num] : The highest character code to process. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-num, then you can specify num to reduce the number of glyphs to pack in the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
+
+* -codepoint_range_file_path [FilePath] : The path to the file that contains the ranges of the character codes for which you want to generate glyphs. 
+For example, if you want to get the glyphs for the Japanese katakanas and hiraganas, the file content would look like the following:
+    ```
+    # Range in [low, high + 1) format.
+
+    # Hiragana: [U+3040, U+309F + 1)
+    12352, 12448
+
+    # Katakana: [U+30A0, U+30FF + 1)
+    12448, 12544
+    ```
+    You don't have to specify this option if you want to get all the glyphs in the range of `[0, max_code_point)`.
+
 
 * -texture_size [num] : The height and width of the PNG files in pixels. The default value is 512.
 

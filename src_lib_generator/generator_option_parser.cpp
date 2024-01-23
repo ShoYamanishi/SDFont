@@ -11,16 +11,15 @@ namespace SDFont {
 const string GeneratorOptionParser::Usage = "Usage: "
                                             "sdfont_generator "
                                             "-verbose "
-                                            "-locale [Locale] "
                                             "-font_path [FontPath] "
                                             "-max_code_point [num] "
                                             "-texture_size [num] "
                                             "-glyph_size_for_sampling [num] "
                                             "-ratio_spread_to_glyph [float] "
+                                            "-codepoint_range_file_path [FilePath] "
                                             "[output file name w/o ext]"
                                             "\n";
 
-const string GeneratorOptionParser::Locale               = "-locale" ;
 const string GeneratorOptionParser::FontPath             = "-font_path" ;
 const string GeneratorOptionParser::MaxCodePoint         = "-max_code_point" ;
 const string GeneratorOptionParser::TextureSize          = "-texture_size" ;
@@ -29,6 +28,7 @@ const string GeneratorOptionParser::RatioSpreadToGlyph   = "-ratio_spread_to_gly
 const string GeneratorOptionParser::Help                 = "-help" ;
 const string GeneratorOptionParser::DashH                = "-h" ;
 const string GeneratorOptionParser::Verbose              = "-verbose" ;
+const string GeneratorOptionParser::CodepointRangeFilePath = "-codepoint_range_file_path" ;
 
 
 GeneratorOptionParser::GeneratorOptionParser( GeneratorConfig& config ):
@@ -54,18 +54,6 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
         else if ( arg.compare ( Verbose ) == 0 ) {
 
             mVerbose = true;
-        }
-        else if ( arg.compare ( Locale ) == 0 ) {
-
-            if ( i < argc - 1 ) {
-
-                string arg2( argv[++i] );
-                processLocale( arg2 );
-            }
-            else {
-                mError = true;
-                break;
-            }
         }
         else if ( arg.compare ( FontPath ) == 0 ) {
 
@@ -127,6 +115,18 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
                 break;
             }
         }
+        else if ( arg.compare ( CodepointRangeFilePath ) == 0 ) {
+
+            if ( i < argc - 1 ) {
+
+                string arg2( argv[++i] );
+                processCodepointRangeFilePath( arg2 );
+            }
+            else {
+                mError = true;
+                break;
+            }
+        }
         else {
 
             processOutputFileName( arg );
@@ -134,19 +134,6 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
     }
 
     return !mError;
-}
-
-
-void GeneratorOptionParser::processLocale ( const string s ) {
-
-    if ( nullptr != setlocale( LC_ALL, s.c_str() ) ) {
-
-         mConfig.setLocale( s );
-    }
-    else {
-
-        mError = true;
-    }
 }
 
 
@@ -229,6 +216,19 @@ void GeneratorOptionParser::processOutputFileName( const string s ) {
         mConfig.setOutputFileName( s );
     }
     else {
+
+        mError = true;
+    }
+}
+
+
+void GeneratorOptionParser::processCodepointRangeFilePath ( const string s ) {
+
+    if ( doesFileExist( s ) ) {
+
+         mConfig.setCodepointRangeFilePath( s );
+    }
+        else {
 
         mError = true;
     }

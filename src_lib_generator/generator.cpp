@@ -30,8 +30,6 @@ bool Generator::generate()
         mConf.emitVerbose();
     }
 
-    setlocale ( LC_ALL, mConf.locale().c_str() );
-
     if ( !initializeFreeType() ) {
 
         return false;
@@ -250,14 +248,16 @@ bool Generator::generateGlyphs()
 {
     for (FT_ULong i = 0; i <= mConf.maxCodePoint(); i++) {
 
-        if ( iswprint(i) ) {
+        if ( mConf.isInACodepointRange(i) ) {
 
             auto ind = FT_Get_Char_Index ( mFtFace, i );
-
+            if ( ind == 0 ) {
+                continue;
+            }
             auto ftError = FT_Load_Glyph ( mFtFace, ind, FT_LOAD_DEFAULT );
 
             if ( ftError != FT_Err_Ok ) {
-                cerr << "error: " << ftError << "\n";
+                cerr << "error at char code [" << i << "]: " << ftError << "\n";
                 return false;
             }
 

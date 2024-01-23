@@ -3,7 +3,11 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <cmath>
+#include <vector>
+#include <utility>
 
 namespace SDFont {
 
@@ -14,7 +18,6 @@ class GeneratorConfig {
   public:
 
     GeneratorConfig():
-        mLocale                     { DefaultLocale },
         mFontPath                   { DefaultFontPath },
         mOutputFileName             { DefaultOutputFileName },
         mMaxCodePoint               { DefaultMaxCodePoint },
@@ -22,12 +25,12 @@ class GeneratorConfig {
         mGlyphScalingFromSamplingToPackedSignedDist
                                     { 1.0f },
         mGlyphBitmapSizeForSampling { DefaultGlyphBitmapSizeForSampling },
-        mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph }
+        mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
+        mCodepointRangeFilePath     { DefaultCodepointRangeFilePath }
         {;}
 
     virtual ~GeneratorConfig(){;}
 
-    void setLocale             ( string s ) { mLocale         = s ; }
     void setFontPath           ( string s ) { mFontPath       = s ; }
     void setOutputFileName     ( string s ) { mOutputFileName = s ; }
     void setMaxCodePoint       ( long   v ) { mMaxCodePoint   = v ; }
@@ -37,8 +40,8 @@ class GeneratorConfig {
     void setRatioSpreadToGlyph ( float v  ) { mRatioSpreadToGlyph = v ; }
     void setGlyphScalingFromSamplingToPackedSignedDist
                                ( float v  ) { mGlyphScalingFromSamplingToPackedSignedDist = v; }
+    void setCodepointRangeFilePath( string s );
 
-    string locale()            const { return mLocale ;                           }
     string fontPath()          const { return mFontPath ;                         }
     string outputFileName()    const { return mOutputFileName ;                   }
     long   maxCodePoint()      const { return mMaxCodePoint ;                     }
@@ -59,9 +62,21 @@ class GeneratorConfig {
     void   emitVerbose () const;
     void   outputMetricsHeader ( ostream& os ) const;
 
+    bool   isInACodepointRange( const int charcode ) const
+    {
+        if ( mCodepointRangePairs.empty() ) {
+            return true;
+        }
+        for ( const auto& pair: mCodepointRangePairs ) {
+            if ( pair.first <= charcode && charcode < pair.second ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
   private:
 
-    string mLocale ;
     string mFontPath ;
     string mOutputFileName ;
     long   mMaxCodePoint ;
@@ -69,16 +84,22 @@ class GeneratorConfig {
     long   mGlyphBitmapSizeForSampling;
     float  mGlyphScalingFromSamplingToPackedSignedDist ;
     float  mRatioSpreadToGlyph;
+    string mCodepointRangeFilePath;
+    vector< pair< int, int > >
+           mCodepointRangePairs;
 
-    static const string DefaultLocale ;
     static const string DefaultFontPath ;
     static const string DefaultOutputFileName ;
     static const long   DefaultMaxCodePoint ;
     static const long   DefaultOutputTextureSize ;
     static const long   DefaultGlyphBitmapSizeForSampling ;
     static const float  DefaultRatioSpreadToGlyph ;
-};
+    static const string DefaultCodepointRangeFilePath;
 
+    void trim( string& line ) const;
+    bool isCommentLine( const std::string& line ) const;
+    size_t splitLine( const string& txt, vector< string >& strs, const char ch ) const;
+};
 
 } // namespace SDFont
 #endif /*__SDFONT_GENERATOR_CONFIG_HPP__*/

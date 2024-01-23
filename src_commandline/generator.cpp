@@ -27,8 +27,6 @@ int main ( int argc, char* argv[] )
 
     SDFont::Generator generator( conf, parser.hasVerbose() );
 
-    setlocale ( LC_ALL, conf.locale().c_str() );
-
     res = generator.generate();
 
     if ( !res ) {

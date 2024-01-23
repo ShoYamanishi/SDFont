@@ -25,22 +25,22 @@ class GeneratorOptionParser {
 
     inline void reset() { mHelp = false; mError = false; mVerbose = false; }
 
-    void processLocale               ( const string s ) ;
     void processFontPath             ( const string s ) ;
     void processMaxCodePoint         ( const string s ) ;
     void processTextureSize          ( const string s ) ;
     void processGlyphSizeForSampling ( const string s ) ;
     void processRatioSpreadToGlyph   ( const string s ) ;
     void processOutputFileName       ( const string s ) ;
+    void processCodepointRangeFilePath( const string s ) ;
     bool doesFileExist               ( const string s ) const ;
     bool isValidFileName             ( const string s ) const ;
+
 
     GeneratorConfig&      mConfig;
     bool                  mError;
     bool                  mHelp;
     bool                  mVerbose;
 
-    static const string   Locale;
     static const string   FontPath;
     static const string   MaxCodePoint;
     static const string   TextureSize;
@@ -49,6 +49,7 @@ class GeneratorOptionParser {
     static const string   Help;
     static const string   DashH;
     static const string   Verbose;
+    static const string   CodepointRangeFilePath;
 };
 
 } // namespace SDFont
