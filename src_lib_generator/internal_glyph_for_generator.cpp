@@ -248,8 +248,6 @@ float InternalGlyphForGen::getSignedDistance(
             break;
         }
 
-        bool breaking = false;
-
         for ( auto j = 1 ; j < i; j++ ) {
 
             if ( testSymmetricPoints( bm, curP, xPix, yPix, i, j ) ) {
@@ -257,52 +255,13 @@ float InternalGlyphForGen::getSignedDistance(
                 float fj   = (float) j;
                 minSqDist  = min( minSqDist, fi * fi + fj * fj );
                 nextStartI = i + downSampleRate;
-                breaking   = true;
-                break;
             }
-        }
-
-        if (breaking) {
-
-            break;
         }
 
         if ( testDiagonalPoints( bm, curP, xPix, yPix, i ) ) {
 
             minSqDist  = min( minSqDist, 2 * fi * fi );
             nextStartI = i + downSampleRate;
-            break;
-        }
-    }
-
-    long maxI = min( (long)(sqrt(minSqDist)) + 1, spreadInGlyphPixelsForSampling );
-
-    for (auto i = nextStartI ; i <= maxI; i += downSampleRate ) {
-
-        float fi = (float)i;
-
-        if ( testOrthogonalPoints( bm, curP, xPix, yPix, i ) ) {
-
-            minSqDist  = min( minSqDist, fi * fi );
-            break;
-        }
-
-        bool breaking = false;
-
-        for ( auto j = 1 ; j < nextStartI; j++ ) {
-
-            if ( testSymmetricPoints( bm, curP, xPix, yPix, i, j ) ) {
-
-                float fj   = (float) j;
-                minSqDist  = min( minSqDist, fi * fi + fj * fj );
-                breaking   = true;
-                break;
-            }
-        }
-
-        if (breaking) {
-
-            break;
         }
     }
 
