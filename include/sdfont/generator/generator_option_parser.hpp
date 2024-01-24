@@ -32,6 +32,7 @@ class GeneratorOptionParser {
     void processRatioSpreadToGlyph   ( const string s ) ;
     void processOutputFileName       ( const string s ) ;
     void processCodepointRangeFilePath( const string s ) ;
+    void processEncoding             ( const string s ) ;
     bool doesFileExist               ( const string s ) const ;
     bool isValidFileName             ( const string s ) const ;
 
@@ -50,6 +51,7 @@ class GeneratorOptionParser {
     static const string   DashH;
     static const string   Verbose;
     static const string   CodepointRangeFilePath;
+    static const string   Encoding;
 };
 
 } // namespace SDFont

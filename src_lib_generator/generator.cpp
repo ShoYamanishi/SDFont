@@ -9,6 +9,20 @@
 namespace SDFont {
 
 
+const string Generator::Encoding_unicode        = "unicode";
+const string Generator::Encoding_ms_symbol      = "ms_symbol";
+const string Generator::Encoding_sjis           = "sjis";
+const string Generator::Encoding_prc            = "prc";
+const string Generator::Encoding_big5           = "big5";
+const string Generator::Encoding_wansung        = "wansung";
+const string Generator::Encoding_johab          = "johab";
+const string Generator::Encoding_adobe_latin_1  = "adobe_latin_1";
+const string Generator::Encoding_adobe_standard = "adobe_standard";
+const string Generator::Encoding_adobe_expert   = "adobe_expert";
+const string Generator::Encoding_adobe_custom   = "adobe_custom";
+const string Generator::Encoding_apple_roman    = "apple_roman";
+const string Generator::Encoding_old_latin_2    = "old_latin_2";
+
 Generator::Generator(GeneratorConfig& conf, bool verbose):
     mConf    ( conf    ),
     mVerbose ( verbose ),
@@ -54,13 +68,72 @@ bool Generator::generate()
 }
 
 
+FT_Error Generator::setEncoding ( const string& s )
+{
+    if ( s.compare(Encoding_unicode) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_UNICODE );
+    }
+    else if (s.compare(Encoding_ms_symbol) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_MS_SYMBOL );
+    }
+    else if (s.compare(Encoding_sjis) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_SJIS );
+    }
+    else if (s.compare(Encoding_prc) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_PRC );
+    }
+    else if (s.compare(Encoding_big5) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_BIG5 );
+    }
+    else if (s.compare(Encoding_wansung) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_WANSUNG );
+    }
+    else if (s.compare(Encoding_johab) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_JOHAB );
+    }
+    else if (s.compare(Encoding_adobe_latin_1) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_ADOBE_LATIN_1 );
+    }
+    else if (s.compare(Encoding_adobe_standard) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_ADOBE_STANDARD );
+    }
+    else if (s.compare(Encoding_adobe_expert) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_ADOBE_EXPERT );
+    }
+    else if (s.compare(Encoding_adobe_custom) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_ADOBE_CUSTOM );
+    }
+    else if (s.compare(Encoding_apple_roman) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_ADOBE_CUSTOM );
+    }
+    else if (s.compare(Encoding_old_latin_2) == 0 ) {
+
+        return FT_Select_Charmap( mFtFace, FT_ENCODING_OLD_LATIN_2 );
+    }
+    else {
+        return FT_Err_Bad_Argument;
+    }
+}
+
 bool Generator::initializeFreeType()
 {
     auto ftError = FT_Init_FreeType( &mFtHandle );
 
     if ( ftError != FT_Err_Ok ) {
 
-        cerr << "error: " << ftError << "\n";
+        cerr << "FreeType error: " << ftError << "\n";
         return false;
     }
 
@@ -73,7 +146,15 @@ bool Generator::initializeFreeType()
 
     if ( ftError != FT_Err_Ok ) {
 
-        cerr << "error: " << ftError << "\n";
+        cerr << "Free Type error: " << ftError << "\n";
+        return false;
+    }
+
+    ftError = setEncoding ( mConf.encoding() );
+
+    if ( ftError != FT_Err_Ok ) {
+
+        cerr << "FreeType error: " << ftError << "\n";
         return false;
     }
 
@@ -81,7 +162,7 @@ bool Generator::initializeFreeType()
 
     if ( ftError != FT_Err_Ok ) {
 
-        cerr << "error: " << ftError << "\n";
+        cerr << "FreeType error: " << ftError << "\n";
         return false;
     }
 
@@ -287,7 +368,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
 
         if (ftError != FT_Err_Ok) {
 
-            cerr << "error: " << ftError << "\n";
+            cerr << "FreeType error: " << ftError << "\n";
             return false;
         }
 
@@ -295,7 +376,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
 
         if (ftError != FT_Err_Ok) {
 
-            cerr << "error: " << ftError << "\n";
+            cerr << "FreeType error: " << ftError << "\n";
             return false;
         }
 

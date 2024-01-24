@@ -5,6 +5,7 @@ namespace SDFont {
 const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;
 const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
 const string GeneratorConfig::DefaultCodepointRangeFilePath = "" ;
+const string GeneratorConfig::DefaultEncoding = "unicode" ;
 
 const long   GeneratorConfig::DefaultMaxCodePoint           =  255 ;
 const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
@@ -112,6 +113,7 @@ void GeneratorConfig::emitVerbose() const {
     cerr << "Signed Distance Font Generator [2019]\n";
     cerr << "Configured as follows.\n";
     cerr << "Font Path: ["        << mFontPath           << "]\n";
+    cerr << "Encoding: ["         << mEncoding           << "]\n";
     cerr << "Codepoint Range File Path: ["
                                   << mCodepointRangeFilePath << "]\n";
     cerr << "Output File Name: [" << mOutputFileName     << "]\n";
@@ -135,6 +137,9 @@ void GeneratorConfig::outputMetricsHeader( ostream& os ) const  {
     os << "\n";
     os << "# Output Texture Size: ";
     os << mOutputTextureSize;
+    os << "\n";
+    os << "# Encoding: ";
+    os << mEncoding;
     os << "\n";
     os << "# Highest Code Point: ";
     os << mMaxCodePoint;

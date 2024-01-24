@@ -27,6 +27,20 @@ class Generator {
     bool emitFileMetrics ();
     void generateMetrics(float& margin, vector<Glyph>& glyphs);
 
+    static const string Encoding_unicode;
+    static const string Encoding_ms_symbol;
+    static const string Encoding_sjis;
+    static const string Encoding_prc;
+    static const string Encoding_big5;
+    static const string Encoding_wansung;
+    static const string Encoding_johab;
+    static const string Encoding_adobe_latin_1;
+    static const string Encoding_adobe_standard;
+    static const string Encoding_adobe_expert;
+    static const string Encoding_adobe_custom;
+    static const string Encoding_apple_roman;
+    static const string Encoding_old_latin_2;
+
   private:
 
     bool  initializeFreeType      ( ) ;
@@ -37,6 +51,7 @@ class Generator {
     float findDimension           ( long itemsPerRow, long& X, long& Y ) ;
     bool  generateGlyphBitmaps    ( long numItemsPerRow ) ;
     bool  generateTexture         ( bool reverseY ) ;
+    FT_Error setEncoding          ( const string& s );
 
     GeneratorConfig&               mConf;
     bool                           mVerbose;

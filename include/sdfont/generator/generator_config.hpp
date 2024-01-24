@@ -26,7 +26,8 @@ class GeneratorConfig {
                                     { 1.0f },
         mGlyphBitmapSizeForSampling { DefaultGlyphBitmapSizeForSampling },
         mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
-        mCodepointRangeFilePath     { DefaultCodepointRangeFilePath }
+        mCodepointRangeFilePath     { DefaultCodepointRangeFilePath },
+        mEncoding                   { DefaultEncoding }
         {;}
 
     virtual ~GeneratorConfig(){;}
@@ -41,6 +42,7 @@ class GeneratorConfig {
     void setGlyphScalingFromSamplingToPackedSignedDist
                                ( float v  ) { mGlyphScalingFromSamplingToPackedSignedDist = v; }
     void setCodepointRangeFilePath( string s );
+    void setEncoding           ( string s ) { mEncoding = s; }
 
     string fontPath()          const { return mFontPath ;                         }
     string outputFileName()    const { return mOutputFileName ;                   }
@@ -58,6 +60,7 @@ class GeneratorConfig {
     long   signedDistExtent()  const { return   (long)( mGlyphBitmapSizeForSampling
                                               * mGlyphScalingFromSamplingToPackedSignedDist
                                               * mRatioSpreadToGlyph );                      }
+    const string& encoding()   const { return mEncoding;                          }
 
     void   emitVerbose () const;
     void   outputMetricsHeader ( ostream& os ) const;
@@ -87,6 +90,7 @@ class GeneratorConfig {
     string mCodepointRangeFilePath;
     vector< pair< int, int > >
            mCodepointRangePairs;
+    string mEncoding;
 
     static const string DefaultFontPath ;
     static const string DefaultOutputFileName ;
@@ -95,6 +99,7 @@ class GeneratorConfig {
     static const long   DefaultGlyphBitmapSizeForSampling ;
     static const float  DefaultRatioSpreadToGlyph ;
     static const string DefaultCodepointRangeFilePath;
+    static const string DefaultEncoding;
 
     void trim( string& line ) const;
     bool isCommentLine( const std::string& line ) const;

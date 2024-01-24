@@ -17,19 +17,21 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "-glyph_size_for_sampling [num] "
                                             "-ratio_spread_to_glyph [float] "
                                             "-codepoint_range_file_path [FilePath] "
+                                            "-encoding [unicode(default) / ms_symbol / sjis / prc / big5 / wansung / johab / adobe_latin_1 / adobe_standard / adobe_expert / adobe_custom / apple_roman / old_latin_2] "
                                             "[output file name w/o ext]"
                                             "\n";
+
 
 const string GeneratorOptionParser::FontPath             = "-font_path" ;
 const string GeneratorOptionParser::MaxCodePoint         = "-max_code_point" ;
 const string GeneratorOptionParser::TextureSize          = "-texture_size" ;
 const string GeneratorOptionParser::GlyphSizeForSampling = "-glyph_size_for_sampling" ;
 const string GeneratorOptionParser::RatioSpreadToGlyph   = "-ratio_spread_to_glyph" ;
+const string GeneratorOptionParser::Encoding             = "-encoding" ;
 const string GeneratorOptionParser::Help                 = "-help" ;
 const string GeneratorOptionParser::DashH                = "-h" ;
 const string GeneratorOptionParser::Verbose              = "-verbose" ;
 const string GeneratorOptionParser::CodepointRangeFilePath = "-codepoint_range_file_path" ;
-
 
 GeneratorOptionParser::GeneratorOptionParser( GeneratorConfig& config ):
     mConfig ( config )
@@ -127,6 +129,19 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
                 break;
             }
         }
+        else if ( arg.compare ( Encoding ) == 0 ) {
+
+            if ( i < argc - 1 ) {
+
+                string arg2( argv[++i] );
+                processEncoding( arg2 );
+            }
+            else {
+                mError = true;
+                break;
+            }
+        }
+
         else {
 
             processOutputFileName( arg );
@@ -232,6 +247,12 @@ void GeneratorOptionParser::processCodepointRangeFilePath ( const string s ) {
 
         mError = true;
     }
+}
+
+
+void GeneratorOptionParser::processEncoding ( const string s ) {
+
+    mConfig.setEncoding(s);
 }
 
 
