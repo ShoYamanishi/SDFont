@@ -227,6 +227,22 @@ For example, if you want to get the glyphs for the Japanese katakanas and hiraga
 
 * -ratio_spread_to_glyph [float] : The extra margin around each glyph to sample and to accommodate the signed distance values tapering off. An appropriate range is 0.1 to 0.2. The default is 0.2.
 
+* -enable_dead_reckoning : Experimental. Switch to enable the dead reckoning algorithm. See notes below.
+
+## NOTES on the Dead Reckoning Algorithm
+The command-line switch *-enable_dead_reckoning* enables an implementation of the dead reckoning algorithm proposed by [Grevera](https://www.sciencedirect.com/science/article/abs/pii/S1077314204000682). It works like dynamic programming.
+It assumes that for each point *v* on the grid on which the glyph is drawn, the closest point to the particular set of points has Bellman-equation like characteristics with respect to the neighbors of *v*. It works much faster than the original vicinity search algorithm. However, the quality of the output seems much worse.
+
+After some investigation, it seems the difference in the quality comes from the fact that the dead reckoning algorithm does not find exactly the closet point of the opposite polarity, but only an approximation.
+
+1. The dead reckoning algorithm first assigns zero at the points on the boundaries (i.e, the points for which at least one of the adjacent points has the opposite polarity), and assigns the nearest points to themselves. During the forward and backward scan, the polarity of each point is not taken into consideration.
+
+2. There may be a case where the Bellman-equation like locality characteristics do not hold. In other words, the closest point could not always be calculated from its immediate neighbors.
+
+This is inconclusive, and I need to investigate further, but external advice would be appreciated.
+
+
+
 ## Output PNG and TXT Files
 
 ### PNG Files
@@ -438,3 +454,6 @@ yamanishi72@gmail.com
 
 * [Green07]
 Chris Green. 2007. Improved alpha-tested magnification for vector textures and special effects. In ACM SIGGRAPH 2007 courses (SIGGRAPH '07). ACM, New York, NY, USA, 9-18. DOI: https://doi.org/10.1145/1281500.1281665
+
+* [Grevera2004]
+George J Grevera, The “dead reckoning” signed distance transform, Computer Vision and Image Understanding, Volume 95, Issue 3, 2004, Pages 317-333, ISSN 1077-3142, https://doi.org/10.1016/j.cviu.2004.05.002.
