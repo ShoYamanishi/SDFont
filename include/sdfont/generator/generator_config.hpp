@@ -27,7 +27,8 @@ class GeneratorConfig {
         mGlyphBitmapSizeForSampling { DefaultGlyphBitmapSizeForSampling },
         mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
         mCodepointRangeFilePath     { DefaultCodepointRangeFilePath },
-        mEncoding                   { DefaultEncoding }
+        mEncoding                   { DefaultEncoding },
+        mEnableDeadReckoning        { DefaultEnableDeadReckoning }
         {;}
 
     virtual ~GeneratorConfig(){;}
@@ -43,6 +44,7 @@ class GeneratorConfig {
                                ( float v  ) { mGlyphScalingFromSamplingToPackedSignedDist = v; }
     void setCodepointRangeFilePath( string s );
     void setEncoding           ( string s ) { mEncoding = s; }
+    void setDeadReckoning      ( bool b )   { mEnableDeadReckoning = b; }
 
     string fontPath()          const { return mFontPath ;                         }
     string outputFileName()    const { return mOutputFileName ;                   }
@@ -61,6 +63,8 @@ class GeneratorConfig {
                                               * mGlyphScalingFromSamplingToPackedSignedDist
                                               * mRatioSpreadToGlyph );                      }
     const string& encoding()   const { return mEncoding;                          }
+
+    bool   isDeadReckoningSet() const { return mEnableDeadReckoning; }
 
     void   emitVerbose () const;
     void   outputMetricsHeader ( ostream& os ) const;
@@ -91,6 +95,7 @@ class GeneratorConfig {
     vector< pair< int, int > >
            mCodepointRangePairs;
     string mEncoding;
+    bool   mEnableDeadReckoning;
 
     static const string DefaultFontPath ;
     static const string DefaultOutputFileName ;
@@ -100,6 +105,7 @@ class GeneratorConfig {
     static const float  DefaultRatioSpreadToGlyph ;
     static const string DefaultCodepointRangeFilePath;
     static const string DefaultEncoding;
+    static const bool   DefaultEnableDeadReckoning;
 
     void trim( string& line ) const;
     bool isCommentLine( const std::string& line ) const;

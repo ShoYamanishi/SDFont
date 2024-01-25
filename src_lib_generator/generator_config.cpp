@@ -11,6 +11,7 @@ const long   GeneratorConfig::DefaultMaxCodePoint           =  255 ;
 const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
 const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
 const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
+const bool   GeneratorConfig::DefaultEnableDeadReckoning    = false;
 
 void GeneratorConfig::setCodepointRangeFilePath( string s )
 {

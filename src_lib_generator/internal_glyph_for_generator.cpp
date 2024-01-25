@@ -281,6 +281,269 @@ float InternalGlyphForGen::getSignedDistance(
 
 void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
 
+    if ( mConf.isDeadReckoningSet() ) {
+
+        setSignedDistByDeadReckoning( bm );
+    }
+    else {
+        setSignedDistBySeparateVicinitySearch( bm );
+    }
+}
+
+void InternalGlyphForGen::setSignedDistByDeadReckoning( FT_Bitmap& bm ) {
+
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    const long spreadInBitmapPixels = static_cast<long> (
+          mConf.ratioSpreadToGlyph()
+        * (float)mConf.glyphBitmapSizeForSampling()
+    );
+
+    mSignedDistWidth  = ceil(mWidth  * scale + 2 * mConf.signedDistExtent());
+    mSignedDistHeight = ceil(mHeight * scale + 2 * mConf.signedDistExtent());
+
+    size_t arraySize = mSignedDistWidth * mSignedDistHeight;
+
+    mSignedDist = new float[ arraySize ];
+
+    auto* nearestCells = new NearestCell[ arraySize ];
+
+    doDeadReckoning_initialize( nearestCells );
+
+    doDeadReckoning_processCellsOnEdges( bm, nearestCells );
+
+    doDeadReckoning_scanForward( nearestCells );
+
+    doDeadReckoning_scanBackward( nearestCells );
+
+    doDeadReckoning_normalizeDistances( bm );
+
+    delete[] nearestCells;
+}
+
+
+void InternalGlyphForGen::doDeadReckoning_initialize( NearestCell* nearestCells )
+{
+    const auto longerEdge = static_cast<float>( std::max(mSignedDistWidth, mSignedDistHeight) );
+    const auto longEnoughDist = longerEdge * longerEdge * 4.0f;
+
+    for ( long j = 0; j < mSignedDistHeight; j++ ) {
+
+        const auto rawStart = j * mSignedDistWidth;
+
+        for ( long i = 0; i < mSignedDistWidth; i++ ) {
+
+            const auto indexSD = rawStart + i;
+
+            mSignedDist[ indexSD ] = longEnoughDist;
+            nearestCells[ indexSD ].set(mSignedDistWidth * 2, mSignedDistHeight * 2);
+        }
+    }
+}
+
+
+void InternalGlyphForGen::doDeadReckoning_processCellsOnEdges( FT_Bitmap& bm, NearestCell* nearestCells ) {
+
+    const auto offset = mConf.signedDistExtent();
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    for ( long j = 0; j < mSignedDistHeight; j++ ) {
+
+        const auto rawStart = j * mSignedDistWidth;
+
+        const auto fj = static_cast<float>( j - offset ) + 0.5f;
+
+        for ( long i = 0; i < mSignedDistWidth; i++ ) {
+
+            const auto indexSD = rawStart + i;
+
+            const auto fi = static_cast<float>(i - offset) + 0.5f;
+
+            auto xCenter = static_cast<long>( fi / scale );
+            auto xWest   = static_cast<long>( (fi - 1.0f) / scale );
+            auto xEast   = static_cast<long>( (fi + 1.0f) / scale );
+
+            auto yCenter = static_cast<long>( fj / scale );
+            auto yNorth  = static_cast<long>( (fj - 1.0f) / scale );
+            auto ySouth  = static_cast<long>( (fj + 1.0f) / scale );
+
+            const auto center = isPixelSet( bm, xCenter, yCenter );
+            const auto north  = isPixelSet( bm, xCenter, yNorth  );
+            const auto south  = isPixelSet( bm, xCenter, ySouth  );
+            const auto east   = isPixelSet( bm, xEast,   yCenter );
+            const auto west   = isPixelSet( bm, xWest,   yCenter );
+
+            const auto allOne  =    north && south && east && west && center;
+            const auto allZero = !( north || south || east || west || center );
+
+            if ( !(allOne || allZero) ) {
+
+                mSignedDist[ indexSD ] = 0.0f;
+                nearestCells[ indexSD ].set( i, j );
+            }
+        }
+    }
+}
+
+void InternalGlyphForGen::doDeadReckoning_scanForward( NearestCell* nearestCells ) {
+
+    const float distDiag  = sqrtf( 2.0f );
+    const float distOrtho = 1.0f;
+
+    for ( long j = 1; j < mSignedDistHeight; j++ ) {
+
+        const auto rawStartCenter =  j    * mSignedDistWidth;
+        const auto rawStartNorth  = (j-1) * mSignedDistWidth;
+
+        for ( long i = 1; i < mSignedDistWidth - 1; i++ ) {
+
+            const auto indexCenter    = rawStartCenter + i;
+
+            auto& distCenter = mSignedDist[ indexCenter    ];
+
+            if ( distCenter == 0.0f ) {
+                continue;
+            }
+
+            auto& cellCenter = nearestCells[ indexCenter ];
+
+            const auto indexWest      = rawStartCenter + i - 1;
+            const auto indexNorth     = rawStartNorth  + i;
+            const auto indexNorthWest = rawStartNorth  + i - 1;
+            const auto indexNorthEast = rawStartNorth  + i + 1;
+
+            const auto distWest      = mSignedDist[ indexWest      ];
+            const auto distNorth     = mSignedDist[ indexNorth     ];
+            const auto distNorthWest = mSignedDist[ indexNorthWest ];
+            const auto distNorthEast = mSignedDist[ indexNorthEast ];
+
+            if ( distNorthWest + distDiag < distCenter ) {
+
+                cellCenter = nearestCells[ indexNorthWest ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+
+            if ( distNorth + distOrtho < distCenter ) {
+
+                cellCenter = nearestCells[ indexNorth ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+
+            if ( distNorthEast + distDiag < distCenter ) {
+
+                cellCenter = nearestCells[ indexNorthEast ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+
+            if ( distWest + distOrtho < distCenter ) {
+
+                cellCenter = nearestCells[ indexWest ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+        }
+    }
+}
+
+void InternalGlyphForGen::doDeadReckoning_scanBackward( NearestCell* nearestCells ) {
+
+    const float distDiag  = sqrtf( 2.0f );
+    const float distOrtho = 1.0f;
+
+    for ( long j = mSignedDistHeight - 2; j > 0 ; j-- ) {
+
+        const auto rawStartCenter =  j    * mSignedDistWidth;
+        const auto rawStartSouth  = (j+1) * mSignedDistWidth;
+
+        for ( long i = mSignedDistWidth - 2; i > 0; i-- ) {
+
+            const auto indexCenter    = rawStartCenter + i;
+
+            auto& distCenter = mSignedDist[ indexCenter    ];
+
+            if ( distCenter == 0.0f ) {
+                continue;
+            }
+
+            auto& cellCenter = nearestCells[ indexCenter ];
+
+            const auto indexEast      = rawStartCenter + i + 1;
+            const auto indexSouth     = rawStartSouth  + i;
+            const auto indexSouthWest = rawStartSouth  + i - 1;
+            const auto indexSouthEast = rawStartSouth  + i + 1;
+
+            const auto distEast      = mSignedDist[ indexEast      ];
+            const auto distSouth     = mSignedDist[ indexSouth     ];
+            const auto distSouthWest = mSignedDist[ indexSouthWest ];
+            const auto distSouthEast = mSignedDist[ indexSouthEast ];
+
+            if ( distSouthEast + distDiag < distCenter ) {
+
+                cellCenter = nearestCells[ indexSouthEast ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+
+            if ( distSouth + distOrtho < distCenter ) {
+
+                cellCenter = nearestCells[ indexSouth ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+
+            if ( distSouthWest + distDiag < distCenter ) {
+
+                cellCenter = nearestCells[ indexSouthWest ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+
+            if ( distEast + distOrtho < distCenter ) {
+
+                cellCenter = nearestCells[ indexEast ];
+
+                distCenter = cellCenter.getDistFrom( i, j );
+            }
+        }
+    }
+}
+
+void InternalGlyphForGen::doDeadReckoning_normalizeDistances( FT_Bitmap& bm ) {
+
+    const auto offset = mConf.signedDistExtent();
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    for ( long j = 0; j < mSignedDistHeight; j++ ) {
+
+        const auto rawStart = j * mSignedDistWidth;
+
+        const auto fj = static_cast<float>(j - offset) + 0.5f;
+
+        for ( long i = 0; i < mSignedDistWidth; i++ ) {
+
+            const auto indexSD = rawStart + i;
+
+            const auto fi = static_cast<float>(i - offset) + 0.5f;
+
+            auto xCenter = static_cast<long>( fi / scale );
+            auto yCenter = static_cast<long>( fj / scale );
+
+            if ( isPixelSet( bm, xCenter, yCenter ) ) {
+                mSignedDist[ indexSD ] = std::min( 1.0f, 0.5f + mSignedDist[ indexSD ] / static_cast<float>(2.0*offset) );
+            }
+            else {
+                mSignedDist[ indexSD ] = std::max( 0.0f, 0.5f - mSignedDist[ indexSD ] / static_cast<float>(2.0*offset) );
+            }
+        }
+    }
+}
+
+
+void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch( FT_Bitmap& bm ) {
+
     const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
 
     const long spreadInBitmapPixels = (long)( mConf.ratioSpreadToGlyph() * (float)mConf.glyphBitmapSizeForSampling() );

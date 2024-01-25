@@ -1112,7 +1112,7 @@ class SeqMainRoll :public SequenceElement {
         mLightingEffect = true;
         mLowThreshold   = 0.45;
         mHighThreshold  = 0.55;
-        mSmoothing      = 2.0/16.0;
+        mSmoothing      = 0.1/16.0;
         mBaseColor      = glm::vec3( 1.0, 1.0, 0.0 );
         mBorderColor    = glm::vec3( 1.0, 1.0, 0.0 );
 
@@ -1244,9 +1244,9 @@ int main( int argc, char* argv[] )
 
     glfw.configGLFW();
 
-    SeqPrologue seqElem01( helper, shader, 0.2, 0.1 );
+    SeqPrologue seqElem01( helper, shader, 0.2, 0.2 );
     SeqTitle    seqElem02( helper, shader, 1.0, 0.4 );
-    SeqMainRoll seqElem03( helper, shader, 0.15, 0.1 );
+    SeqMainRoll seqElem03( helper, shader, 0.15, 0.2 );
 
     DeltaTime dt;
     double    absT = 0.0;

@@ -18,9 +18,9 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "-ratio_spread_to_glyph [float] "
                                             "-codepoint_range_file_path [FilePath] "
                                             "-encoding [unicode(default) / ms_symbol / sjis / prc / big5 / wansung / johab / adobe_latin_1 / adobe_standard / adobe_expert / adobe_custom / apple_roman / old_latin_2] "
+                                            " -enable_dead_reckoning "
                                             "[output file name w/o ext]"
                                             "\n";
-
 
 const string GeneratorOptionParser::FontPath             = "-font_path" ;
 const string GeneratorOptionParser::MaxCodePoint         = "-max_code_point" ;
@@ -28,6 +28,7 @@ const string GeneratorOptionParser::TextureSize          = "-texture_size" ;
 const string GeneratorOptionParser::GlyphSizeForSampling = "-glyph_size_for_sampling" ;
 const string GeneratorOptionParser::RatioSpreadToGlyph   = "-ratio_spread_to_glyph" ;
 const string GeneratorOptionParser::Encoding             = "-encoding" ;
+const string GeneratorOptionParser::EnableDeadReckoning  = "-enable_dead_reckoning" ;
 const string GeneratorOptionParser::Help                 = "-help" ;
 const string GeneratorOptionParser::DashH                = "-h" ;
 const string GeneratorOptionParser::Verbose              = "-verbose" ;
@@ -141,8 +142,11 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
                 break;
             }
         }
+        else if ( arg.compare ( EnableDeadReckoning ) == 0 ) {
 
-        else {
+            processDeadReckoning( true );
+        }
+	else {
 
             processOutputFileName( arg );
         }
@@ -253,6 +257,11 @@ void GeneratorOptionParser::processCodepointRangeFilePath ( const string s ) {
 void GeneratorOptionParser::processEncoding ( const string s ) {
 
     mConfig.setEncoding(s);
+}
+
+void GeneratorOptionParser::processDeadReckoning ( const bool b ) {
+
+    mConfig.setDeadReckoning( b );
 }
 
 

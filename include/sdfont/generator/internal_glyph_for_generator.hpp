@@ -54,6 +54,9 @@ class InternalGlyphForGen {
      */
     void setSignedDist( FT_Bitmap& bm );
 
+
+
+
     /** @brief set the coordinates of this glyph in the PNG coordinate system
      *         and the normalized texture coordinate system.
      *         It also sets the texture width and height in the normalized
@@ -228,6 +231,35 @@ class InternalGlyphForGen {
      */
     inline bool isPixelSet( FT_Bitmap& bm, long x, long y );
 
+    void setSignedDistBySeparateVicinitySearch( FT_Bitmap& bm );
+
+    void setSignedDistByDeadReckoning( FT_Bitmap& bm );
+
+    class NearestCell {
+
+        short mX;
+        short mY;
+
+      public:
+        NearestCell():mX(0),mY(0){}
+
+        void set( int x, int y ){ mX = x; mY = y; }
+
+        float getDistFrom( const long i, const long j ) const {
+
+            const auto spanX = static_cast<float>( i - mX );
+            const auto spanY = static_cast<float>( j - mY );
+
+            return sqrtf( spanX * spanX + spanY * spanY );
+        }
+
+    };
+
+    void doDeadReckoning_initialize( NearestCell* nearestCells );
+    void doDeadReckoning_processCellsOnEdges( FT_Bitmap& bm, NearestCell* nearestCells );
+    void doDeadReckoning_scanForward( NearestCell* nearestCells );
+    void doDeadReckoning_scanBackward( NearestCell* nearestCells );
+    void doDeadReckoning_normalizeDistances( FT_Bitmap& bm );
 
     GeneratorConfig&    mConf;
     long                mCodePoint;
