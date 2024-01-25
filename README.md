@@ -229,6 +229,8 @@ For example, if you want to get the glyphs for the Japanese katakanas and hiraga
 
 * -enable_dead_reckoning : Experimental. Switch to enable the dead reckoning algorithm. See notes below.
 
+* -reverse_y_direction_for_glyphs: Switch to reverse the vertical orientation of the glyphs in the PNG texture file. It's turned off by default. Turn it on, if you want to align the vertical direction of the glyphs in the texture to the direction of the rectangles in the vertices for rendering.
+
 ## NOTES on the Dead Reckoning Algorithm
 The command-line switch *-enable_dead_reckoning* enables an implementation of the dead reckoning algorithm proposed by [Grevera](https://www.sciencedirect.com/science/article/abs/pii/S1077314204000682). It works like dynamic programming.
 It assumes that for each point *v* on the grid on which the glyph is drawn, the closest point to the particular set of points has Bellman-equation like characteristics with respect to the neighbors of *v*. It works much faster than the original vicinity search algorithm. However, the quality of the output seems much worse.

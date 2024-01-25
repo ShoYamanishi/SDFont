@@ -34,6 +34,8 @@ class GeneratorOptionParser {
     void processCodepointRangeFilePath( const string s ) ;
     void processEncoding             ( const string s ) ;
     void processDeadReckoning        ( const bool   b );
+    void processReverseYDirectionForGlyphs
+                                     ( const bool   b );
     bool doesFileExist               ( const string s ) const ;
     bool isValidFileName             ( const string s ) const ;
 
@@ -49,6 +51,7 @@ class GeneratorOptionParser {
     static const string   GlyphSizeForSampling;
     static const string   RatioSpreadToGlyph;
     static const string   EnableDeadReckoning;
+    static const string   ReverseYDirectionForGlyphs;
     static const string   Help;
     static const string   DashH;
     static const string   Verbose;

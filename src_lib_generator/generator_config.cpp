@@ -12,6 +12,7 @@ const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
 const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
 const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
 const bool   GeneratorConfig::DefaultEnableDeadReckoning    = false;
+const bool   GeneratorConfig::DefaultReverseYDirectionForGlyphs = false;
 
 void GeneratorConfig::setCodepointRangeFilePath( string s )
 {
@@ -128,6 +129,8 @@ void GeneratorConfig::emitVerbose() const {
     cerr << "Initial Glyph Scaling from Sampling oo Packed Signed Dist: ["    << mGlyphScalingFromSamplingToPackedSignedDist << "]\n";
     cerr << "Glyph Bitmap Size for Sampling: ["  << glyphBitmapSizeForSampling()        << "]\n";
     cerr << "Ratio Spread to Glyph: [" << ratioSpreadToGlyph()   << "]\n";
+    cerr << "Dead Reckoning: [" << isDeadReckoningSet() << "]\n";
+    cerr << "ReverseYDirectionForGlyphSet: [" << isReverseYDirectionForGlyphsSet() << "]\n";
 }
 
 

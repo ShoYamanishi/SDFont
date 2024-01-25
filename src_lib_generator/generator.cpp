@@ -447,8 +447,8 @@ bool Generator::generateTexture( bool reverseY )
 
         for ( auto srcY = 0; srcY < g.signedDistHeight(); srcY++ ) {
 
-            auto dstY    = reverseY ? ( (len - 1) - ( srcY + g.baseY() ) ) :
-                                      ( srcY + g.baseY()                 ) ;
+            auto dstY    = len - 1 - ( srcY + g.baseY() );
+
             if ( dstY < 0 || len <= dstY ) {
                 continue;
             }
@@ -460,7 +460,12 @@ bool Generator::generateTexture( bool reverseY )
                 if ( dstX < 0 || len <= dstX ) {
                     continue;
                 }
-                auto dist  = g.signedDist( srcX, srcY );
+
+                auto dist  = g.signedDist(
+                    srcX, 
+                    mConf.isReverseYDirectionForGlyphsSet() ? (g.signedDistHeight() - 1 - srcY) : srcY
+
+                );
 
                 auto alpha = min ( 255, max( 0, (int)( dist * 255.0 ) ) );
 
@@ -488,7 +493,7 @@ void Generator::releaseTexture()
 
 unsigned char** Generator::textureBitmap()
 {
-    if ( !generateTexture( true ) ) {
+    if ( !generateTexture( mConf.isReverseYDirectionForGlyphsSet() ) ) {
 
         std::cerr << "Error\n";
 
@@ -500,7 +505,7 @@ unsigned char** Generator::textureBitmap()
 
 bool Generator::emitFilePNG()
 {
-    if ( !generateTexture( true ) ) {
+    if ( !generateTexture( mConf.isReverseYDirectionForGlyphsSet() ) ) {
 
         std::cerr << "Error\n";
         return false;

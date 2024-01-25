@@ -28,7 +28,8 @@ class GeneratorConfig {
         mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
         mCodepointRangeFilePath     { DefaultCodepointRangeFilePath },
         mEncoding                   { DefaultEncoding },
-        mEnableDeadReckoning        { DefaultEnableDeadReckoning }
+        mEnableDeadReckoning        { DefaultEnableDeadReckoning },
+        mReverseYDirectionForGlyphs { DefaultReverseYDirectionForGlyphs }
         {;}
 
     virtual ~GeneratorConfig(){;}
@@ -45,7 +46,8 @@ class GeneratorConfig {
     void setCodepointRangeFilePath( string s );
     void setEncoding           ( string s ) { mEncoding = s; }
     void setDeadReckoning      ( bool b )   { mEnableDeadReckoning = b; }
-
+    void setReverseYDirectionForGlyphs
+                               ( bool b )   { mReverseYDirectionForGlyphs = b; }
     string fontPath()          const { return mFontPath ;                         }
     string outputFileName()    const { return mOutputFileName ;                   }
     long   maxCodePoint()      const { return mMaxCodePoint ;                     }
@@ -65,7 +67,7 @@ class GeneratorConfig {
     const string& encoding()   const { return mEncoding;                          }
 
     bool   isDeadReckoningSet() const { return mEnableDeadReckoning; }
-
+    bool   isReverseYDirectionForGlyphsSet() const { return mReverseYDirectionForGlyphs; }
     void   emitVerbose () const;
     void   outputMetricsHeader ( ostream& os ) const;
 
@@ -96,7 +98,7 @@ class GeneratorConfig {
            mCodepointRangePairs;
     string mEncoding;
     bool   mEnableDeadReckoning;
-
+    bool   mReverseYDirectionForGlyphs;
     static const string DefaultFontPath ;
     static const string DefaultOutputFileName ;
     static const long   DefaultMaxCodePoint ;
@@ -106,6 +108,7 @@ class GeneratorConfig {
     static const string DefaultCodepointRangeFilePath;
     static const string DefaultEncoding;
     static const bool   DefaultEnableDeadReckoning;
+    static const bool   DefaultReverseYDirectionForGlyphs;
 
     void trim( string& line ) const;
     bool isCommentLine( const std::string& line ) const;
