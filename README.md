@@ -232,18 +232,58 @@ For example, if you want to get the glyphs for the Japanese katakanas and hiraga
 * -reverse_y_direction_for_glyphs: Switch to reverse the vertical orientation of the glyphs in the PNG texture file. It's turned off by default. Turn it on, if you want to align the vertical direction of the glyphs in the texture to the direction of the rectangles in the vertices for rendering.
 
 ## NOTES on the Dead Reckoning Algorithm
-The command-line switch *-enable_dead_reckoning* enables an implementation of the dead reckoning algorithm proposed by [Grevera](https://www.sciencedirect.com/science/article/abs/pii/S1077314204000682). It works like dynamic programming.
-It assumes that for each point *v* on the grid on which the glyph is drawn, the closest point to the particular set of points has Bellman-equation like characteristics with respect to the neighbors of *v*. It works much faster than the original vicinity search algorithm. However, the quality of the output seems much worse.
-
-After some investigation, it seems the difference in the quality comes from the fact that the dead reckoning algorithm does not find exactly the closet point of the opposite polarity, but only an approximation.
-
-1. The dead reckoning algorithm first assigns zero at the points on the boundaries (i.e, the points for which at least one of the adjacent points has the opposite polarity), and assigns the nearest points to themselves. During the forward and backward scan, the polarity of each point is not taken into consideration.
-
-2. There may be a case where the Bellman-equation like locality characteristics do not hold. In other words, the closest point could not always be calculated from its immediate neighbors.
-
-This is inconclusive, and I need to investigate further, but external advice would be appreciated.
+The command-line switch *-enable_dead_reckoning* enables an implementation of the dead reckoning algorithm proposed by [Grevera](https://www.sciencedirect.com/science/article/abs/pii/S1077314204000682). It works like dynamic programming. It is not an exact algorithm, but it calculates a good approximation of the real signed distance.
+It assumes that for each point *v* on the grid on which the glyph is drawn, the closest point to the particular set of points has Bellman-equation like characteristics with respect to the neighbors of *v*. It works much faster than the original vicinity search algorithm. However, the quality of the output does not seem satisfactory.
 
 
+In fact, it seems in many cases the inaccuracy is not tolerable for the purpose of the signed-distance fonts.
+In the signed-distance fonts, each value in the texture carries significant information to correctly to render the glyph at runtime. Hence, it is strongly desirable to calculate the signed distance values accurately with an exact algorithm as opposed to an approximation algorithms.
+
+After some investigations, the inaccuracy observed in the dead-reckoning algorithm stems from the following.
+
+1. The application of the *if* clauses in the forward and backward scan to locally update the signed distance values. This can be illustrated by the following example.
+
+<a href="docs/readme/dead_reckoning_01.png">
+<img src="docs/readme/dead_reckoning_01.png" width="200">
+</a>
+
+This is a snapshot of the backward scan phase in which the minimum distance for the point ( 11, 1 ) is about to be calculated from its 4 neighbors. The points with the black dots indicate the boundary points with the minimum distance 0. The part around the point (11, 1) is magnified below.
+
+<a href="docs/readme/dead_reckoning_02.png">
+<img src="docs/readme/dead_reckoning_02.png" width="200">
+</a>
+
+- At step 1, the minimum distance and its associated closest point at the point (12, 1)
+are examined. Assume the current minimum distance at point (11, 1) is not found
+ (infinity), then we tentatively set the associated closest point at (11, 1) to the one at (12, 1), which is (16, 8). Calculate the distance between (11, 1) and (16,8) to be 8.602.
+
+- At step 2, the minimum distance and the closest point at (10, 2) are tried.
+The distance from (10,2) to its associated closest point (14, 9) is 8.062.
+The diagonal distance from (11, 1) to (10,2) is 1.414.
+The current minimum distance at (11,1) is 8.602, which has been calculated at step 1.
+Comparing 8.062 + 1.414 with 8.602, 8.602 is lower. Hence the minimum distance and
+the associated closest point are not updated.
+
+- At step 3, the info at (11,2) is examined. In the same way as in step 2, the sum of
+the distance 7.616 + 1.0 is compared with 8.602, and no update is performed for (11,1).
+
+- At step 4, the info at (12,2) is examined. The sum of the distance 7.211 + 1.414 is compared with 8.602, and no update is performed.
+
+In the end, the minimum distance and its associated closest point for (11,1) are found as follows.
+
+<a href="docs/readme/dead_reckoning_03.png">
+<img src="docs/readme/dead_reckoning_03.png" width="200">
+</a>
+
+The actual minimum distance and its associated closest point are 8.544 and (14, 9) respectively. The error is gradually built up this way and propagated to the surrounding points.
+
+2. The use of neighbors and local search (like the Dijkstra's algorithm) to update the signed distance values in the forward and backward scan. The assumption for Bell-man-equation like characteristics do not hold well. In my experiments, I have increased the number of scans (both forward and backward) with various paths, but non-negligible error was still observed.
+
+3. Polarity-agnostic calculation of the distance. The original vicinity search algorithm finds a closest point of the opposite polarity for each point. In other words, if the current target point is in the glyph (black/inked), the closest point found is outside the glyph (white), and vice-versa. And the minimum signed distance is 1.0 (an orthogonally adjacent point). However, the polarity is ignored in the first few phases of the dead-reckoning algorithm. The closest point found will be in most cases of the same polarity, and the minimum signed distance is (incorrectly) 0. This may contribute to the inaccuracy significantly, especially if the beam width/sickness of the glyph is 4 to 6 pixels.
+
+Increasing the kernel size from 3x3 to 5x5 or larger may incrase the accuracy, but I have not tried this idea yet. Any advice and suggestions to increase the accuracy with the dead-reckoning algorithm (or any other algorithms) would be appreciated.
+
+ 
 
 ## Output PNG and TXT Files
 
