@@ -11,6 +11,28 @@ using namespace std;
 
 namespace SDFont {
 
+class Rect {
+  public:
+    float mX; // lower (left) X
+    float mY; // lower (bottom) Y
+    float mW;
+    float mH;
+
+    Rect( const float x, const float y, const float w, const float h ) noexcept
+        :mX{x} ,mY{y}, mW{w}, mH{h}{}
+};
+
+/** @brief represents one glyph in terms of two bounding boxes: mFrame and mTexture.
+ *         mFrame specifies the position of the glyph in a rectangle in the xy rendering coordinate system.
+ *         The other (mTexture) is to specify the corresponding location in the uv texture coordinates.
+ */
+class GlyphBound {
+  public:
+    Rect mFrame;
+    Rect mTexture;
+
+    GlyphBound( const Rect& frame, const Rect& texture ) noexcept : mFrame{frame}, mTexture{texture} {}
+};
 
 class RuntimeHelper {
 
@@ -34,8 +56,12 @@ class RuntimeHelper {
      */
     Glyph* getGlyph( long c );
 
-    float&             spreadInTexture()     { return mSpreadInTexture;     }
-    float&             spreadInFontMetrics() { return mSpreadInFontMetrics; }
+    /** @brief spread in lengths in the uv-texture coordinates.
+     */
+    float& spreadInTexture()     { return mSpreadInTexture;     }
+
+    /** @brief spread in pixels in the font metrics. */
+    float& spreadInFontMetrics() { return mSpreadInFontMetrics; }
 
     map< long, Glyph>& glyphs() { return mGlyphs; }
 
@@ -98,6 +124,89 @@ class RuntimeHelper {
         vector< Glyph* >& glyphs
     );
 
+
+    /** @brief generates bounding boxes for rendering.
+     *
+     *  @param glyphs   (in): the list of glyphs. Usually obtained from getMetrics()
+     *  @param posXs    (in): the list of the left positions of the glyphs in the
+     *                        local coordinate system, i.e., the position for the first element is 0,
+     *                        i.e., posXs[0] = 0.
+     *                        Usually obtained from getMetrics()
+     *  @param startX   (in): the starting X coordinate, that will be aligned with posXs[0].
+     *  @param baselineY(in): the baseline horizontal cocordinate.
+     *  @param fontSize (in): font size in pixels.
+     *  @param spreadRatio
+     *                  (in): how much spread to allocate around the glyph in proportion to the
+     *                        spread specified in the font in the range of 0.0(no spread) to
+     *                        1.0(max spread specified in the font).
+     *  @param glyphSpacing
+     *                  (in): spacing between glyphs. 1.0 means the original spacing kept in posXs,
+     *                        similar to letter-spacing attribute in CSS.
+     *
+     *  @param bounds   (out):bounding boxes for rendering.
+     *
+     *  @return true if the generation is successful. false otherwise.
+     */
+    bool getBoundingBoxes(
+
+        const vector< Glyph* >& glyphs,
+        const vector< float >&  posXs,
+        const float             startX,
+        const float             baselineY,
+        const float             fontSize,
+        const float             spreadRatio,
+        const float             glyphSpacing,
+        vector< GlyphBound >&   bounds
+    );
+
+
+
+    /** @brief generates OpenGL VBOs for the given glyph, i.e.
+     *         elements for  GL_ARRAY_BUFFER and
+     *         indices for GL_ELEMENT_ARRAY_BUFFER.
+     *         Each element for GL_ARRAY_BUFFER consists of 8 floats as follows
+     *
+     *         float  point   X
+     *         float  point   Y
+     *         float  point   Z (constant,   Z)
+     *         float  normal  X (constant, 0.0)
+     *         float  normal  Y (constant, 0.0)
+     *         float  normal  Z (constant, 1.0)
+     *         float  texture U
+     *         float  texture V
+     *
+     *         It generates 4 elements for one glyph for the corner points
+     *         of the rectangle for the glyph in the counter clock wise.
+     *
+     *         The indices consist of 6 elements for one glyph to represent
+     *         two triangles for GL_TRIANGLES.
+     *
+     *         The glyph is drawn on the plane on the plane perpendicular to
+     *         and intersects Z axis at (0, 0, GLZ).
+     *         The positive Y-axis indicates the upward direction of the glyph.
+     *
+     *  @param bounds    (in): glyph bounds
+     *
+     *  @param Z         (in): Z coordinate of the plane on which the glyph
+     *                         is drawn.
+     *
+     *  @param arrayBuf  (in): the start location in GL_ARRAY_BUFFER
+     *                         where the series of values will be stored.
+     *
+     *  @param indexStart(in): the start index in the GL_ARRAY_BUFFER
+     *                         that corresponds to arrayBuf above.
+     *
+     *  @param indices   (in): the start location in GL_ELEMENT_ARRAY_BUFFER
+     *                         where the series of the indices will be stored.
+     */
+    void generateOpenGLDrawElements (
+
+        const vector< GlyphBound >& bounds,
+        const float                 Z,
+        float*                      arrayBuf,
+        const unsigned int          indexStart,
+        unsigned int*               indices
+    );
 
     /** @brief generates OpenGL VBOs for the given glyph, i.e.
      *         elements for  GL_ARRAY_BUFFER and

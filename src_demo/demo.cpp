@@ -511,7 +511,9 @@ class Word {
 
     void generateElements(float* elements, GLuint* indices, long startIndex) {
 
-        mHelper.generateOpenGLDrawElements (
+        vector< SDFont::GlyphBound > bounds;
+
+        mHelper.getBoundingBoxes(
             mGlyphs,
             mTextureXs,
             mLeftX - firstBearingX(),
@@ -519,6 +521,11 @@ class Word {
             mFontSize,
             mSpreadRatio,
             mDistribution,
+            bounds
+        );
+
+        mHelper.generateOpenGLDrawElements (
+            bounds,
             mZ,
             &( elements[   SDFont::RuntimeHelper::NUM_FLOATS_PER_GLYPH
                          * startIndex                                   ] ) ,
