@@ -199,7 +199,7 @@ To run the Star Wars demo, run the following command, and hit '*space*'.
 ## Offline Font Generation with the Command-Line Tool
 
 ```
-Usage: sdfont_generator -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -codepoint_range_file_path [FilePath] [output file name w/o ext]
+Usage: sdfont_generator -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -codepoint_range_file_path [FilePath] -reverse_y_direction_for_glyphs [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
