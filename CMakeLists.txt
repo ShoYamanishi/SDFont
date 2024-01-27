@@ -4,14 +4,6 @@ project( sdfont )
 
 include(CMakePrintHelpers)
 
-#include( /Users/shoichiroyamanishi/workarea/tmp/libgd-2.3.3/cmake/modules/FindGD.cmake )
-
-message( "" )
-message( "    [WARNING ON LIBGD]: libdg does not install any export modules at any common locations. However the Git repository contain FindGD.cmake. It's been copied from libgd-2.3.3/cmake/modules to ${PROJECT_SOURCE_DIR} for convenience." )
-message( "" )
-
-include( FindGD.cmake )
-
 find_package( Freetype REQUIRED )
 find_package( PNG      REQUIRED )
 
@@ -33,13 +25,11 @@ target_compile_features( sdfont_gen PRIVATE cxx_std_17 )
 
 target_include_directories( sdfont_gen PUBLIC ${PROJECT_SOURCE_DIR}/include )
 
-target_include_directories( sdfont_gen PRIVATE ${GD_INCLUDE_DIR}        )
 target_include_directories( sdfont_gen PRIVATE ${FREETYPE_INCLUDE_DIRS} )
 target_include_directories( sdfont_gen PRIVATE ${PNG_INCLUDE_DIR}       )
 
 target_link_directories( sdfont_gen PRIVATE "/usr/local/lib" )
 
-target_link_libraries( sdfont_gen ${GD_LIBRARIES}       )
 target_link_libraries( sdfont_gen ${FREETYPE_LIBRARIES} )
 target_link_libraries( sdfont_gen ${PNG_LIBRARIES}      )
 
