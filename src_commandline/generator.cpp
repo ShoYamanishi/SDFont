@@ -1,3 +1,4 @@
+#include <time.h>
 #include "sdfont/generator/generator_option_parser.hpp"
 #include "sdfont/generator/generator_config.hpp"
 #include "sdfont/generator/generator.hpp"
@@ -12,7 +13,7 @@ using namespace std;
 
 int main ( int argc, char* argv[] )
 {
-
+    auto tStart = clock();
     SDFont::GeneratorConfig conf;
 
     SDFont::GeneratorOptionParser parser( conf );
@@ -27,7 +28,9 @@ int main ( int argc, char* argv[] )
 
     SDFont::Generator generator( conf, parser.hasVerbose() );
 
+
     res = generator.generate();
+
 
     if ( !res ) {
 
@@ -51,9 +54,13 @@ int main ( int argc, char* argv[] )
         exit(1);
     }
 
+    auto tEnd = clock();
     if ( parser.hasVerbose() ) {
 
-        cerr << "Finishied.\n";
+        auto tDiffInMillisec =  static_cast<float>( tEnd - tStart ) 
+                              / static_cast<float>( CLOCKS_PER_SEC ) * 1000.0f;
+
+        cerr << "Finishied in " << int(tDiffInMillisec) << " milli seconds\n";
     }
 
     return 0;
