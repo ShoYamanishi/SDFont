@@ -81,7 +81,6 @@ From left to right:
 ## General
 
 * [Freetype](https://freetype.org) : used to access the true type fonts, to draw glyphs, and to obtain the font metrics.
-* [LibGD](https://libgd.github.io) : used to handle raster graphics for the signed distance font glyphs.
 * [LibPNG](http://www.libpng.org/pub/png/libpng.html) : used to read & write PNG files.
 
 * [OpenGL](https://www.opengl.org) : used to render the fonts on the screen.
@@ -111,35 +110,8 @@ sudo apt install libfreetype-dev
 sudo apt install libpng-dev
 ```
 
-## Installing LibGD
-The installation by the package managers such as apt and homebrew is missing or does not seem to work.
-The best way to install LibGD seems to be to build and install it manually.
-```
-git clone https://github.com/libgd/libgd.git
-cd libgd
-git branch -l
-* master
-git log -n 1 --oneline
-0d75136b (HEAD -> master, origin/master, origin/HEAD) add static qualifier to multiple functions
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-VERBOSE=1 make 2>&1 | tee make.log
-VERBOSE=1 sudo make install 2>&1 | tee make_isntall.log
-```
-
-Please copy **FindGD.cmake** to the top directory of **SDFont**, where **CMakeLists.txt** resides.
-
-```
-# Find the location for FindGD.cmake
-cd ..
-find . -name "FindGD.cmake"
-./cmake/modules/FindGD.cmake
-cp ./cmake/modules/FindGD.cmake /path/to/your/SDFont
-```
-
 ## Installing GLFW on MacOS.
-On MacOS the requirements except for LibGD can be installed by [Homebrew](https://brew.sh).
+On MacOS the requirements can be installed by [Homebrew](https://brew.sh).
 However, the GLFW installed by Homebrew does not seem to work for me and I had to manually build it.
 (The **glfwCreateWindow()** returns **nullptr** when it is linked with Homebrew's glfw library.)
 
@@ -169,9 +141,6 @@ They are built with the standard CMake process.
 
 ```
 $ cd <path/to>/SDFont
-# make sure you have copied FindGD.cmake.
-$ ls FindGD.cmake
-FindGD.cmake
 $ mkdir build
 $ cd build
 $ cmake -DCMAKE_BUILD_TYPE=Release ..
