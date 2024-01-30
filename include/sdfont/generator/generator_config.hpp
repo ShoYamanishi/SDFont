@@ -50,7 +50,18 @@ class GeneratorConfig {
                                ( bool b )   { mReverseYDirectionForGlyphs = b; }
     string fontPath()          const { return mFontPath ;                         }
     string outputFileName()    const { return mOutputFileName ;                   }
-    long   maxCodePoint()      const { return mMaxCodePoint ;                     }
+    long   maxCodePoint()      const {
+        if ( mCodepointRangePairs.empty() ) {
+            return mMaxCodePoint ;
+        }
+        else {
+            int v = 0;
+            for ( const auto& p : mCodepointRangePairs ) {
+                v = std::max( v, p.second );
+            }
+            return v;
+        }
+    }
     long   outputTextureSize() const { return mOutputTextureSize ;                }
     long   defaultRatioSpreadToGlyph()
                                const { return DefaultRatioSpreadToGlyph ;         }
