@@ -18,7 +18,7 @@ RuntimeHelper::RuntimeHelper( string fileName ): mSpreadInTexture(0.0), mSpreadI
 
 RuntimeHelper::~RuntimeHelper() {;}
 
-Glyph* RuntimeHelper::getGlyph( long c )
+const Glyph* RuntimeHelper::getGlyph( const long c ) const
 {
     auto git = mGlyphs.find( c );
 
@@ -33,25 +33,145 @@ Glyph* RuntimeHelper::getGlyph( long c )
 }
 
 
+void RuntimeHelper::getGlyphOriginsWidthAndHeight(
+        
+    const string&           s,
+    const float             fontSize,
+    const float             letterSpacing,
+    const float&            leftX,
+    const float&            baselineY,
+
+    vector< const Glyph* >& glyphs,
+    vector< Point2D >&      instanceOrigins,
+    float&                  width,
+    float&                  height,
+    float&                  aboveBaselineY,
+    float&                  belowBaselineY
+) const {
+
+    glyphs.clear();
+    instanceOrigins.clear();
+    width          = 0.0f;
+    height         = 0.0f;
+    aboveBaselineY = 0.0f;
+    belowBaselineY = 0.0f;    
+
+    for ( auto i = 0 ; i < s.length() ; i++ ) {
+
+        auto ch  = s.at(i);
+        auto it = mGlyphs.find(ch);
+
+        if ( it != mGlyphs.end() ) {
+
+            glyphs.push_back( &(it->second) );
+        }
+    }
+
+    if ( glyphs.size() == 0 ) {
+        return;
+    }
+
+    instanceOrigins.emplace_back(
+
+        leftX - glyphs[0]->mHorizontalBearingX * fontSize,
+        baselineY
+    );
+
+    aboveBaselineY = std::max( 0.0f, glyphs[0]->mHorizontalBearingY ); 
+    belowBaselineY = std::max( 0.0f,   glyphs[0]->mHeight
+                                     - glyphs[0]->mHorizontalBearingY );
+
+    const auto numGlyphs = glyphs.size();
+
+    for ( int i = 1; i < numGlyphs; i++ ) {
+
+        instanceOrigins.emplace_back(
+
+                instanceOrigins[i-1].mX
+              + glyphs[i-1]->mHorizontalAdvance * fontSize * letterSpacing
+
+            , baselineY
+        );
+
+        aboveBaselineY = std::max( aboveBaselineY, glyphs[i]->mHorizontalBearingY ); 
+        belowBaselineY = std::max( belowBaselineY,   glyphs[i]->mHeight
+                                                   - glyphs[i]->mHorizontalBearingY );
+    }
+
+    width =   instanceOrigins[numGlyphs-1].mX
+            + glyphs[numGlyphs-1]->mWidth * fontSize
+            - instanceOrigins[0].mX;
+
+    height = aboveBaselineY + belowBaselineY;
+}
+
+void RuntimeHelper::getBoundingBoxes(
+
+    const float                   fontSize,
+    const float                   spreadRatio,
+    const vector< const Glyph* >& glyphs,
+    const vector< Point2D >&      instanceOrigins,
+    vector< GlyphBound >&         bounds
+) const {
+
+    bounds.clear();
+
+    const auto numGlyphs = glyphs.size();
+
+    const float spreadVertex  = spreadInFontMetrics() * spreadRatio;
+    const float spreadTexture = spreadInTexture()     * spreadRatio;
+
+    for ( int i = 0; i < numGlyphs; i++ ) {
+
+        const auto* glyph = glyphs[i];
+
+        const Point2D bottomLeft(
+
+              instanceOrigins[i].mX
+            + glyph->mHorizontalBearingX * fontSize
+
+          ,   instanceOrigins[i].mY 
+            +   ( glyph->mHorizontalBearingY - glyph->mHeight )
+              * fontSize
+        );
+
+        const Rect frameBound(
+            bottomLeft.mX - spreadVertex * fontSize,
+            bottomLeft.mY - spreadVertex * fontSize,
+            ( glyph->mWidth  + 2.0f * spreadVertex ) * fontSize,
+            ( glyph->mHeight + 2.0f * spreadVertex ) * fontSize
+        );
+
+        const Rect textureBound(
+            glyph->mTextureCoordX - spreadTexture,
+            glyph->mTextureCoordY - spreadTexture,
+            glyph->mTextureWidth  + 2.0f * spreadTexture,
+            glyph->mTextureHeight + 2.0f * spreadTexture
+        );
+
+        bounds.emplace_back( frameBound, textureBound );
+    }
+}
+
 void RuntimeHelper::getMetrics(
 
-    string            s,
-    float             fontSize,
-    float&            width,
-    vector< float >&  posXs,
-    float&            firstBearingX,
-    float&            bearingY,
-    float&            belowBaseLineY,
-    float&            advanceY,
-    vector< Glyph* >& glyphs
-) {
+    const string&           s,
+    const float             fontSize,
+    float&                  width,
+    vector< float >&        posXs,
+    float&                  firstBearingX,
+    float&                  bearingY,
+    float&                  belowBaselineY,
+    float&                  advanceY,
+    vector< const Glyph* >& glyphs
+) const {
     getMetricsNormalized(
         s,
         width,
         posXs,
         firstBearingX,
         bearingY,
-        belowBaseLineY,
+        belowBaselineY,
         advanceY,
         glyphs
     );
@@ -61,27 +181,28 @@ void RuntimeHelper::getMetrics(
     }
     firstBearingX  *= fontSize;
     bearingY       *= fontSize;
-    belowBaseLineY *= fontSize;
+    belowBaselineY *= fontSize;
     advanceY       *= fontSize;
 }
 
 
 void RuntimeHelper::getMetricsNormalized(
 
-    string            s,
+    const string&     s,
     float&            width,
     vector< float >&  posXs,
     float&            firstBearingX,
     float&            bearingY,
-    float&            belowBaseLineY,
+    float&            belowBaselineY,
     float&            advanceY,
-    vector< Glyph* >& glyphs
+    vector< const Glyph* >& glyphs
 
-) {
+) const {
+
     width          = 0.0;
     firstBearingX  = 0.0;
     bearingY       = 0.0;
-    belowBaseLineY = 0.0;
+    belowBaselineY = 0.0;
     advanceY       = 0.0;
 
     bool  firstFound     = false;
@@ -111,7 +232,7 @@ void RuntimeHelper::getMetricsNormalized(
 
             bearingY       = max( bearingY, g.mHorizontalBearingY );
 
-            belowBaseLineY = min( belowBaseLineY,
+            belowBaselineY = min( belowBaselineY,
                                   g.mHorizontalBearingY - g.mHeight );
 
             advanceY       = max( advanceY, g.mVerticalAdvance );
@@ -119,8 +240,9 @@ void RuntimeHelper::getMetricsNormalized(
 
             if ( chPrevSet ) {
 
-                auto& gPrev = mGlyphs[ chPrev ];
-                auto gitKern = gPrev.mKernings.find( ch );
+                const auto  git     = mGlyphs.find( chPrev );
+                const auto& gPrev   = git->second;
+                const auto  gitKern = gPrev.mKernings.find( ch );
 
                 if ( gitKern != gPrev.mKernings.end() ) {
                     curX += (gitKern->second);
@@ -213,7 +335,9 @@ void RuntimeHelper::generateOpenGLDrawElements (
     float*                      arrayBuf,
     const unsigned int          indexStart,
     unsigned int*               indices
-) {
+
+) const {
+
     unsigned int  index  = indexStart;
     float*        arrayP = arrayBuf;
     unsigned int* indexP = indices;
@@ -272,17 +396,18 @@ void RuntimeHelper::generateOpenGLDrawElements (
 
 void RuntimeHelper::generateOpenGLDrawElementsForOneChar (
 
-    Glyph&        g,
-    float         leftX,
-    float         baseLineY,
-    float         fontSize,
-    float         spreadRatio,
-    float         Z,
-    float*        arrayBuf,
-    unsigned int  indexStart,
-    unsigned int* indices
+    const Glyph&       g,
+    const float        leftX,
+    const float        baselineY,
+    const float        fontSize,
+    const float        spreadRatio,
+    const float        Z,
+    float*             arrayBuf,
+    const unsigned int indexStart,
+    unsigned int*      indices
 
-) {
+) const {
+
     indices[0] = indexStart;
     indices[1] = indexStart + 1;
     indices[2] = indexStart + 3;
@@ -293,14 +418,14 @@ void RuntimeHelper::generateOpenGLDrawElementsForOneChar (
     float spreadInFont    = mSpreadInFontMetrics * fontSize * spreadRatio;
     float spreadInTexture = mSpreadInTexture * spreadRatio;
 
-    float belowBaseLine = baseLineY + ( g.mHorizontalBearingY - g.mHeight ) * fontSize - spreadInFont;
-    float aboveBaseLine = baseLineY + g.mHorizontalBearingY * fontSize + spreadInFont;
+    float belowBaseline = baselineY + ( g.mHorizontalBearingY - g.mHeight ) * fontSize - spreadInFont;
+    float aboveBaseline = baselineY + g.mHorizontalBearingY * fontSize + spreadInFont;
 
     float leftPos       = leftX - spreadInFont;
     float rightPos      = leftX + g.mWidth * fontSize + spreadInFont;
 
     arrayBuf[ 0]  = leftPos;
-    arrayBuf[ 1]  = belowBaseLine;
+    arrayBuf[ 1]  = belowBaseline;
     arrayBuf[ 2]  = Z ;
     arrayBuf[ 3]  = 0.0;
     arrayBuf[ 4]  = 0.0;
@@ -309,7 +434,7 @@ void RuntimeHelper::generateOpenGLDrawElementsForOneChar (
     arrayBuf[ 7]  = g.mTextureCoordY + g.mTextureHeight + spreadInTexture;
 
     arrayBuf[ 8]  = rightPos;
-    arrayBuf[ 9]  = belowBaseLine;
+    arrayBuf[ 9]  = belowBaseline;
     arrayBuf[10]  = Z ;
     arrayBuf[11]  = 0.0;
     arrayBuf[12]  = 0.0;
@@ -318,7 +443,7 @@ void RuntimeHelper::generateOpenGLDrawElementsForOneChar (
     arrayBuf[15]  = g.mTextureCoordY + g.mTextureHeight + spreadInTexture;
 
     arrayBuf[16]  = rightPos;
-    arrayBuf[17]  = aboveBaseLine;
+    arrayBuf[17]  = aboveBaseline;
     arrayBuf[18]  = Z ;
     arrayBuf[19]  = 0.0;
     arrayBuf[20]  = 0.0;
@@ -327,7 +452,7 @@ void RuntimeHelper::generateOpenGLDrawElementsForOneChar (
     arrayBuf[23]  = g.mTextureCoordY - spreadInTexture;
 
     arrayBuf[24]  = leftPos;
-    arrayBuf[25]  = aboveBaseLine;
+    arrayBuf[25]  = aboveBaseline;
     arrayBuf[26]  = Z ;
     arrayBuf[27]  = 0.0;
     arrayBuf[28]  = 0.0;
@@ -339,18 +464,19 @@ void RuntimeHelper::generateOpenGLDrawElementsForOneChar (
 
 void RuntimeHelper::generateOpenGLDrawElements (
 
-    vector< Glyph* >& glyphs,
-    vector< float >&  posXs,
-    float             leftX,
-    float             baselineY,
-    float             fontSize,
-    float             spreadRatio,
-    float             distribution,
-    float             Z,
-    float*            arrayBuf,
-    unsigned int      indexStart,
-    unsigned int*     indices
-) {
+    const vector< Glyph* >& glyphs,
+    const vector< float >&  posXs,
+    const float             leftX,
+    const float             baselineY,
+    const float             fontSize,
+    const float             spreadRatio,
+    const float             distribution,
+    const float             Z,
+    float*                  arrayBuf,
+    const unsigned int      indexStart,
+    unsigned int*           indices
+
+) const {
 
     for ( auto i = 0 ; i < glyphs.size() ; i++ ) {
 

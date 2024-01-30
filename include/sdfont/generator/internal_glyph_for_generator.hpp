@@ -261,6 +261,9 @@ class InternalGlyphForGen {
     void doDeadReckoning_scanBackward( NearestCell* nearestCells );
     void doDeadReckoning_normalizeDistances( FT_Bitmap& bm );
 
+    void doGaussianBlur5x5( FT_Bitmap& bm );
+    float doGaussianBlur5x5( FT_Bitmap& bm, long i, long j );
+
     GeneratorConfig&    mConf;
     long                mCodePoint;
 

@@ -468,59 +468,70 @@ class DeltaTime {
 class Word {
 
   public:
-    Word( SDFont::RuntimeHelper& helper, string str, float fontSize, float spreadRatio ):
-        mHelper       (helper),
-        mString       (str),
-        mLeftX        (0.0),
-        mBaselineY    (0.0),
-        mFontSize     (fontSize),
-        mDistribution (1.0),
-        mSpreadRatio  (spreadRatio),
-        mZ            (0.0)
+    Word(
+        SDFont::RuntimeHelper& helper, 
+        const string           str, 
+        const float            fontSize, 
+        const float            spreadRatio,
+        const float            letterSpacing
+    ):
+        mHelper        (helper),
+        mString        (str),
+        mLeftX         (0.0),
+        mBaselineY     (0.0),
+        mWidth         (0.0),
+        mHeight        (0.0),
+        mAboveBaselineY(0.0),
+        mBelowBaselineY(0.0),
+        mFontSize      (fontSize),
+        mLetterSpacing (letterSpacing),
+        mSpreadRatio   (spreadRatio),
+        mZ             (0.0)
     {
-        mHelper.getMetrics( mString,
-                            mFontSize,
-                            mWidth,
-                            mTextureXs,
-                            mFirstBearingX,
-                            mBearingY,
-                            mBelowBaselineY,
-                            mAdvanceY,
-                            mGlyphs          );
+        mHelper.getGlyphOriginsWidthAndHeight(
 
+            mString,
+            mFontSize,
+            mLetterSpacing,
+            mLeftX,
+            mBaselineY,
+            mGlyphs,
+            mGlyphOrigins,
+            mWidth,
+            mHeight,
+            mAboveBaselineY,
+            mBelowBaselineY
+        );
     }
 
     long len() const { return mGlyphs.size(); }
 
     float width() const {return mWidth; }
 
-    float firstBearingX() const {return mFirstBearingX; }
-
-    float bearingY() const {return mBearingY; }
+    float bearingY() const {return mAboveBaselineY; }
 
     float belowBaselineY() const {return mBelowBaselineY; }
 
-    float advanceY() const {return mAdvanceY; }
+    float advanceY() const {return mGlyphs[0]->mVerticalAdvance * mFontSize; }
 
-    void setPos(float leftX, float baselineY) {
-        mLeftX     = leftX;
+    void setPos( const float leftX, const float baselineY ) {
+        mLeftX = leftX;
         mBaselineY = baselineY;
+        for ( auto& origin: mGlyphOrigins ) {
+            origin.mX += leftX;
+            origin.mY += baselineY;
+        }
     }
-
-    void setDistribution(float s) { mDistribution = s; }
 
     void generateElements(float* elements, GLuint* indices, long startIndex) {
 
         vector< SDFont::GlyphBound > bounds;
 
         mHelper.getBoundingBoxes(
-            mGlyphs,
-            mTextureXs,
-            mLeftX - firstBearingX(),
-            mBaselineY,
             mFontSize,
             mSpreadRatio,
-            mDistribution,
+            mGlyphs,
+            mGlyphOrigins,
             bounds
         );
 
@@ -540,17 +551,15 @@ class Word {
     SDFont::RuntimeHelper&   mHelper;
     string                   mString;
     float                    mWidth;
-    float                    mFirstBearingX;
-    float                    mBearingY;
+    float                    mHeight;
+    float                    mAboveBaselineY;
     float                    mBelowBaselineY;
-    float                    mAdvanceY;
-    vector< SDFont::Glyph* > mGlyphs;
-    vector< float >          mTextureXs;
-
+    vector< const SDFont::Glyph* > mGlyphs;
+    vector< SDFont::Point2D> mGlyphOrigins;
     float                    mLeftX;
     float                    mBaselineY;
     float                    mFontSize;
-    float                    mDistribution;
+    float                    mLetterSpacing;
     float                    mSpreadRatio;
     float                    mZ;
 };
@@ -569,7 +578,7 @@ class Line {
 
         splitLine( str, strs, ' ' );
         for (auto& s : strs) {
-            mWords.emplace_back(helper, s, fontSize, spreadRatio );
+            mWords.emplace_back(helper, s, fontSize, spreadRatio, 1.0 );
         }
     }
 
@@ -907,12 +916,12 @@ class SeqPrologue :public SequenceElement {
         mLowThreshold   = 0.45;
         mHighThreshold  = 0.55;
         mSmoothing      = 2.0/16.0;
-        mBaseColor      = glm::vec3( 0.0, 0.5, 1.0 );
-        mBorderColor    = glm::vec3( 0.0, 0.5, 1.0 );
+        mBaseColor      = glm::vec3( 1.0, 1.0, 1.0 );
+        mBorderColor    = glm::vec3( 1.0, 1.0, 1.0 );
 
         mM = glm::translate(
                              glm::mat4(1.0),
-                             glm::vec3( 0.0, 0.0, -4.0 )
+                             glm::vec3( 0.0, -0.1, -4.0 )
                            );
 
         mV = glm::lookAt(
@@ -1029,14 +1038,14 @@ class SeqTitle :public SequenceElement {
             draw();
 
         }
-        else if  ( 10.0 <= t && t < 12.0 ) {
+        else if  ( 10.0 <= t && t < 16.0 ) {
 
             mM = glm::translate(
                      glm::mat4(1.0),
                      glm::vec3( 0.0, 0.0, -1.0 * (2.0* t - 10.0))
                  );
 
-            mBaseColor = glm::vec3( 0.5 * (12.0 - t), 0.5 * (12.0 - t), 0.0 );
+            mBaseColor = glm::vec3( 0.5 * (16.0 - t), 0.5 * (16.0 - t), 0.0 );
 
             draw();
         }
@@ -1117,6 +1126,9 @@ class SeqMainRoll :public SequenceElement {
 
         mEffect         = 1;
         mLightingEffect = true;
+//        mLowThreshold   = 0.45;
+//        mHighThreshold  = 0.55;
+//        mSmoothing      = 10.0/16.0;
         mLowThreshold   = 0.45;
         mHighThreshold  = 0.55;
         mSmoothing      = 0.1/16.0;

@@ -284,6 +284,7 @@ void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
     if ( mConf.isDeadReckoningSet() ) {
 
         setSignedDistByDeadReckoning( bm );
+//        doGaussianBlur5x5( bm );
     }
     else {
         setSignedDistBySeparateVicinitySearch( bm );
@@ -540,6 +541,89 @@ void InternalGlyphForGen::doDeadReckoning_normalizeDistances( FT_Bitmap& bm ) {
         }
     }
 }
+
+
+void InternalGlyphForGen::doGaussianBlur5x5( FT_Bitmap& bm ) {
+
+    const auto offset = mConf.signedDistExtent();
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    const long spreadInBitmapPixels = static_cast<long> (
+          mConf.ratioSpreadToGlyph()
+        * (float)mConf.glyphBitmapSizeForSampling()
+    );
+
+    mSignedDistWidth  = ceil(mWidth  * scale + 2 * mConf.signedDistExtent());
+    mSignedDistHeight = ceil(mHeight * scale + 2 * mConf.signedDistExtent());
+
+    size_t arraySize = mSignedDistWidth * mSignedDistHeight;
+
+    mSignedDist = new float[ arraySize ];
+
+    for ( long j = 0; j < mSignedDistHeight; j++ ) {
+
+        const auto rawStart = j * mSignedDistWidth;
+
+        for ( long i = 0; i < mSignedDistWidth; i++ ) {
+
+            const auto indexSD = rawStart + i;
+
+            mSignedDist[ indexSD ] = std::max( 0.0f, std::min( 1.0f, doGaussianBlur5x5( bm, i - offset, j - offset) ) );
+        }
+    }
+}
+
+
+float InternalGlyphForGen::doGaussianBlur5x5( FT_Bitmap& bm, long i, long j ) {
+
+    const auto offset = mConf.signedDistExtent();
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    const auto fj = static_cast<float>( j ) + 0.5f;
+    const auto fi = static_cast<float>( i ) + 0.5f;
+
+    auto xCenter = static_cast<long>( fi / scale );
+    auto yCenter = static_cast<long>( fj / scale );
+
+    if ( isPixelSet( bm, xCenter, yCenter ) ) {
+
+        return 1.0f;
+    }
+    else {
+        return 0.0f;
+    }
+
+    static const float coeffs[] = {
+        1.0f,  4.0f,   6.0f,  4.0f, 1.0f,
+        4.0f, 16.0f,  24.0f, 16.0f, 4.0f,
+        6.0f, 24.0f,  36.0f, 24.0f, 6.0f,
+        4.0f, 16.0f,  24.0f, 16.0f, 4.0f,
+        1.0f,  4.0f,   6.0f,  4.0f, 1.0f,
+    };
+
+    float val = 0.0f;
+
+    for ( long j2 = -2; j2 < 3; j2++ ) {
+
+        const auto fj = static_cast<float>(j + j2) + 0.5f;
+
+        for ( long i2 = -2; i2 < 3; i2++ ) {
+
+            const auto coeff = coeffs[j2*5 + i2];
+
+            const auto fi = static_cast<float>(i + i2) + 0.5f;
+
+            auto xCenter = static_cast<long>( fi / scale );
+            auto yCenter = static_cast<long>( fj / scale );
+
+            if ( isPixelSet( bm, xCenter, yCenter ) ) {
+                val += coeff;
+            }
+        }
+    }
+    return val / 128.0f;
+}
+
 
 
 void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch( FT_Bitmap& bm ) {

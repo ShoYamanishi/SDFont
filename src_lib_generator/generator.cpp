@@ -468,8 +468,7 @@ bool Generator::generateTexture( bool reverseY )
                 );
 
                 auto alpha = min ( 255, max( 0, (int)( dist * 255.0 ) ) );
-
-                curRow [ dstX ] = (unsigned char) alpha;
+                curRow [ dstX ] = (unsigned char)alpha;
             }
         }
     }

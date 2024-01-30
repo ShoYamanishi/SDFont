@@ -82,8 +82,8 @@ void main (void) {\n\
         // Softened edge.\n\
 \n\
         color.rgb = baseColor;\n\
-        color.a   = smoothstep( 0.5 - smoothing,\n\
-                                0.5 + smoothing,\n\
+        color.a   = smoothstep( lowThreshold - smoothing,\n\
+                                highThreshold + smoothing,\n\
                                 texture( fontTexture, texCoordOut ).r );\n\
     }\n\
     else if ( effect == 2 ) {\n\

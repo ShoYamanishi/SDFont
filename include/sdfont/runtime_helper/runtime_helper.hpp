@@ -11,6 +11,16 @@ using namespace std;
 
 namespace SDFont {
 
+
+class Point2D {
+  public:
+    float mX;
+    float mY;
+
+    Point2D( const float x, const float y ) noexcept
+        :mX{x} ,mY{y}{}
+};
+
 class Rect {
   public:
     float mX; // lower (left) X
@@ -23,8 +33,11 @@ class Rect {
 };
 
 /** @brief represents one glyph in terms of two bounding boxes: mFrame and mTexture.
- *         mFrame specifies the position of the glyph in a rectangle in the xy rendering coordinate system.
- *         The other (mTexture) is to specify the corresponding location in the uv texture coordinates.
+ *
+ *         - mFrame specifies the vertex positions of the glyph bonding box in the 
+ *           render coordinate system.
+ *
+ *         - mTexture is to specify the bounding box in the uv texture coordinate system.
  */
 class GlyphBound {
   public:
@@ -54,16 +67,106 @@ class RuntimeHelper {
      *  @return pointer to Glyph that constains the metrics.
      *          nullptr if the given code point is not valid.
      */
-    Glyph* getGlyph( long c );
+    const Glyph* getGlyph( const long c ) const;
 
     /** @brief spread in lengths in the uv-texture coordinates.
      */
-    float& spreadInTexture()     { return mSpreadInTexture;     }
+    float spreadInTexture() const     { return mSpreadInTexture;     }
 
     /** @brief spread in pixels in the font metrics. */
-    float& spreadInFontMetrics() { return mSpreadInFontMetrics; }
+    float spreadInFontMetrics() const { return mSpreadInFontMetrics; }
 
-    map< long, Glyph>& glyphs() { return mGlyphs; }
+    const map< long, Glyph>& glyphs() const { return mGlyphs; }
+
+    /** @brief typesets a word.
+     *
+     *  @param s               (in):  the word to typeset
+     *
+     *  @param fontSize        (in):  font size in pixels.
+     *
+     *  @param letterSpacing   (in):  letter spacing similar to letter-spacing 
+     *                                property in CSS. Use 1.0 as the base value.
+     *                                If you want to stretch the spacing by 10%, then
+     *                                set 1.1.
+     *
+     *  @param leftX           (in):  the X-coordinate to which the left
+     *                                edge of the bounding box of the first glyph
+     *                                is aligned in the render coordinate system.
+     *
+     *  @param baselineY       (in):  the Y-coordinate for the baseline 
+     *                                in the render coordinate system.
+     *
+     *  @param glyphs          (out): the list of Glyphs which contain the metrics.
+     *
+     *  @param instanceOrigins (out): the list of the glyph origins 
+     *                                in the render coordinate system.
+     *
+     *  @param width           (out): width of the rectangular area
+     *                                in the render coordinate system
+     *                                required to accommodate all the glyph bounding boxes 
+     *                                for the word.
+     *
+     *  @param height          (out): height of the rectangular area
+     *                                in the render coordinate system
+     *                                required to accommodate all the glyph bounding boxes 
+     *                                for the word.
+     *
+     *                                height = aboveBaselineY + belowBaselineY
+     *
+     *  @param aboveBaselineY  (out): maximum height above the baseline 
+     *                                in the render coordinate system
+     *                                required to accommodate all the glyph bounding boxes 
+     *                                for the word.
+     *
+     *  @param belowBaselineY  (out): maximum height below the baseline 
+     *                                in the render coordinate system
+     *                                required to accommodate all the glyph bounding boxes 
+     *                                for the word.
+     */
+    void getGlyphOriginsWidthAndHeight(
+        
+        const string&           s,
+        const float             fontSize,
+        const float             letterSpacing,
+        const float&            leftX,
+        const float&            baselineY,
+
+        vector< const Glyph* >& glyphs,
+        vector< Point2D >&      instanceOrigins,
+        float&                  width,
+        float&                  height,
+        float&                  aboveBaselineY,
+        float&                  belowBaselineY
+    ) const;
+
+
+    /** @brief generates bounding boxes for rendering.
+     *
+     *  @param fontSize        (in): font size in pixels.
+     *
+     *  @param spreadRatio     (in): specifies how much spread to allocate to expand the
+     *                               glyph bounding boxes.
+     *                               The bonding boxes are expanded by the following amount.
+     *
+     *                               - spreadRatio * spreadInTexture() 
+     *                                   : for the uv-texture coordinates.
+     *                               - spreadRatio * spreadInFontMetrics() 
+     *                                   : for the render vertices
+     *
+     *   glyph                  (in): list of Glyphs from getGlyphOriginsWidthAndHeight().
+     *   instanceOrigins        (in): list of glyph origins from getGlyphOriginsWidthAndHeight().
+     *
+     *   bounds                 (out): list of bounding boxes for rendering.
+     */
+    void getBoundingBoxes(
+
+        const float                   fontSize,
+        const float                   spreadRatio,
+        const vector< const Glyph* >& glyphs,
+        const vector< Point2D >&      instanceOrigins,
+        vector< GlyphBound >&         bounds
+    ) const;
+
 
 
     /** @brief it generates the follogin metrics in the normalized
@@ -76,7 +179,7 @@ class RuntimeHelper {
      *                  glyph rectangle.
      *                  I.e. The X origin + horizontal bearing.
      *
-     *         - height (bearingY + belowBaseLineY) where bearingY is
+     *         - height (bearingY + belowBaselineY) where bearingY is
      *                  the height required above the base line.
      *                  The height is given as the sum of the two terms.
      *
@@ -93,36 +196,35 @@ class RuntimeHelper {
      *  @param posXs          (out): See above.
      *  @param firstBearingX  (out): See above.
      *  @param bearingY       (out): See above.
-     *  @param belowBaseLineY (out): See above.
+     *  @param belowBaselineY (out): See above.
      *  @param advanceY       (out): See above.
      *  @param glyphs         (out): See above.
      */
     void getMetrics(
 
-        string            s,
-        float             fontSize,
-        float&            width,
-        vector< float >&  posXs,
-        float&            firstBearingX,
-        float&            bearingY,
-        float&            belowBaseLineY,
-        float&            advanceY,
-        vector< Glyph* >& glyphs
-
-    );
+        const string&           s,
+        const float             fontSize,
+        float&                  width,
+        vector< float >&        posXs,
+        float&                  firstBearingX,
+        float&                  bearingY,
+        float&                  belowBaselineY,
+        float&                  advanceY,
+        vector< const Glyph* >& glyphs
+    ) const;
 
 
     void getMetricsNormalized(
 
-        string            s,
-        float&            width,
-        vector< float >&  posXs,
-        float&            firstBearingX,
-        float&            bearingY,
-        float&            belowBaseLineY,
-        float&            advanceY,
-        vector< Glyph* >& glyphs
-    );
+        const string&           s,
+        float&                  width,
+        vector< float >&        posXs,
+        float&                  firstBearingX,
+        float&                  bearingY,
+        float&                  belowBaselineY,
+        float&                  advanceY,
+        vector< const Glyph* >& glyphs
+    ) const;
 
 
     /** @brief generates bounding boxes for rendering.
@@ -159,9 +261,7 @@ class RuntimeHelper {
         vector< GlyphBound >&   bounds
     );
 
-
-
-    /** @brief generates OpenGL VBOs for the given glyph, i.e.
+    /** @brief generates OpenGL VBOs for the given glyphs, i.e.
      *         elements for  GL_ARRAY_BUFFER and
      *         indices for GL_ELEMENT_ARRAY_BUFFER.
      *         Each element for GL_ARRAY_BUFFER consists of 8 floats as follows
@@ -175,14 +275,14 @@ class RuntimeHelper {
      *         float  texture U
      *         float  texture V
      *
-     *         It generates 4 elements for one glyph for the corner points
-     *         of the rectangle for the glyph in the counter clock wise.
+     *         It generates 4 elements per bounding box of the glyph
+     *         in the counter-clockwise orientation.
      *
      *         The indices consist of 6 elements for one glyph to represent
      *         two triangles for GL_TRIANGLES.
      *
-     *         The glyph is drawn on the plane on the plane perpendicular to
-     *         and intersects Z axis at (0, 0, GLZ).
+     *         The glyph is drawn on the plane perpendicular to the Z-axis,
+     *         and it intersects the axis at (0, 0, Z).
      *         The positive Y-axis indicates the upward direction of the glyph.
      *
      *  @param bounds    (in): glyph bounds
@@ -191,13 +291,13 @@ class RuntimeHelper {
      *                         is drawn.
      *
      *  @param arrayBuf  (in): the start location in GL_ARRAY_BUFFER
-     *                         where the series of values will be stored.
+     *                         where the list of values will be stored.
      *
      *  @param indexStart(in): the start index in the GL_ARRAY_BUFFER
      *                         that corresponds to arrayBuf above.
      *
      *  @param indices   (in): the start location in GL_ELEMENT_ARRAY_BUFFER
-     *                         where the series of the indices will be stored.
+     *                         where the list of the indices will be stored.
      */
     void generateOpenGLDrawElements (
 
@@ -206,7 +306,7 @@ class RuntimeHelper {
         float*                      arrayBuf,
         const unsigned int          indexStart,
         unsigned int*               indices
-    );
+    ) const;
 
     /** @brief generates OpenGL VBOs for the given glyph, i.e.
      *         elements for  GL_ARRAY_BUFFER and
@@ -236,7 +336,7 @@ class RuntimeHelper {
      *
      *  @param leftX     (in): the left side of the glyph rectangle.
      *                         I.e. the origin of X + horizontal bearing.
-     *  @param baseLineY (in): vertical base line.
+     *  @param baselineY (in): vertical base line.
      *
      *  @param fontSize  (in): font size in pixels.
      *
@@ -245,27 +345,27 @@ class RuntimeHelper {
      *  @param Z         (in): Z coordinate of the plane on which the glyph
      *                         is drawn.
      *
-     *  @param arrayBuf  (in): the start location in GL_ARRAY_BUFFER
+     *  @param arrayBuf  (in/out): the start location in GL_ARRAY_BUFFER
      *                         where the series of values will be stored.
      *
      *  @param indexStart(in): the start index in the GL_ARRAY_BUFFER
      *                         that corresponds to arrayBuf above.
      *
-     *  @param indices   (in): the start location in GL_ELEMENT_ARRAY_BUFFER
+     *  @param indices   (in/out): the start location in GL_ELEMENT_ARRAY_BUFFER
      *                         where the series of the indices will be stored.
      */
     void generateOpenGLDrawElementsForOneChar (
 
-        Glyph&        g,
-        float         leftX,
-        float         baseLineY,
-        float         fontSize,
-        float         spreadRatio,
-        float         Z,
-        float*        arrayBuf,
-        unsigned int  indexStart,
-        unsigned int* indices
-    );
+        const Glyph&       g,
+        const float        leftX,
+        const float        baselineY,
+        const float        fontSize,
+        const float        spreadRatio,
+        const float        Z,
+        float*             arrayBuf,
+        const unsigned int indexStart,
+        unsigned int*      indices
+    ) const;
 
 
     /** @brief generates OpenGL VBOs for the given glyphs, i.e.
@@ -296,7 +396,7 @@ class RuntimeHelper {
      *
      *  @param leftX     (in): the left side of the glyph rectangle.
      *                         I.e. the origin of X + horizontal bearing.
-     *  @param baseLineY (in): vertical base line.
+     *  @param baselineY (in): vertical base line.
      *
      *  @param fontSize  (in): font size in pixels.
      *
@@ -326,18 +426,19 @@ class RuntimeHelper {
      */
     void generateOpenGLDrawElements (
 
-        vector< Glyph* >& glyphs,
-        vector< float >&  posXs,
-        float             leftX,
-        float             baselineY,
-        float             fontSize,
-        float             spreadRatio,
-        float             distribution,
-        float             Z,
-        float*            arrayBuf,
-        unsigned int      indexStart,
-        unsigned int*     indices
-    );
+        const vector< Glyph* >& glyphs,
+        const vector< float >&  posXs,
+        const float             leftX,
+        const float             baselineY,
+        const float             fontSize,
+        const float             spreadRatio,
+        const float             distribution,
+        const float             Z,
+        float*                  arrayBuf,
+        const unsigned int      indexStart,
+        unsigned int*           indices
+
+    ) const;
 
   private:
     float             mSpreadInTexture;
