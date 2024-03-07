@@ -77,9 +77,9 @@ void RuntimeHelper::getGlyphOriginsWidthAndHeight(
         baselineY
     );
 
-    aboveBaselineY = std::max( 0.0f, glyphs[0]->mHorizontalBearingY ); 
-    belowBaselineY = std::max( 0.0f,   glyphs[0]->mHeight
-                                     - glyphs[0]->mHorizontalBearingY );
+    aboveBaselineY = std::max( 0.0f, glyphs[0]->mHorizontalBearingY * fontSize );
+    belowBaselineY = std::max( 0.0f,(  glyphs[0]->mHeight
+                                     - glyphs[0]->mHorizontalBearingY ) * fontSize );
 
     const auto numGlyphs = glyphs.size();
 
@@ -93,9 +93,9 @@ void RuntimeHelper::getGlyphOriginsWidthAndHeight(
             , baselineY
         );
 
-        aboveBaselineY = std::max( aboveBaselineY, glyphs[i]->mHorizontalBearingY ); 
-        belowBaselineY = std::max( belowBaselineY,   glyphs[i]->mHeight
-                                                   - glyphs[i]->mHorizontalBearingY );
+        aboveBaselineY = std::max( aboveBaselineY, glyphs[i]->mHorizontalBearingY * fontSize );
+        belowBaselineY = std::max( belowBaselineY,(  glyphs[i]->mHeight
+                                                   - glyphs[i]->mHorizontalBearingY ) * fontSize );
     }
 
     width =   instanceOrigins[numGlyphs-1].mX
