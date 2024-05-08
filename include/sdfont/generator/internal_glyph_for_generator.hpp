@@ -28,6 +28,17 @@ class InternalGlyphForGen {
         long              codePoint ,
         FT_Glyph_Metrics& m            );
 
+
+    InternalGlyphForGen (
+        GeneratorConfig&  conf,
+        const long        codePoint,
+        const long        width,
+        const long        height,
+        unsigned char*    external_bitmap,
+        const long        external_bitmap_width,
+        const long        external_bitmap_height
+    );
+
     virtual ~InternalGlyphForGen ();
 
     inline long codePoint() const;
@@ -53,8 +64,7 @@ class InternalGlyphForGen {
      *  @param bm     (in): FreeType bitmap info.
      */
     void setSignedDist( FT_Bitmap& bm );
-
-
+    void setSignedDist();
 
 
     /** @brief set the coordinates of this glyph in the PNG coordinate system
@@ -67,6 +77,8 @@ class InternalGlyphForGen {
      */
     void setBaseXY( long x, long y );
 
+    float width()  const { return mWidth;  }
+    float height() const { return mHeight; }
 
     void releaseBitmap();
 
@@ -75,6 +87,8 @@ class InternalGlyphForGen {
     void emitKernings( ostream& os ) const ;
 
     Glyph generateSDGlyph() const;
+
+    bool hasExternalBitmap() const { return mHasExternalBitmap; }
 
   private:
 
@@ -113,6 +127,12 @@ class InternalGlyphForGen {
         long       ySD
     );
 
+    float getSignedDistance(
+        const long  i,
+        const long  j,
+        const long  width,
+        const long  height
+    );
 
     /** @brief test the points along the X and Y axes distant by 'offset'
      *         from the terget point.
@@ -231,7 +251,10 @@ class InternalGlyphForGen {
      */
     inline bool isPixelSet( FT_Bitmap& bm, long x, long y );
 
+    bool isPixelSetInExternalBitmap( const long x, const long y )  ;
+
     void setSignedDistBySeparateVicinitySearch( FT_Bitmap& bm );
+    void setSignedDistBySeparateVicinitySearch();
 
     void setSignedDistByDeadReckoning( FT_Bitmap& bm );
 
@@ -292,6 +315,11 @@ class InternalGlyphForGen {
     map< long, FT_Pos > mKernings;
 
     static const long   FREE_TYPE_FIXED_POINT_SCALING;
+
+    bool                mHasExternalBitmap;
+    long                mExternalBitmapWidth;
+    long                mExternalBitmapHeight;
+    unsigned char*      mExternalBitmap;
 };
 
 

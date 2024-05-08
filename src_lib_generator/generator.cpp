@@ -3,8 +3,10 @@
 #include <sstream>
 #include <math.h>
 #include <png.h>
+#include <filesystem>
 
 #include "sdfont/generator/generator.hpp"
+#include "sdfont/generator/png_loader.hpp"
 
 namespace SDFont {
 
@@ -34,6 +36,11 @@ Generator::Generator(GeneratorConfig& conf, bool verbose):
 Generator::~Generator()
 {
     releaseTexture();
+
+    for ( auto* g : mGlyphs ) {
+
+        delete g;
+    }
 }
 
 
@@ -49,10 +56,14 @@ bool Generator::generate()
         return false;
     }
 
-
     if ( !generateGlyphs() ) {
 
         return false;
+    }
+
+    if ( mConf.extraGlyphPath() != "" ) {
+
+       generateExtraGlyphs();
     }
 
     getKernings();
@@ -174,20 +185,28 @@ void Generator::getKernings()
 {
     if ( FT_HAS_KERNING( mFtFace ) ) {;
 
-        for ( auto& g1 : mGlyphs ) {
+        for ( auto* g1 : mGlyphs ) {
 
-            auto ci1 = FT_Get_Char_Index( mFtFace, g1.codePoint() );
+            if ( g1->hasExternalBitmap() ) {
+                continue;
+            }
 
-            for ( auto& g2 : mGlyphs ) {
+            auto ci1 = FT_Get_Char_Index( mFtFace, g1->codePoint() );
 
-                auto ci2 = FT_Get_Char_Index( mFtFace, g2.codePoint() );
+            for ( auto* g2 : mGlyphs ) {
+
+                if ( g2->hasExternalBitmap() ) {
+                    continue;
+                }
+
+                auto ci2 = FT_Get_Char_Index( mFtFace, g2->codePoint() );
 
                 FT_Vector kerning;
                 FT_Get_Kerning( mFtFace, ci1, ci2, FT_KERNING_DEFAULT, &kerning);
 
                 if ( kerning.x != 0 ) {
 
-                    g1.addKerning( g2.codePoint(), kerning.x );
+                    g1->addKerning( g2->codePoint(), kerning.x );
                 }
             }
         }
@@ -304,11 +323,11 @@ float Generator::findDimension ( long itemsPerRow, long& X, long& Y )
 
             if ( k < mGlyphs.size() ){
 
-                auto& g = mGlyphs[k];
+                auto* g = mGlyphs[k];
 
-                totalXrow += g.signedDistWidth();
+                totalXrow += g->signedDistWidth();
 
-                maxY = max( maxY, g.signedDistHeight() );
+                maxY = max( maxY, g->signedDistHeight() );
             }
         }
 
@@ -341,18 +360,66 @@ bool Generator::generateGlyphs()
                 cerr << "error at char code [" << i << "]: " << ftError << "\n";
                 return false;
             }
-
-            mGlyphs.emplace_back ( mConf, i, mFtFace->glyph->metrics );
+            auto* g = new InternalGlyphForGen( mConf, i, mFtFace->glyph->metrics );
+            mGlyphs.push_back ( g );
         }
     }
-
     return true;
 }
 
+std::pair<float, float> Generator::findMeanGlyphDimension()
+{
+    float width { 0.0f };
+    float height{ 0.0f };
+    float count { 0.0f };
+    for ( auto* g : mGlyphs ) {
+        if ( g->width() > 0.0f &&  g->height() > 0.0f ) {
+            width  += g->width();
+            height += g->height();
+            count  += 1.0f;
+        }
+    }
+    return std::pair( width / count, height / count );
+}
+
+void Generator::generateExtraGlyphs()
+{
+    const auto dim  = findMeanGlyphDimension();
+
+    addExtraGlyph( 0x0A, dim, GeneratorConfig::FileNameExtraGlyphCarriageReturn );
+
+    addExtraGlyph( 0x00, dim, GeneratorConfig::FileNameExtraGlyphBlank          );
+}
+
+void Generator::addExtraGlyph( const long code_point, const std::pair<float, float>& dim, const std::string& file_name )
+{
+    const auto base_path = std::filesystem::path{ mConf.extraGlyphPath() };
+    const auto file_path = std::filesystem::path{ file_name };
+
+    unsigned long width, height;
+    unsigned char* data;
+
+    const auto result = loadPngImage( base_path / file_path, width, height, &data );
+
+    if ( mVerbose ) {
+        cerr << "External bitmap: [" << file_name << "] ( " << width << ", " << height << ")\n";
+    }
+
+    auto* g = new InternalGlyphForGen (
+        mConf,
+        code_point,
+        static_cast< long >( dim.first  ),
+        static_cast< long >( dim.second ),
+        data,
+        width,
+        height
+    );
+
+    mGlyphs.push_back( g );
+}
 
 bool Generator::generateGlyphBitmaps( long numItemsPerRow )
 {
-
     long baseX    = 0;
     long baseY    = 0;
     long glyphNum = 0;
@@ -360,39 +427,47 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
 
     long numGlyphsProcessed = 1;
 
-    for ( auto& g : mGlyphs ) {
+    for ( auto* g : mGlyphs ) {
 
-        auto ind = FT_Get_Char_Index( mFtFace, g.codePoint() );
+        if ( g->hasExternalBitmap() ) {
 
-        auto ftError = FT_Load_Glyph( mFtFace, ind, FT_LOAD_DEFAULT );
+            g->setSignedDist();
+        }
+        else {
 
-        if (ftError != FT_Err_Ok) {
+            auto ind = FT_Get_Char_Index( mFtFace, g->codePoint() );
 
-            cerr << "FreeType error: " << ftError << "\n";
-            return false;
+            auto ftError = FT_Load_Glyph( mFtFace, ind, FT_LOAD_DEFAULT );
+
+            if (ftError != FT_Err_Ok) {
+
+                cerr << "FreeType error: " << ftError << "\n";
+                return false;
+            }
+
+            ftError = FT_Render_Glyph( mFtFace->glyph, FT_RENDER_MODE_MONO );
+
+            if (ftError != FT_Err_Ok) {
+
+                cerr << "FreeType error: " << ftError << "\n";
+                return false;
+            }
+
+            auto& bm = mFtFace->glyph->bitmap;
+            g->setSignedDist( bm );
         }
 
-        ftError = FT_Render_Glyph( mFtFace->glyph, FT_RENDER_MODE_MONO );
-
-        if (ftError != FT_Err_Ok) {
-
-            cerr << "FreeType error: " << ftError << "\n";
-            return false;
-        }
-
-        auto& bm = mFtFace->glyph->bitmap;
-        g.setSignedDist( bm );
-        g.setBaseXY(baseX, baseY);
+        g->setBaseXY(baseX, baseY);
 
         if ( mVerbose ) {
 
-            g.visualize(cerr);
+            g->visualize(cerr);
             cerr << "Num Glyphs Processed: " << numGlyphsProcessed << "/" << mGlyphs.size() << "\n";
             cerr << "Base:[" << baseX << " , " << baseY << "]\n";
             cerr << "\n";
         }
 
-        maxY = max( maxY, g.signedDistHeight() );
+        maxY = max( maxY, g->signedDistHeight() );
 
         glyphNum++;
 
@@ -404,7 +479,7 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
 
         }
         else {
-            baseX += g.signedDistWidth();
+            baseX += g->signedDistWidth();
         }
         numGlyphsProcessed++;
     }
@@ -443,27 +518,27 @@ bool Generator::generateTexture( bool reverseY )
         mPtrArray[i] = &( mPtrMain[ sizeof(unsigned char) * len * i ] );
     }
 
-    for ( auto& g : mGlyphs ) {
+    for ( auto* g : mGlyphs ) {
 
-        for ( auto srcY = 0; srcY < g.signedDistHeight(); srcY++ ) {
+        for ( auto srcY = 0; srcY < g->signedDistHeight(); srcY++ ) {
 
-            auto dstY    = len - 1 - ( srcY + g.baseY() );
+            auto dstY    = len - 1 - ( srcY + g->baseY() );
 
             if ( dstY < 0 || len <= dstY ) {
                 continue;
             }
             auto* curRow = mPtrArray [dstY];
 
-            for ( auto srcX = 0; srcX < g.signedDistWidth(); srcX++ ) {
+            for ( auto srcX = 0; srcX < g->signedDistWidth(); srcX++ ) {
 
-                auto dstX  = ( srcX + g.baseX() );
+                auto dstX  = ( srcX + g->baseX() );
                 if ( dstX < 0 || len <= dstX ) {
                     continue;
                 }
 
-                auto dist  = g.signedDist(
+                auto dist  = g->signedDist(
                     srcX, 
-                    mConf.isReverseYDirectionForGlyphsSet() ? (g.signedDistHeight() - 1 - srcY) : srcY
+                    mConf.isReverseYDirectionForGlyphsSet() ? (g->signedDistHeight() - 1 - srcY) : srcY
 
                 );
 
@@ -629,9 +704,9 @@ bool Generator::emitFileMetrics()
     osMetrics << "\n";
     osMetrics << "GLYPHS\n";
 
-    for ( auto& g : mGlyphs ) {
+    for ( auto* g : mGlyphs ) {
 
-        g.emitMetrics( osMetrics );
+        g->emitMetrics( osMetrics );
         osMetrics << "\n";
 
     }
@@ -641,9 +716,9 @@ bool Generator::emitFileMetrics()
 
     osMetrics << "KERNINGS\n";
 
-    for ( auto& g : mGlyphs ) {
+    for ( auto* g : mGlyphs ) {
 
-        g.emitKernings( osMetrics );
+        g->emitKernings( osMetrics );
 
     }
 
@@ -666,9 +741,9 @@ void Generator::generateMetrics(float& margin, vector<Glyph>& glyphs)
 
     margin =  (float)mConf.signedDistExtent() / (float) mConf.outputTextureSize();
 
-    for ( auto& g : mGlyphs ) {
+    for ( auto* g : mGlyphs ) {
 
-        auto sdg = g.generateSDGlyph();
+        auto sdg = g->generateSDGlyph();
         glyphs.push_back( std::move(sdg) );
     }
 

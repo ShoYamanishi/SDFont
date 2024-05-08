@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 
 #include "sdfont/generator/generator_option_parser.hpp"
 
@@ -12,6 +13,7 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "sdfont_generator "
                                             "-verbose "
                                             "-font_path [FontPath] "
+                                            "-extra_glyph_path [DirPath] "
                                             "-max_code_point [num] "
                                             "-texture_size [num] "
                                             "-glyph_size_for_sampling [num] "
@@ -24,6 +26,7 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "\n";
 
 const string GeneratorOptionParser::FontPath             = "-font_path" ;
+const string GeneratorOptionParser::ExtraGlyphPath       = "-extra_glyph_path" ;
 const string GeneratorOptionParser::MaxCodePoint         = "-max_code_point" ;
 const string GeneratorOptionParser::TextureSize          = "-texture_size" ;
 const string GeneratorOptionParser::GlyphSizeForSampling = "-glyph_size_for_sampling" ;
@@ -67,6 +70,18 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
 
                 string arg2( argv[++i] );
                 processFontPath( arg2 );
+            }
+            else {
+                mError = true;
+                break;
+            }
+        }
+        else if ( arg.compare ( ExtraGlyphPath ) == 0 ) {
+
+            if ( i < argc - 1 ) {
+
+                string arg2( argv[++i] );
+                processExtraGlyphPath( arg2 );
             }
             else {
                 mError = true;
@@ -168,6 +183,18 @@ void GeneratorOptionParser::processFontPath ( const string s ) {
     if ( doesFileExist( s ) ) {
 
          mConfig.setFontPath( s );
+    }
+        else {
+
+        mError = true;
+    }
+}
+
+void GeneratorOptionParser::processExtraGlyphPath ( const string s ) {
+
+    if ( doesDirectoryExist( s ) ) {
+
+         mConfig.setExtraGlyphPath( s );
     }
         else {
 
@@ -279,16 +306,13 @@ void GeneratorOptionParser::processReverseYDirectionForGlyphs ( const bool b ) {
 
 bool GeneratorOptionParser::doesFileExist ( const string s ) const {
 
-    ifstream fp( s );
+    return std::filesystem::is_regular_file( s );
+}
 
-    if ( fp ) {
 
-        return true;
-    }
-    else {
+bool GeneratorOptionParser::doesDirectoryExist ( const string s ) const {
 
-        return false;
-    }
+    return std::filesystem::is_directory( s );
 }
 
 

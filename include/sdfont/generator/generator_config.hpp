@@ -17,8 +17,12 @@ class GeneratorConfig {
 
   public:
 
+    static const string FileNameExtraGlyphCarriageReturn ;
+    static const string FileNameExtraGlyphBlank;
+
     GeneratorConfig():
         mFontPath                   { DefaultFontPath },
+        mExtraGlyphPath             { DefaultExtraGlyphPath },
         mOutputFileName             { DefaultOutputFileName },
         mMaxCodePoint               { DefaultMaxCodePoint },
         mOutputTextureSize          { DefaultOutputTextureSize },
@@ -35,6 +39,7 @@ class GeneratorConfig {
     virtual ~GeneratorConfig(){;}
 
     void setFontPath           ( string s ) { mFontPath       = s ; }
+    void setExtraGlyphPath     ( string s ) { mExtraGlyphPath = s ; }
     void setOutputFileName     ( string s ) { mOutputFileName = s ; }
     void setMaxCodePoint       ( long   v ) { mMaxCodePoint   = v ; }
     void setOutputTextureSize  ( long   v ) { mOutputTextureSize    = v ; }
@@ -49,6 +54,7 @@ class GeneratorConfig {
     void setReverseYDirectionForGlyphs
                                ( bool b )   { mReverseYDirectionForGlyphs = b; }
     string fontPath()          const { return mFontPath ;                         }
+    string extraGlyphPath()    const { return mExtraGlyphPath ;                   }
     string outputFileName()    const { return mOutputFileName ;                   }
     long   maxCodePoint()      const {
         if ( mCodepointRangePairs.empty() ) {
@@ -98,6 +104,7 @@ class GeneratorConfig {
   private:
 
     string mFontPath ;
+    string mExtraGlyphPath ;
     string mOutputFileName ;
     long   mMaxCodePoint ;
     long   mOutputTextureSize ;
@@ -110,7 +117,9 @@ class GeneratorConfig {
     string mEncoding;
     bool   mEnableDeadReckoning;
     bool   mReverseYDirectionForGlyphs;
+
     static const string DefaultFontPath ;
+    static const string DefaultExtraGlyphPath ;
     static const string DefaultOutputFileName ;
     static const long   DefaultMaxCodePoint ;
     static const long   DefaultOutputTextureSize ;

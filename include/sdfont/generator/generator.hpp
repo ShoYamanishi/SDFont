@@ -45,6 +45,10 @@ class Generator {
 
     bool  initializeFreeType      ( ) ;
     bool  generateGlyphs          ( ) ;
+    void  generateExtraGlyphs     ( ) ;
+    std::pair<float, float>
+          findMeanGlyphDimension  ( ) ;
+    void  addExtraGlyph           ( const long code_point, const std::pair<float, float>& dim, const std::string& file_name );
     void  getKernings             ( ) ;
     long  fitGlyphsToTexture      ( ) ;
     long  bestNumberOfItemsPerRow ( long& X, long& Y ) ;
@@ -57,7 +61,7 @@ class Generator {
     bool                           mVerbose;
     FT_Library                     mFtHandle;
     FT_Face                        mFtFace;
-    vector< InternalGlyphForGen >  mGlyphs;
+    vector< InternalGlyphForGen* > mGlyphs;
     unsigned char*                 mPtrMain;
     unsigned char**                mPtrArray;
 

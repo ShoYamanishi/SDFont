@@ -26,6 +26,7 @@ class GeneratorOptionParser {
     inline void reset() { mHelp = false; mError = false; mVerbose = false; }
 
     void processFontPath             ( const string s ) ;
+    void processExtraGlyphPath       ( const string s ) ;
     void processMaxCodePoint         ( const string s ) ;
     void processTextureSize          ( const string s ) ;
     void processGlyphSizeForSampling ( const string s ) ;
@@ -37,6 +38,7 @@ class GeneratorOptionParser {
     void processReverseYDirectionForGlyphs
                                      ( const bool   b );
     bool doesFileExist               ( const string s ) const ;
+    bool doesDirectoryExist          ( const string s ) const ;
     bool isValidFileName             ( const string s ) const ;
 
 
@@ -46,6 +48,7 @@ class GeneratorOptionParser {
     bool                  mVerbose;
 
     static const string   FontPath;
+    static const string   ExtraGlyphPath;
     static const string   MaxCodePoint;
     static const string   TextureSize;
     static const string   GlyphSizeForSampling;

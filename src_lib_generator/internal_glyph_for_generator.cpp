@@ -3,6 +3,7 @@
 #include <sstream>
 #include <math.h>
 #include <limits>
+#include <stdexcept>
 
 #include "sdfont/generator/generator_config.hpp"
 #include "sdfont/generator/internal_glyph_for_generator.hpp"
@@ -40,14 +41,63 @@ InternalGlyphForGen::InternalGlyphForGen (
     mSignedDistWidth    ( 0 ),
     mSignedDistHeight   ( 0 ),
     mSignedDistBaseX    ( 0 ),
-    mSignedDistBaseY    ( 0 )
+    mSignedDistBaseY    ( 0 ),
+    mHasExternalBitmap  ( false ),
+    mExternalBitmapWidth( 0 ),
+    mExternalBitmapHeight( 0 ),
+    mExternalBitmap     ( nullptr )
 {
-    mSignedDistWidth  = ceil( (float)mWidth + 2.0f * mConf.signedDistExtent() );
+    mSignedDistWidth  = ceil( (float)mWidth  + 2.0f * mConf.signedDistExtent() );
+    mSignedDistHeight = ceil( (float)mHeight + 2.0f * mConf.signedDistExtent() );
+}
+
+
+InternalGlyphForGen::InternalGlyphForGen (
+    GeneratorConfig&  conf,
+    const long        codePoint,
+    const long        width,
+    const long        height,
+    unsigned char*    external_bitmap,
+    const long        external_bitmap_width,
+    const long        external_bitmap_height
+):
+    mConf               ( conf ),
+    mCodePoint          ( codePoint ),
+
+    mTextureCoordX      ( 0.0 ),
+    mTextureCoordY      ( 0.0 ),
+    mTextureWidth       ( 0.0 ),
+    mTextureHeight      ( 0.0 ),
+
+    mWidth              ( width ),
+    mHeight             ( height ),
+    mHorizontalBearingX ( 0.0f ),
+    mHorizontalBearingY ( 0.0f ),
+    mHorizontalAdvance  ( width ),
+    mVerticalBearingX   ( 0.0f ),
+    mVerticalBearingY   ( 0.0f ),
+    mVerticalAdvance    ( height ),
+    mSignedDist         ( nullptr ),
+    mSignedDistWidth    ( 0 ),
+    mSignedDistHeight   ( 0 ),
+    mSignedDistBaseX    ( 0 ),
+    mSignedDistBaseY    ( 0 ),
+    mHasExternalBitmap  ( true ),
+    mExternalBitmapWidth( external_bitmap_width ),
+    mExternalBitmapHeight(external_bitmap_height ),
+    mExternalBitmap     ( external_bitmap )
+{
+    mSignedDistWidth  = ceil( (float)mWidth  + 2.0f * mConf.signedDistExtent() );
     mSignedDistHeight = ceil( (float)mHeight + 2.0f * mConf.signedDistExtent() );
 }
 
 
 InternalGlyphForGen::~InternalGlyphForGen () {
+
+    if ( mHasExternalBitmap ) {
+
+        free( mExternalBitmap );
+    }
 
     if ( mSignedDist != nullptr ) {
 
@@ -279,6 +329,69 @@ float InternalGlyphForGen::getSignedDistance(
 }
 
 
+float InternalGlyphForGen::getSignedDistance(
+    const long i,
+    const long j,
+    const long width,
+    const long height
+) {
+    const auto x_spread = static_cast<long>( mConf.ratioSpreadToGlyph() * static_cast<float>( mExternalBitmapWidth  ) );
+    const auto y_spread = static_cast<long>( mConf.ratioSpreadToGlyph() * static_cast<float>( mExternalBitmapHeight ) );
+
+    const auto x = static_cast<long>(   static_cast<float>( i )
+                                      / static_cast<float>( width )
+                                      * static_cast<float>( mExternalBitmapWidth + 2 * x_spread )
+                                    );
+
+    const auto y = static_cast<long>(   static_cast<float>( j )
+                                      / static_cast<float>( height )
+                                      * static_cast<float>( mExternalBitmapHeight + 2 * y_spread )
+                                    );
+
+    const auto set_xy = isPixelSetInExternalBitmap( x - x_spread, y - y_spread );
+
+    long min_sq_dist{ x_spread * x_spread + y_spread * y_spread };
+
+    for ( long ty = -1 * y_spread; ty <= y_spread; ty++ ) {
+
+        for ( long tx = -1 * x_spread; tx <= x_spread; tx++ ) {
+
+            if ( isPixelSetInExternalBitmap( tx + x - x_spread, ty + y -y_spread ) != set_xy ) {
+
+                const auto sq_dist = tx * tx + ty * ty;
+
+                if ( sq_dist < min_sq_dist ) {
+
+                    min_sq_dist = sq_dist;
+                }
+            }
+        }
+    }
+
+    const auto normalized_min_dist = sqrt( static_cast< float >( min_sq_dist ) )
+                               / static_cast< float >( ( x_spread + y_spread ) / 2 );
+    if ( set_xy ) {
+        return 0.5f + ( normalized_min_dist / 2.0f );
+    }
+    else {
+        return 0.5f - ( normalized_min_dist / 2.0f );
+    }
+}
+
+
+bool InternalGlyphForGen::isPixelSetInExternalBitmap( const long x, const long y )
+{
+    if (   x < 0
+        || x >= mExternalBitmapWidth
+        || y < 0
+        || y >= mExternalBitmapHeight
+    ) {
+        return false;
+    }
+
+    return mExternalBitmap[ ( mExternalBitmapHeight - 1 - y ) * mExternalBitmapWidth + x ] > 0;
+}
+
 void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
 
     if ( mConf.isDeadReckoningSet() ) {
@@ -290,6 +403,18 @@ void InternalGlyphForGen::setSignedDist( FT_Bitmap& bm ) {
         setSignedDistBySeparateVicinitySearch( bm );
     }
 }
+
+
+void InternalGlyphForGen::setSignedDist()
+{
+    if ( !hasExternalBitmap() ) {
+
+        throw std::runtime_error( "no external bitmap specified." );
+    }
+
+    setSignedDistBySeparateVicinitySearch();
+}
+
 
 void InternalGlyphForGen::setSignedDistByDeadReckoning( FT_Bitmap& bm ) {
 
@@ -655,6 +780,36 @@ void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch( FT_Bitmap& bm )
         }
     }
 }
+
+
+void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch()
+{
+    const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
+
+    mSignedDistWidth  = ceil(mWidth  * scale + 2 * mConf.signedDistExtent());
+    mSignedDistHeight = ceil(mHeight * scale + 2 * mConf.signedDistExtent());
+
+    size_t arraySize = mSignedDistWidth * mSignedDistHeight;
+
+    mSignedDist = new float[ arraySize ];
+
+    const long offset = mConf.signedDistExtent();
+
+    for ( long i = 0 ; i < mSignedDistHeight; i++ ) {
+
+        for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
+
+            auto val = getSignedDistance(
+                j,
+                i,
+                mSignedDistWidth,
+                mSignedDistHeight
+            );
+            mSignedDist[i * mSignedDistWidth + j] = val;
+        }
+    }
+}
+
 
 
 void InternalGlyphForGen::releaseBitmap() {

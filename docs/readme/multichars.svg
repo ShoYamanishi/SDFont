@@ -25,9 +25,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.80354939"
-     inkscape:cx="404.45553"
-     inkscape:cy="840.02303"
+     inkscape:zoom="1.1363904"
+     inkscape:cx="505.10808"
+     inkscape:cy="205.03516"
      inkscape:window-width="1715"
      inkscape:window-height="1052"
      inkscape:window-x="115"
@@ -386,7 +386,7 @@
          style="stroke-width:0.264583"
          x="18.927601"
          y="-123.99942"
-         id="tspan62731">Glyph::mVerticalBearingY * FS</tspan></text><path
+         id="tspan62731">Glyph::mHorizontalBearingY * FS</tspan></text><path
        style="fill:none;stroke:#000000;stroke-width:0.1;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        d="M 127.54266,46.54241 138.7763,64.69554"
        id="path62735"

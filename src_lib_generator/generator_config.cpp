@@ -2,7 +2,11 @@
 
 namespace SDFont {
 
+const string GeneratorConfig::FileNameExtraGlyphCarriageReturn = "cr.png";
+const string GeneratorConfig::FileNameExtraGlyphBlank          = "blank.png";
+
 const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;
+const string GeneratorConfig::DefaultExtraGlyphPath = "" ;
 const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
 const string GeneratorConfig::DefaultCodepointRangeFilePath = "" ;
 const string GeneratorConfig::DefaultEncoding = "unicode" ;
@@ -115,6 +119,7 @@ void GeneratorConfig::emitVerbose() const {
     cerr << "Signed Distance Font Generator [2019]\n";
     cerr << "Configured as follows.\n";
     cerr << "Font Path: ["        << mFontPath           << "]\n";
+    cerr << "Extra Glyph Path: [" << mExtraGlyphPath     << "]\n";
     cerr << "Encoding: ["         << mEncoding           << "]\n";
     cerr << "Codepoint Range File Path: ["
                                   << mCodepointRangeFilePath << "]\n";
