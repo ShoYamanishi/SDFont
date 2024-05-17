@@ -386,7 +386,7 @@ void Generator::generateExtraGlyphs()
 {
     const auto dim  = findMeanGlyphDimension();
 
-    addExtraGlyph( 0x0A, dim, GeneratorConfig::FileNameExtraGlyphCarriageReturn );
+    addExtraGlyph( 0x0A, dim, GeneratorConfig::FileNameExtraGlyphLineFeed );
 
     addExtraGlyph( 0x00, dim, GeneratorConfig::FileNameExtraGlyphBlank          );
 }

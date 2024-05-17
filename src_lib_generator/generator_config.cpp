@@ -2,7 +2,7 @@
 
 namespace SDFont {
 
-const string GeneratorConfig::FileNameExtraGlyphCarriageReturn = "cr.png";
+const string GeneratorConfig::FileNameExtraGlyphLineFeed       = "lf.png";
 const string GeneratorConfig::FileNameExtraGlyphBlank          = "blank.png";
 
 const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;

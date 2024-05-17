@@ -17,7 +17,7 @@ class GeneratorConfig {
 
   public:
 
-    static const string FileNameExtraGlyphCarriageReturn ;
+    static const string FileNameExtraGlyphLineFeed;
     static const string FileNameExtraGlyphBlank;
 
     GeneratorConfig():
