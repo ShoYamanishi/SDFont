@@ -51,9 +51,9 @@ class Generator {
     void  addExtraGlyph           ( const long code_point, const std::pair<float, float>& dim, const std::string& file_name );
     void  getKernings             ( ) ;
     long  fitGlyphsToTexture      ( ) ;
-    long  bestNumberOfItemsPerRow ( long& X, long& Y ) ;
-    float findDimension           ( long itemsPerRow, long& X, long& Y ) ;
-    bool  generateGlyphBitmaps    ( long numItemsPerRow ) ;
+    long  findBestWidthForDefaultFontSize( long& bestHeight, long& maxNumGlyphsPerEdge );
+    long  findHeightFromWidth     ( const long width, long& maxNumGlyphsPerEdge );
+    bool  generateGlyphBitmaps    ( long bestWidthForDefaultFontSize ) ;
     bool  generateTexture         ( bool reverseY ) ;
     FT_Error setEncoding          ( const string& s );
 

@@ -68,9 +68,9 @@ bool Generator::generate()
 
     getKernings();
 
-    auto numItemsPerRow = fitGlyphsToTexture();
+    const auto bestWidthForDefaultFontSize = fitGlyphsToTexture();
 
-    if ( !generateGlyphBitmaps( numItemsPerRow ) ) {
+    if ( !generateGlyphBitmaps( bestWidthForDefaultFontSize ) ) {
 
         return false;
     }
@@ -216,133 +216,149 @@ void Generator::getKernings()
 
 long Generator::fitGlyphsToTexture()
 {
-    long X = 0, Y = 0 ;
-
-    long numItemsPerRow = bestNumberOfItemsPerRow ( X, Y );
+    long maxNumGlyphsPerEdge = 0;
+    long bestHeight = 0;
+    const auto bestWidth = findBestWidthForDefaultFontSize( bestHeight, maxNumGlyphsPerEdge );
 
     if ( mVerbose ) {
 
-        cerr << "Best Number of glyphs per row is " << numItemsPerRow << ".\n";
-        cerr << "Area [X: " << X << " , Y: " << Y << "]\n";
+        cerr << "Best width/height for the default font size is " << bestWidth << " / " << bestHeight << ".\n";
+        cerr << "Max number of glyphs per edge is " << maxNumGlyphsPerEdge << ".\n";
     }
 
     // Consider a 1 pixel margin per glyph, to account for rounding errors
-    auto factorX = (float)(mConf.outputTextureSize() - numItemsPerRow) / (float)X;
-    auto nbRows = (mGlyphs.size() + numItemsPerRow - 1) / numItemsPerRow;
-    auto factorY = (float)(mConf.outputTextureSize() - nbRows) / (float)Y;
+    auto factorX = (float)(mConf.outputTextureSize() - maxNumGlyphsPerEdge) / (float)bestWidth;
+    auto factorY = (float)(mConf.outputTextureSize() - maxNumGlyphsPerEdge) / (float)bestHeight;
     auto factor = min(factorX, factorY);
     mConf.setGlyphScalingFromSamplingToPackedSignedDist( factor );
-
-    findDimension ( numItemsPerRow, X, Y );
 
     if ( mVerbose ) {
         const auto s = mConf.glyphScalingFromSamplingToPackedSignedDist();
         cerr << "Scale is adjusted to " << s << ".\n";
-        cerr << "Area [X: " << (long)((float)X * s) << " , Y: " << (long)((float)Y * s) << "]\n";
+        cerr << "Area [W: " << (long)((float)bestWidth * s) << " , H: " << (long)((float)bestHeight * s) << "]\n";
     }
 
-    return numItemsPerRow;
+    return bestWidth;
+}
+
+long Generator::findHeightFromWidth( const long width, long& maxNumGlyphsPerEdge )
+{
+    long leftX  = 0;
+    long height = 0;
+    long heightOfCurrentRow = 0;
+
+    long maxNumGlyphsPerRow = 0;
+    long numGlyphsPerRow = 0;
+    long numGlyphsPerColumn = 1;
+
+    for ( auto i = 0; i < mGlyphs.size(); i++ ) {
+
+        auto* g = mGlyphs[ i ];
+
+        if ( leftX + g->signedDistWidth() > width ) {
+
+            height += heightOfCurrentRow;
+
+            leftX  = g->signedDistWidth();
+            heightOfCurrentRow = g->signedDistHeight();
+
+            maxNumGlyphsPerRow = std::max( maxNumGlyphsPerRow, numGlyphsPerRow );
+            numGlyphsPerRow = 1;
+
+            numGlyphsPerColumn++;
+        }
+        else {
+            leftX += g->signedDistWidth();
+            heightOfCurrentRow = std::max( heightOfCurrentRow, g->signedDistHeight() );
+
+            numGlyphsPerRow++;
+        }
+    }
+
+    height += heightOfCurrentRow;
+
+    maxNumGlyphsPerRow = std::max( maxNumGlyphsPerRow, numGlyphsPerRow );
+
+    maxNumGlyphsPerEdge = std::max( maxNumGlyphsPerRow, numGlyphsPerColumn );
+
+    return height;
 }
 
 
-long Generator::bestNumberOfItemsPerRow ( long& X, long& Y)
+long Generator::findBestWidthForDefaultFontSize( long& bestHeight, long& maxNumGlyphsPerEdge )
 {
+    const auto initialWidth = (long) sqrt ( mGlyphs.size() ) * mConf.glyphBitmapSizeForSampling();
 
-    long initialNumPerRow = (long) sqrt ( mGlyphs.size() );
+    const auto initialHeight = findHeightFromWidth( initialWidth, maxNumGlyphsPerEdge );
 
-    long curX, curY;
+    auto previousWidth { initialWidth  };
+    auto previousHeight{ initialHeight };
+    long previousMaxNumGlyphsPerEdge{ 0 };
 
-    float initialRatio = findDimension ( initialNumPerRow, curX, curY );
+    if ( initialWidth > initialHeight ) {
 
-    long  bestNumPerRow = initialNumPerRow ;
-    float bestRatio     = initialRatio;
-    long  bestX         = curX;
-    long  bestY         = curY;
+        for ( auto width = initialWidth - 1; width >= initialHeight; width-- ) {
 
-    if (curX < curY) {
+            const auto height = findHeightFromWidth( width, maxNumGlyphsPerEdge );
 
-        // Intial area is Portrait. Try increasing the number.                  
-        for ( auto curNumPerRow = initialNumPerRow + 1 ;
-                   curNumPerRow < mGlyphs.size()       ;
-                   curNumPerRow++                        ) {
+            if ( width == height ) {
 
-            auto curRatio = findDimension( curNumPerRow, curX, curY );
-
-            if ( curRatio >= bestRatio ) {
-                break;
+                bestHeight = height;
+                return width;
             }
+            else if ( width < height ) {
 
-            bestNumPerRow = curNumPerRow;
-            bestRatio     = curRatio;
-            bestX         = curX;
-            bestY         = curY;
+                if ( height - width < previousWidth - previousHeight ) {
+
+                    bestHeight = height;
+                    return width;
+                }
+                else {
+                    maxNumGlyphsPerEdge = previousMaxNumGlyphsPerEdge;
+                    bestHeight = previousHeight;
+                    return previousWidth;
+                }
+            }
+            else {
+                previousWidth  = width;
+                previousHeight = height;
+                previousMaxNumGlyphsPerEdge = maxNumGlyphsPerEdge;
+            }
         }
     }
     else {
-        // Intial area is Landscape. Try decreasing the number.                 
+        for ( auto width = initialWidth + 1; width <= initialHeight; width++ ) {
 
-        for ( auto curNumPerRow = initialNumPerRow - 1 ;
-                   curNumPerRow > 0                    ;
-                   curNumPerRow--                        ) {
+            const auto height = findHeightFromWidth( width, maxNumGlyphsPerEdge );
 
-            auto curRatio = findDimension ( curNumPerRow, curX, curY );
+            if ( width == height ) {
 
-            if ( curRatio >= bestRatio ) {
-                break;
+                bestHeight = height;
+                return width;
             }
+            else if ( width > height ) {
 
-            bestNumPerRow = curNumPerRow;
-            bestRatio     = curRatio;
-            bestX         = curX;
-            bestY         = curY;
-        }
+                if ( width - height < previousHeight - previousWidth ) {
 
-    }
-
-    X = bestX;
-    Y = bestY;
-
-    return bestNumPerRow;
-}
-
-
-float Generator::findDimension ( long itemsPerRow, long& X, long& Y )
-{
-
-    long totalX      = 0;
-    long totalY      = 0;
-
-    for ( auto i = 0; i < ( mGlyphs.size() + itemsPerRow - 1 ) / itemsPerRow ; i++ ) {
-
-        long totalXrow = 0;
-        long maxY      = 0;
-
-        for ( auto j = 0; j < itemsPerRow; j++ ) {
-
-            auto  k = i * itemsPerRow + j;
-
-            if ( k < mGlyphs.size() ){
-
-                auto* g = mGlyphs[k];
-
-                totalXrow += g->signedDistWidth();
-
-                maxY = max( maxY, g->signedDistHeight() );
+                    bestHeight = height;
+                    return width;
+                }
+                else {
+                    maxNumGlyphsPerEdge = previousMaxNumGlyphsPerEdge;
+                    bestHeight = previousHeight;
+                    return previousWidth;
+                }
+            }
+            else {
+                previousWidth  = width;
+                previousHeight = height;
+                previousMaxNumGlyphsPerEdge = maxNumGlyphsPerEdge;
             }
         }
-
-        totalX = max( totalX, totalXrow );
-        totalY += maxY;
-
     }
 
-    X = totalX;
-    Y = totalY;
-
-    return ( totalX > totalY ) ? ( (float)totalX / (float)totalY ) :
-                                 ( (float)totalY / (float)totalX ) ;
+    return initialWidth;
 }
-
 
 bool Generator::generateGlyphs()
 {
@@ -418,11 +434,10 @@ void Generator::addExtraGlyph( const long code_point, const std::pair<float, flo
     mGlyphs.push_back( g );
 }
 
-bool Generator::generateGlyphBitmaps( long numItemsPerRow )
+bool Generator::generateGlyphBitmaps( long bestWidthForDefaultFontSize )
 {
     long baseX    = 0;
     long baseY    = 0;
-    long glyphNum = 0;
     long maxY     = 0;
 
     long numGlyphsProcessed = 1;
@@ -434,7 +449,6 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
             g->setSignedDist();
         }
         else {
-
             auto ind = FT_Get_Char_Index( mFtFace, g->codePoint() );
 
             auto ftError = FT_Load_Glyph( mFtFace, ind, FT_LOAD_DEFAULT );
@@ -457,7 +471,16 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
             g->setSignedDist( bm );
         }
 
+        if ( baseX + g->signedDistWidth() > mConf.outputTextureSize() ) {
+
+            baseX = 0;
+            baseY += maxY;
+            maxY = 0;
+        }
+
         g->setBaseXY(baseX, baseY);
+        baseX += g->signedDistWidth();
+        maxY = std::max( maxY, g->signedDistHeight() );
 
         if ( mVerbose ) {
 
@@ -467,20 +490,6 @@ bool Generator::generateGlyphBitmaps( long numItemsPerRow )
             cerr << "\n";
         }
 
-        maxY = max( maxY, g->signedDistHeight() );
-
-        glyphNum++;
-
-        if ( (glyphNum % numItemsPerRow) == 0 ) {
-
-            baseX = 0;
-            baseY += maxY;
-            maxY  = 0;
-
-        }
-        else {
-            baseX += g->signedDistWidth();
-        }
         numGlyphsProcessed++;
     }
 
