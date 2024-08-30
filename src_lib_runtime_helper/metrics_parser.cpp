@@ -245,6 +245,12 @@ void MetricsParser::handleSpreadInFontMetrics (
     mSpreadInFontMetrics = stof( fields[ 0] );
 }
 
+static long convertToLong( const std::string& s )
+{
+    const auto trimmed_s = s.substr( 2, s.size() - 2 ); // remove "0X"
+
+    return stol( trimmed_s, 0, 16);
+}
 
 void MetricsParser::handleGlyph (
 
@@ -265,7 +271,7 @@ void MetricsParser::handleGlyph (
 
     Glyph g;
 
-    g.mCodePoint          = stol( fields[ 0] );
+    g.mCodePoint          = convertToLong( fields[ 0 ] );
     g.mWidth              = stof( fields[ 1] );
     g.mHeight             = stof( fields[ 2] );
     g.mHorizontalBearingX = stof( fields[ 3] );
@@ -302,11 +308,11 @@ void MetricsParser::handleKerning (
         emitError( filename, lineNumber, "Invalid Node", errorFlag );
     }
 
-    auto& g = mGlyphs[ stol( fields[ 0] ) ];
+    auto& g = mGlyphs[ convertToLong( fields[ 0] ) ];
 
     for ( int i = 1; i < numFields; i +=2 ) {
 
-        g.mKernings[ stol( fields[ i ]) ] = stof( fields[ i+1 ] );
+        g.mKernings[ convertToLong( fields[ i ] ) ] = stof( fields[ i+1 ] );
     }
 }
 

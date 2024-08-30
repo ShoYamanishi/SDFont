@@ -56,12 +56,12 @@ class GeneratorConfig {
     string fontPath()          const { return mFontPath ;                         }
     string extraGlyphPath()    const { return mExtraGlyphPath ;                   }
     string outputFileName()    const { return mOutputFileName ;                   }
-    long   maxCodePoint()      const {
+    long maxCodePoint()      const {
         if ( mCodepointRangePairs.empty() ) {
             return mMaxCodePoint ;
         }
         else {
-            int v = 0;
+            long v = 0;
             for ( const auto& p : mCodepointRangePairs ) {
                 v = std::max( v, p.second );
             }
@@ -88,7 +88,7 @@ class GeneratorConfig {
     void   emitVerbose () const;
     void   outputMetricsHeader ( ostream& os ) const;
 
-    bool   isInACodepointRange( const int charcode ) const
+    bool   isInACodepointRange( const long charcode ) const
     {
         if ( mCodepointRangePairs.empty() ) {
             return true;
@@ -112,7 +112,7 @@ class GeneratorConfig {
     float  mGlyphScalingFromSamplingToPackedSignedDist ;
     float  mRatioSpreadToGlyph;
     string mCodepointRangeFilePath;
-    vector< pair< int, int > >
+    vector< pair< long, long > >
            mCodepointRangePairs;
     string mEncoding;
     bool   mEnableDeadReckoning;

@@ -847,12 +847,32 @@ void InternalGlyphForGen::visualize( ostream& os ) const {
     }
 }
 
+template< typename T >
+static std::string toHexString( T val )
+{
+    static const char* digits = "0123456789ABCDEF";
+
+    static const size_t num_digits = sizeof( T ) * 2; // num_bytes * 2
+
+    std::string formatted_string( num_digits, '0' );
+
+    int shift_amount = ( num_digits - 1 ) * 4 ;
+
+    for (size_t i = 0; i < num_digits; i++ ) {
+
+        formatted_string[ i ] = digits[ ( val >> shift_amount ) & 0x0f ];
+
+        shift_amount -= 4;
+    }
+
+    return formatted_string;
+}
 
 void InternalGlyphForGen::emitMetrics( ostream& os ) const {
 
     float factor =  (float) ( mConf.glyphBitmapSizeForSampling() );
 
-    os << mCodePoint ;
+    os << "0X" << toHexString( (uint32_t) mCodePoint ) ;
 
     os << "\t";
     os << ( (float)mWidth              / factor );
@@ -889,11 +909,12 @@ void InternalGlyphForGen::emitKernings( ostream& os ) const {
 
         float factor =  (float) ( mConf.glyphBitmapSizeForSampling() );
 
-        os << mCodePoint ;
+        os << "0X" << toHexString( (uint32_t) mCodePoint ) ;
 
         for ( auto it = mKernings.begin(); it != mKernings.end(); it++ ) {
 
-            os << "\t" << it->first ;
+            os << "\t" << "0X" << toHexString( (uint32_t) (it->first) ) ;
+
             os << "\t" << (float)( (it->second ) / factor ) ;
         }
 
