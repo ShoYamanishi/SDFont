@@ -33,7 +33,8 @@ class GeneratorConfig {
         mCodepointRangeFilePath     { DefaultCodepointRangeFilePath },
         mEncoding                   { DefaultEncoding },
         mEnableDeadReckoning        { DefaultEnableDeadReckoning },
-        mReverseYDirectionForGlyphs { DefaultReverseYDirectionForGlyphs }
+        mReverseYDirectionForGlyphs { DefaultReverseYDirectionForGlyphs },
+        mFaceHasGlyphNames          { DefaultFaceHasGlyphNames }
         {;}
 
     virtual ~GeneratorConfig(){;}
@@ -101,6 +102,9 @@ class GeneratorConfig {
         return false;
     }
 
+    void    setFaceHasGlyphNames() { mFaceHasGlyphNames = true; }
+    bool    faceHasGlyphNames() const { return mFaceHasGlyphNames; }
+
   private:
 
     string mFontPath ;
@@ -117,6 +121,7 @@ class GeneratorConfig {
     string mEncoding;
     bool   mEnableDeadReckoning;
     bool   mReverseYDirectionForGlyphs;
+    bool   mFaceHasGlyphNames;
 
     static const string DefaultFontPath ;
     static const string DefaultExtraGlyphPath ;
@@ -129,6 +134,7 @@ class GeneratorConfig {
     static const string DefaultEncoding;
     static const bool   DefaultEnableDeadReckoning;
     static const bool   DefaultReverseYDirectionForGlyphs;
+    static const bool   DefaultFaceHasGlyphNames;
 
     void trim( string& line ) const;
     bool isCommentLine( const std::string& line ) const;

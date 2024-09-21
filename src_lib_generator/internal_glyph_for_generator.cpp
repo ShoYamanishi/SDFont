@@ -7,6 +7,7 @@
 
 #include "sdfont/generator/generator_config.hpp"
 #include "sdfont/generator/internal_glyph_for_generator.hpp"
+#include "sdfont/util.hpp"
 
 using namespace std;
 
@@ -19,11 +20,12 @@ const long InternalGlyphForGen::FREE_TYPE_FIXED_POINT_SCALING = 64 ;
 InternalGlyphForGen::InternalGlyphForGen (
     GeneratorConfig&  conf,
     long              codePoint,
-    FT_Glyph_Metrics& m
+    FT_Glyph_Metrics& m,
+    const string&     glyphName
 ):
     mConf               ( conf ),
     mCodePoint          ( codePoint ),
-
+    mGlyphName          ( glyphName ),
     mTextureCoordX      ( 0.0 ),
     mTextureCoordY      ( 0.0 ),
     mTextureWidth       ( 0.0 ),
@@ -46,6 +48,7 @@ InternalGlyphForGen::InternalGlyphForGen (
     mExternalBitmapWidth( 0 ),
     mExternalBitmapHeight( 0 ),
     mExternalBitmap     ( nullptr )
+
 {
     mSignedDistWidth  = ceil( (float)mWidth  + 2.0f * mConf.signedDistExtent() );
     mSignedDistHeight = ceil( (float)mHeight + 2.0f * mConf.signedDistExtent() );
@@ -55,6 +58,7 @@ InternalGlyphForGen::InternalGlyphForGen (
 InternalGlyphForGen::InternalGlyphForGen (
     GeneratorConfig&  conf,
     const long        codePoint,
+    const string&     glyphName,
     const long        width,
     const long        height,
     unsigned char*    external_bitmap,
@@ -63,7 +67,7 @@ InternalGlyphForGen::InternalGlyphForGen (
 ):
     mConf               ( conf ),
     mCodePoint          ( codePoint ),
-
+    mGlyphName          ( glyphName ),
     mTextureCoordX      ( 0.0 ),
     mTextureCoordY      ( 0.0 ),
     mTextureWidth       ( 0.0 ),
@@ -845,27 +849,7 @@ void InternalGlyphForGen::visualize( ostream& os ) const {
             cerr << "\n";
         }
     }
-}
-
-template< typename T >
-static std::string toHexString( T val )
-{
-    static const char* digits = "0123456789ABCDEF";
-
-    static const size_t num_digits = sizeof( T ) * 2; // num_bytes * 2
-
-    std::string formatted_string( num_digits, '0' );
-
-    int shift_amount = ( num_digits - 1 ) * 4 ;
-
-    for (size_t i = 0; i < num_digits; i++ ) {
-
-        formatted_string[ i ] = digits[ ( val >> shift_amount ) & 0x0f ];
-
-        shift_amount -= 4;
-    }
-
-    return formatted_string;
+    cerr << "[" << mGlyphName << "]\n";
 }
 
 void InternalGlyphForGen::emitMetrics( ostream& os ) const {
@@ -873,7 +857,8 @@ void InternalGlyphForGen::emitMetrics( ostream& os ) const {
     float factor =  (float) ( mConf.glyphBitmapSizeForSampling() );
 
     os << "0X" << toHexString( (uint32_t) mCodePoint ) ;
-
+    os << "\t";
+    os << mGlyphName;
     os << "\t";
     os << ( (float)mWidth              / factor );
     os << "\t";

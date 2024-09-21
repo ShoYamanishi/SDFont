@@ -6,6 +6,7 @@
 
 #include "sdfont/glyph.hpp"
 #include "sdfont/runtime_helper/metrics_parser.hpp"
+#include "sdfont/char_map.hpp"
 
 using namespace std;
 
@@ -78,9 +79,16 @@ class RuntimeHelper {
 
     const map< long, Glyph>& glyphs() const { return mGlyphs; }
 
+    int32_t numCharMaps() const { return mCharMaps.size(); }
+    int32_t getActiveCharMapIndex() const;
+    const CharMap& charMap( int32_t index ) const { return mCharMaps[index]; }
+
     /** @brief typesets a word.
      *
      *  @param s               (in):  the word to typeset
+     *
+     *  @param charMapIndex    (in):  index into the character maps.
+     *                                set to -1 if you want to use the default map.
      *
      *  @param fontSize        (in):  font size in pixels.
      *
@@ -125,7 +133,8 @@ class RuntimeHelper {
      */
     void getGlyphOriginsWidthAndHeight(
         
-        const string&           s,
+        const vector<uint32_t>& s,
+        const int32_t           charMapIndex,
         const float             fontSize,
         const float             letterSpacing,
         const float&            leftX,
@@ -191,6 +200,8 @@ class RuntimeHelper {
      *                  points.
      *
      *  @param s              (in): string to be displayed.
+     *  @param charMapIndex   (in): index into the character maps.
+     *                              set to -1 if you want to use the default map.
      *  @param fontSize       (in): font size in pixels.
      *  @param width          (out): See above.
      *  @param posXs          (out): See above.
@@ -202,7 +213,8 @@ class RuntimeHelper {
      */
     void getMetrics(
 
-        const string&           s,
+        const vector<uint32_t>& s,
+        const int32_t           charMapIndex,
         const float             fontSize,
         float&                  width,
         vector< float >&        posXs,
@@ -216,7 +228,8 @@ class RuntimeHelper {
 
     void getMetricsNormalized(
 
-        const string&           s,
+        const vector<uint32_t>& s,
+        const int32_t           charMapIndex,
         float&                  width,
         vector< float >&        posXs,
         float&                  firstBearingX,
@@ -444,6 +457,7 @@ class RuntimeHelper {
     float             mSpreadInTexture;
     float             mSpreadInFontMetrics;
     map< long, Glyph> mGlyphs;
+    vector< CharMap > mCharMaps;
 };
 
 

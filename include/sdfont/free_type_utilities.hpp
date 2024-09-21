@@ -24,6 +24,8 @@ void FTUtilPrintPixelMode( FT_Pixel_Mode m, ostream& os );
 
 void FTUtilPrintPixels ( FT_Bitmap& bm ,ostream& os ) ;
 
+string FTUtilStringEncoding( FT_Encoding enc );
+
 void FTUtilPrintGlyphMetrics( FT_Glyph_Metrics& m, ostream& os );
 
 #endif /*__SDFONT_FREE_TYPE_UTILITIES_HPP__*/

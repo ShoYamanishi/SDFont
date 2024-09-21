@@ -22,6 +22,8 @@
 #include "sdfont/runtime_helper/runtime_helper.hpp"
 #include "sdfont/runtime_helper/vanilla_shader_manager.hpp"
 
+#include "utfcpp/utf8.h"
+
 using namespace std;
 
 /** @file sdfont_demo.cpp
@@ -488,9 +490,15 @@ class Word {
         mSpreadRatio   (spreadRatio),
         mZ             (0.0)
     {
+        vector< uint32_t > unicodeSequence;
+        auto* c_str = str.c_str();
+
+        utf8::utf8to32( c_str, c_str + strlen( c_str ), back_inserter( unicodeSequence ) );
+
         mHelper.getGlyphOriginsWidthAndHeight(
 
-            mString,
+            unicodeSequence,
+            -1,
             mFontSize,
             mLetterSpacing,
             mLeftX,

@@ -121,6 +121,9 @@ From left to right:
 * [GLEW](https://glew.sourceforge.net) : a quasi requirement to use OpenGL.
 * [GLFW3](https://www.glfw.org) : a window manager for OpenGL used in the demo program.
 
+* [utfcpp](https://github.com/nemtrif/utfcpp) : a library to manipulate strings in unicode developed by [Nemanja Trifunovic](https://github.com/nemtrif) provided under BSL-1.0 license. It is already included in [include/utfcpp](include/utfcpp/).
+
+
 Following is a sample installation process tested on Ubuntu 22.04.3 LTS.
 ```
 sudo add-apt-repository universe
@@ -186,7 +189,7 @@ Please specify a correct path to a TrueType font to the option *-font_path* belo
 The fonts are usually found in `/usr/share/fonts, /usr/local/fonts` etc on Linux, and `/System/Library/Fonts/` on MacOS. The demo program was tested with the normal Helvetica font.
 
 ```
-./sdfont_commandline -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 512 -glyph_size_for_sampling 512 -ratio_spread_to_glyph 0.2 -reverse_y_direction_for_glyphs signed_dist_font
+./sdfont_commandline -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 512 -glyph_size_for_sampling 512 signed_dist_font
 ```
 
 This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance in the gray scale 8-bit PNG format. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for typesetting.
@@ -203,26 +206,13 @@ It takes a vector TrueType font (usually the extension is `.ttf` or `.ttc`, and 
 **NOTE:** Ligatures are not supported at moment. I could not figure out if/how I handle ligatures with libfreetype. If you know how, I would appreciate your advice.
 
 ```
-Usage: sdfont_commandline -verbose -font_path [FontPath] -max_code_point [num] -codepoint_range_file_path [FilePath]  -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -reverse_y_direction_for_glyphs [output file name w/o ext]
+Usage: sdfont_commandline -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
 * -font_path : Path to the TrueType font including the extention. The fonts are usually found in `/usr/share/fonts`, `/usr/local/fonts` etc. on Linux, and `/System/Library/Fonts/` on MacOS.
 
 * -max_code_point [num] : The highest code point to process. The encoding depends on the input font. It is UTF-8 in most of the fonts. Some old fonts use some esoteric encoding such as Shift-JIS. This command-line parameter provides a convenient way to exclude the glyphs that you don't use, if the code-points of those unused glyphs are assigned in a higher range. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-*num*, then you can specify *num* to reduce the number of glyphs to pack in the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
-
-* -codepoint_range_file_path [FilePath] : The path to the file that contains the ranges of the code points for which you want to generate glyphs. 
-For example, if you want to get the glyphs for the Japanese katakanas and hiraganas, the file content would look like the following:
-    ```
-    # Range in [low, high + 1) format.
-
-    # Hiragana: [U+3040, U+309F + 1)
-    12352, 12448
-
-    # Katakana: [U+30A0, U+30FF + 1)
-    12448, 12544
-    ```
-    You don't have to specify this option, if you want to get all the glyphs in the range of `[0, max_code_point)`. On the other hand, if you specify this parameter, then *-max_code_point* will be ignored. 
 
 * -texture_size [num] : The height and width of the PNG files in pixels. The default value is 512. It  should be a power of 2, as most of the OpenGL implementations do not accept the textures of different sizes.
 
@@ -232,8 +222,6 @@ For example, if you want to get the glyphs for the Japanese katakanas and hiraga
 
 * -enable_dead_reckoning : Experimental. Switch to enable the dead reckoning algorithm for faster processing. See [Appendix A](#appendix-a-notes-on-the-dead-reckoning-algorithm).
 
-* -reverse_y_direction_for_glyphs: Switch to reverse the vertical orientation of the glyphs in the PNG texture file. It's turned off by default. Turn it on, if you want to align the vertical direction of the glyphs in the texture to the direction of the rectangles in the vertices for rendering.
-
 # PNG & TXT File: Output of the `sdfont_commandline`.
 The output consits of two files: PNG that represents the signed-distance field of each glyph, and an accompanying TXT file that contains the metrics of the fonts necessary to render the glyphs at runtime.
 
@@ -241,8 +229,8 @@ The output consits of two files: PNG that represents the signed-distance field o
 The output PNG file is a 2-dimensional gray scale image (*PNG_COLOR_TYPE_GRAY*), where each pixel in unsigned byte (*depth:8*) represents the quantized value sampled at the regular grid points in the signed-distance field.
 The PNG file looks like the one shown below.
 
-<a href="docs/readme/sample_texture.png">
-<img src="docs/readme/sample_texture.png" width="400">
+<a href="docs/readme/sd_font.png">
+<img src="docs/readme/sd_font.png" width="400">
 </a>
 
 It wll be loaded as a texture map at runtime. With OpenGL, it can be loaded with the following
@@ -310,6 +298,7 @@ In Glyphs section, each line represents the metrics for a glyph.
 One line consists of the following fields.
 
 - Code Point
+- Glyph Name
 - Width
 - Height
 - Horizontal Bearing X
@@ -348,9 +337,9 @@ First, let's focus on renderin a single character 'g'.
 The code point of 'g' in all the known encodings is 103 (0x67).
 You will find something like the following in the TXT file.
 
-| Code Point | Width | Height | Horizontal Bearing X | Horizontal Bearing Y | Horizontal Advance | Vertical Bearing X | Vertical Bearing Y | Vertical Advance | Texture Coord X | Texture Coord Y | Texture Width | Texture Height |
-| :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| 103 | 0.458984 | 0.757812 | 0.0292969 | 0.536133 | 0.556641 | -0.249023 | 0.0810547 | 0.919922 | 0.361328 | 0.641602 | 0.0386015 | 0.0637336 |
+| Code Point | Glyph Name | Width | Height | Horizontal Bearing X | Horizontal Bearing Y | Horizontal Advance | Vertical Bearing X | Vertical Bearing Y | Vertical Advance | Texture Coord X | Texture Coord Y | Texture Width | Texture Height |
+| :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| 103 | Ccedilla | 0.458984 | 0.757812 | 0.0292969 | 0.536133 | 0.556641 | -0.249023 | 0.0810547 | 0.919922 | 0.361328 | 0.641602 | 0.0386015 | 0.0637336 |
 
 | SPREAD IN TEXTURE | SPREAD IN FONT METRICS |
 | :--: | :--: |
@@ -746,6 +735,7 @@ class Glyph {
     float mTextureWidth;
     float mTextureHeight;
 
+    std::string mGlyphName;
     /*
      *  key:   code point
      *  value: kerning
@@ -761,7 +751,10 @@ class Glyph {
 ```
     /** @brief typesets a word.
      *
-     *  @param s               (in):  the word to typeset
+     *  @param s               (in):  the word to typeset in the unicode sequence.
+     *
+     *  @param charMapIndex    (in):  index into the character maps.
+     *                                set to -1 if you want to use the default map.
      *
      *  @param fontSize        (in):  font size in pixels.
      *
@@ -806,7 +799,8 @@ class Glyph {
      */
     void getGlyphOriginsWidthAndHeight(
         
-        const string&           s,
+        const vector<uint32_t>& s,
+        const int32_t           charMapIndex,
         const float             fontSize,
         const float             letterSpacing,
         const float&            leftX,
@@ -999,7 +993,7 @@ Here's an overview of SDFont, which consists of three parts:
 
 Copyright (c) 2019 Shoichiro Yamanishi
 
-Wailea is released under MIT license. See `LICENSE` for details.
+SDFont is released under MIT license. See `LICENSE` for details.
 
 # Contact
 
@@ -1015,6 +1009,9 @@ Chris Green. 2007. Improved alpha-tested magnification for vector textures and s
 
 * [Grevera2004]
 George J Grevera, The “dead reckoning” signed distance transform, Computer Vision and Image Understanding, Volume 95, Issue 3, 2004, Pages 317-333, ISSN 1077-3142, https://doi.org/10.1016/j.cviu.2004.05.002.
+
+* [Trifunovic]
+Nemanja Trifunovic, "UTF-8 with C++ in a Portable Way", https://github.com/nemtrif/utfcpp
 
 # Appendices
 

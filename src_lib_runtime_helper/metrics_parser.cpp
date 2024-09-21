@@ -12,6 +12,8 @@ const std::string MetricsParser::SPREAD_IN_TEXTURE      = "SPREAD IN TEXTURE";
 const std::string MetricsParser::SPREAD_IN_FONT_METRICS = "SPREAD IN FONT METRICS";
 const std::string MetricsParser::GLYPHS                 = "GLYPHS";
 const std::string MetricsParser::KERNINGS               = "KERNINGS";
+const std::string MetricsParser::CHAR_MAPS              = "CHAR MAPS";
+const std::string MetricsParser::CHAR_MAP_DEFAULT       = "default";
 
 void MetricsParser::trim( string& line ) {
 
@@ -88,6 +90,11 @@ bool MetricsParser::parseSpec( string fileName )
             handleKerning ( line, fileName, lineNumber, error );
             break;
 
+          case IN_CHAR_MAPS:
+
+            handleCharMap ( line, fileName, lineNumber, error );
+            break;
+
           case END:
           default:
 
@@ -110,7 +117,6 @@ bool MetricsParser::isSectionHeader (
     enum parseState& state
 
 ) {
-
     if ( line.compare( 0, SPREAD_IN_TEXTURE.size(), SPREAD_IN_TEXTURE ) == 0 ) {
 
         state = IN_SPREAD_IN_TEXTURE;
@@ -129,6 +135,11 @@ bool MetricsParser::isSectionHeader (
     else if ( line.compare( 0, KERNINGS.size(), KERNINGS ) == 0 ) {
 
         state = IN_KERNINGS;
+        return true;
+    }
+    else if ( line.compare( 0, CHAR_MAPS.size(), CHAR_MAPS ) == 0 ) {
+
+        state = IN_CHAR_MAPS;
         return true;
     }
 
@@ -252,6 +263,14 @@ static long convertToLong( const std::string& s )
     return stol( trimmed_s, 0, 16);
 }
 
+static unsigned long convertToUnsignedLong( const std::string& s )
+{
+    const auto trimmed_s = s.substr( 2, s.size() - 2 ); // remove "0X"
+
+    return stoul( trimmed_s, 0, 16);
+}
+
+
 void MetricsParser::handleGlyph (
 
     string line,
@@ -263,7 +282,7 @@ void MetricsParser::handleGlyph (
 
     vector<std::string> fields;
 
-    if ( splitLine( line, fields, '\t' ) != 13 ) {
+    if ( splitLine( line, fields, '\t' ) != 14 ) {
 
         emitError( filename, lineNumber, "Invalid Node", errorFlag );
         return;
@@ -272,21 +291,21 @@ void MetricsParser::handleGlyph (
     Glyph g;
 
     g.mCodePoint          = convertToLong( fields[ 0 ] );
-    g.mWidth              = stof( fields[ 1] );
-    g.mHeight             = stof( fields[ 2] );
-    g.mHorizontalBearingX = stof( fields[ 3] );
-    g.mHorizontalBearingY = stof( fields[ 4] );
-    g.mHorizontalAdvance  = stof( fields[ 5] );
-    g.mVerticalBearingX   = stof( fields[ 6] );
-    g.mVerticalBearingY   = stof( fields[ 7] );
-    g.mVerticalAdvance    = stof( fields[ 8] );
-    g.mTextureCoordX      = stof( fields[ 9] );
-    g.mTextureCoordY      = stof( fields[10] );
-    g.mTextureWidth       = stof( fields[11] );
-    g.mTextureHeight      = stof( fields[12] );
+    g.mGlyphName          = fields[ 1];
+    g.mWidth              = stof( fields[ 2] );
+    g.mHeight             = stof( fields[ 3] );
+    g.mHorizontalBearingX = stof( fields[ 4] );
+    g.mHorizontalBearingY = stof( fields[ 5] );
+    g.mHorizontalAdvance  = stof( fields[ 6] );
+    g.mVerticalBearingX   = stof( fields[ 7] );
+    g.mVerticalBearingY   = stof( fields[ 8] );
+    g.mVerticalAdvance    = stof( fields[ 9] );
+    g.mTextureCoordX      = stof( fields[10] );
+    g.mTextureCoordY      = stof( fields[11] );
+    g.mTextureWidth       = stof( fields[12] );
+    g.mTextureHeight      = stof( fields[13] );
 
     mGlyphs[ g.mCodePoint ] = g;
-
 }
 
 
@@ -305,7 +324,7 @@ void MetricsParser::handleKerning (
 
     if ( numFields < 3 || (numFields - 1) % 2 != 0 ) {
 
-        emitError( filename, lineNumber, "Invalid Node", errorFlag );
+        emitError( filename, lineNumber, "Invalid Kerning Line", errorFlag );
     }
 
     auto& g = mGlyphs[ convertToLong( fields[ 0] ) ];
@@ -316,5 +335,42 @@ void MetricsParser::handleKerning (
     }
 }
 
+
+void MetricsParser::handleCharMap (
+
+    string      line,
+    string      filename,
+    long        lineNumber,
+    bool&       errorFlag
+) {
+
+    vector<std::string> fields;
+
+    auto numFields = splitLine( line, fields, '\t' );
+
+    if ( numFields < 5 || (numFields - 5) % 2 != 0 ) {
+
+        emitError( filename, lineNumber, "Invalid Char Map Line", errorFlag );
+    }
+
+    CharMap mp(
+        ( fields[ 3 ].compare( 0, CHAR_MAP_DEFAULT.size(), CHAR_MAP_DEFAULT ) == 0 ),
+        fields[ 0 ],
+        stol( fields[ 1 ] ),
+        stol( fields[ 2 ] )
+    );
+
+    const auto num_elems = stol( fields[ 4 ] );
+
+    for ( int i = 5; i < numFields; i +=2 ) {
+
+        const uint32_t charCode       = convertToUnsignedLong( fields[ i     ] );
+        const uint32_t glyphCodePoint = convertToUnsignedLong( fields[ i + 1 ] );
+
+        mp.m_char_to_codepoint.insert( pair( charCode, glyphCodePoint ) );
+    }
+
+    mCharMaps.push_back( mp );
+}
 
 } // namespace SDFont

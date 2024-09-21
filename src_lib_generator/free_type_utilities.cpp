@@ -1,4 +1,4 @@
-#include "sdfont/generator/free_type_utilities.hpp"
+#include "sdfont/free_type_utilities.hpp"
 
 using namespace std;
 
@@ -181,7 +181,56 @@ void FTUtilPrintPixels ( FT_Bitmap& bm ,ostream& os ) {
     }
 }
 
+string FTUtilStringEncoding( FT_Encoding enc )
+{
+    switch( enc ) {
 
+    case FT_ENCODING_NONE:
+        return "FT_ENCODING_NONE";
+
+    case FT_ENCODING_UNICODE:
+        return "FT_ENCODING_UNICODE";
+
+    case FT_ENCODING_MS_SYMBOL:
+        return "FT_ENCODING_MS_SYMBOL";
+
+    case FT_ENCODING_ADOBE_LATIN_1:
+        return "FT_ENCODING_ADOBE_LATIN_1";
+
+    case FT_ENCODING_OLD_LATIN_2:
+        return "FT_ENCODING_OLD_LATIN_2";
+
+    case FT_ENCODING_SJIS:
+        return "FT_ENCODING_SJIS";
+
+    case FT_ENCODING_PRC:
+        return "FT_ENCODING_PRC";
+
+    case FT_ENCODING_BIG5:
+        return "FT_ENCODING_BIG5";
+
+    case FT_ENCODING_WANSUNG:
+        return "FT_ENCODING_WANSUNG";
+
+    case FT_ENCODING_JOHAB:
+        return "FT_ENCODING_JOHAB";
+
+    case FT_ENCODING_ADOBE_STANDARD:
+        return "FT_ENCODING_ADOBE_STANDARD";
+
+    case FT_ENCODING_ADOBE_EXPERT:
+        return "FT_ENCODING_ADOBE_EXPERT";
+
+    case FT_ENCODING_ADOBE_CUSTOM:
+        return "FT_ENCODING_ADOBE_CUSTOM";
+
+    case FT_ENCODING_APPLE_ROMAN:
+        return "FT_ENCODING_APPLE_ROMAN";
+
+    default:
+        return "<unknown>";
+    }
+}
 
 
 void FTUtilPrintGlyphMetrics( FT_Glyph_Metrics& m, ostream& os ) {

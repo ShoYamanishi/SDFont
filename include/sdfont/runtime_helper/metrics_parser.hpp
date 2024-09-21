@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include "sdfont/glyph.hpp"
+#include "sdfont/char_map.hpp"
 
 using namespace std;
 
@@ -18,10 +19,11 @@ class MetricsParser {
      *
      *  @param  G (in/out) graph to which nodes and edges are to be added
      */
-    MetricsParser( map< long, Glyph>& glyphs, float& spreadInTexture, float& spreadInFontMetrics ):
+    MetricsParser( map< long, Glyph>& glyphs, float& spreadInTexture, float& spreadInFontMetrics, vector< CharMap >& charMaps ):
         mSpreadInTexture(spreadInTexture),
         mSpreadInFontMetrics(spreadInFontMetrics),
-        mGlyphs(glyphs) {;}
+        mGlyphs(glyphs),
+        mCharMaps( charMaps ) {;}
 
 
     virtual ~MetricsParser(){;}
@@ -38,6 +40,8 @@ class MetricsParser {
     static const string SPREAD_IN_FONT_METRICS;
     static const string GLYPHS;
     static const string KERNINGS;
+    static const string CHAR_MAPS;
+    static const string CHAR_MAP_DEFAULT;
 
   private:
 
@@ -47,6 +51,7 @@ class MetricsParser {
         IN_SPREAD_IN_FONT_METRICS,
         IN_GLYPHS,
         IN_KERNINGS,
+        IN_CHAR_MAPS,
         END
     };
 
@@ -92,6 +97,13 @@ class MetricsParser {
         bool&  errorFlag
     );
 
+    void handleCharMap(
+        string line,
+        string fileName,
+        long   lineNumber,
+        bool&  errorFlag
+    );
+
 
     void emitError(
         string fileName,
@@ -106,7 +118,7 @@ class MetricsParser {
 
     /** @brief used during parsing to find a node from a node number.*/
     map< long, Glyph >& mGlyphs;
-
+    vector< CharMap >&  mCharMaps;
 };
 
 

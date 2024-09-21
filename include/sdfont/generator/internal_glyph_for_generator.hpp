@@ -24,14 +24,16 @@ class InternalGlyphForGen {
   public:
 
     InternalGlyphForGen(
-        GeneratorConfig&  conf ,
-        long              codePoint ,
-        FT_Glyph_Metrics& m            );
-
+        GeneratorConfig&  conf,
+        long              codePoint,
+        FT_Glyph_Metrics& m,
+        const string&     glyphName
+    );
 
     InternalGlyphForGen (
         GeneratorConfig&  conf,
         const long        codePoint,
+        const string&     glyphName,
         const long        width,
         const long        height,
         unsigned char*    external_bitmap,
@@ -289,7 +291,7 @@ class InternalGlyphForGen {
 
     GeneratorConfig&    mConf;
     long                mCodePoint;
-
+    const string        mGlyphName;
     float               mTextureCoordX;
     float               mTextureCoordY;
     float               mTextureWidth;

@@ -12,7 +12,7 @@ const int RuntimeHelper::NUM_INDICES_PER_GLYPH = 6;
 
 RuntimeHelper::RuntimeHelper( string fileName ): mSpreadInTexture(0.0), mSpreadInFontMetrics(0.0)
 {
-    MetricsParser parser( mGlyphs, mSpreadInTexture, mSpreadInFontMetrics );
+    MetricsParser parser( mGlyphs, mSpreadInTexture, mSpreadInFontMetrics, mCharMaps );
     parser.parseSpec( fileName );
 }
 
@@ -32,10 +32,21 @@ const Glyph* RuntimeHelper::getGlyph( const long c ) const
     }
 }
 
+int32_t RuntimeHelper::getActiveCharMapIndex() const
+{
+    for ( int32_t i = 0; i < mCharMaps.size(); i++ ) {
+        const auto& charMap = mCharMaps[i];
+        if ( charMap.m_default ) {
+            return i;
+        }
+    }
+    return -1;
+}
 
 void RuntimeHelper::getGlyphOriginsWidthAndHeight(
         
-    const string&           s,
+    const vector<uint32_t>& s,
+    const int32_t           charMapIndex,
     const float             fontSize,
     const float             letterSpacing,
     const float&            leftX,
@@ -56,10 +67,18 @@ void RuntimeHelper::getGlyphOriginsWidthAndHeight(
     aboveBaselineY = 0.0f;
     belowBaselineY = 0.0f;    
 
-    for ( auto i = 0 ; i < s.length() ; i++ ) {
+    auto ind = charMapIndex;
+    if ( ind == -1 ) {
+        ind = getActiveCharMapIndex();
+    }
+    const auto& charMap = mCharMaps[ ind ];
 
-        auto ch  = s.at(i);
-        auto it = mGlyphs.find(ch);
+    for ( auto i = 0 ; i < s.size() ; i++ ) {
+
+        const auto ch32 = s[i];
+        const auto cp   = charMap.getCodepoint( ch32 );
+
+        auto it = mGlyphs.find(cp);
 
         if ( it != mGlyphs.end() ) {
 
@@ -155,7 +174,8 @@ void RuntimeHelper::getBoundingBoxes(
 
 void RuntimeHelper::getMetrics(
 
-    const string&           s,
+    const vector<uint32_t>& s,
+    const int32_t           charMapIndex,
     const float             fontSize,
     float&                  width,
     vector< float >&        posXs,
@@ -167,6 +187,7 @@ void RuntimeHelper::getMetrics(
 ) const {
     getMetricsNormalized(
         s,
+        charMapIndex,
         width,
         posXs,
         firstBearingX,
@@ -188,13 +209,14 @@ void RuntimeHelper::getMetrics(
 
 void RuntimeHelper::getMetricsNormalized(
 
-    const string&     s,
-    float&            width,
-    vector< float >&  posXs,
-    float&            firstBearingX,
-    float&            bearingY,
-    float&            belowBaselineY,
-    float&            advanceY,
+    const vector<uint32_t>& s,
+    const int32_t           charMapIndex,
+    float&                  width,
+    vector< float >&        posXs,
+    float&                  firstBearingX,
+    float&                  bearingY,
+    float&                  belowBaselineY,
+    float&                  advanceY,
     vector< const Glyph* >& glyphs
 
 ) const {
@@ -208,17 +230,24 @@ void RuntimeHelper::getMetricsNormalized(
     bool  firstFound     = false;
     float curX           = 0.0;
     float lastAdjustment = 0.0;
-    long  chPrev         = 0;
+    uint32_t chPrev      = 0;
     bool  chPrevSet      = false;
-    auto  len            = s.length();
+    auto  len            = s.size();
 
     glyphs.clear();
 
+    auto ind = charMapIndex;
+    if ( ind == -1 ) {
+        ind = getActiveCharMapIndex();
+    }
+    const auto& charMap = mCharMaps[ ind ];
 
     for ( auto i = 0 ; i < len ; i++ ) {
 
-        auto ch  = s.at(i);
-        auto git = mGlyphs.find(ch);
+        const auto ch32 = s[i];
+        const auto cp   = charMap.getCodepoint( ch32 );
+
+        auto git = mGlyphs.find(cp);
 
         if ( git != mGlyphs.end() ) {
 
@@ -242,7 +271,7 @@ void RuntimeHelper::getMetricsNormalized(
 
                 const auto  git     = mGlyphs.find( chPrev );
                 const auto& gPrev   = git->second;
-                const auto  gitKern = gPrev.mKernings.find( ch );
+                const auto  gitKern = gPrev.mKernings.find( cp );
 
                 if ( gitKern != gPrev.mKernings.end() ) {
                     curX += (gitKern->second);
@@ -260,7 +289,7 @@ void RuntimeHelper::getMetricsNormalized(
 
                 chPrevSet = true ;
             }
-            chPrev = ch;
+            chPrev = cp;
 
             glyphs.push_back( &g );
 

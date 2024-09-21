@@ -1,6 +1,8 @@
 #ifndef __SDFONT_GLYPH_HPP__
 #define __SDFONT_GLYPH_HPP__
 
+#include <string>
+
 namespace SDFont {
 
 
@@ -21,6 +23,8 @@ class Glyph {
     float mTextureCoordY;
     float mTextureWidth;
     float mTextureHeight;
+
+    std::string mGlyphName;
 
     /*
      *  key:   code point

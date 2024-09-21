@@ -11,12 +11,13 @@ const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
 const string GeneratorConfig::DefaultCodepointRangeFilePath = "" ;
 const string GeneratorConfig::DefaultEncoding = "unicode" ;
 
-const long   GeneratorConfig::DefaultMaxCodePoint           =  255 ;
+const long   GeneratorConfig::DefaultMaxCodePoint           =  1024 * 1024;
 const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
 const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
 const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
 const bool   GeneratorConfig::DefaultEnableDeadReckoning    = false;
 const bool   GeneratorConfig::DefaultReverseYDirectionForGlyphs = false;
+const bool   GeneratorConfig::DefaultFaceHasGlyphNames = false;
 
 void GeneratorConfig::setCodepointRangeFilePath( string s )
 {
@@ -171,6 +172,8 @@ void GeneratorConfig::outputMetricsHeader( ostream& os ) const  {
     os << mOutputFileName << ".png\n";
     os << "#\t";
     os << "Code Point";
+    os << "\t";
+    os << "Glyph Name";
     os << "\t";
     os << "Width";
     os << "\t";

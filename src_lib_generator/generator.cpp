@@ -7,9 +7,9 @@
 
 #include "sdfont/generator/generator.hpp"
 #include "sdfont/generator/png_loader.hpp"
+#include "sdfont/free_type_utilities.hpp"
 
 namespace SDFont {
-
 
 const string Generator::Encoding_unicode        = "unicode";
 const string Generator::Encoding_ms_symbol      = "ms_symbol";
@@ -177,6 +177,42 @@ bool Generator::initializeFreeType()
         return false;
     }
 
+    if ( FT_HAS_GLYPH_NAMES( mFtFace ) ) {
+        mConf.setFaceHasGlyphNames();
+        cerr << "The face has glyph names.\n";
+    }
+
+    cerr << "Num charmaps: " << mFtFace->num_charmaps << "\n";
+
+    int active_charmap_index = -1;
+    if ( mFtFace->charmap != nullptr ) {
+
+        active_charmap_index = FT_Get_Charmap_Index( mFtFace->charmap );
+    }
+
+    for ( int i = 0; i < mFtFace->num_charmaps; i++ ) {
+
+        cerr << "index: " << i;
+        if ( i == active_charmap_index ) {
+
+            cerr << " [ACTIVE] ";
+        }
+        else {
+            cerr << "          ";
+        }
+
+        cerr << "encoding: " << FTUtilStringEncoding( mFtFace->charmaps[i]->encoding ) << "\t";
+        cerr << "platform_id: " << mFtFace->charmaps[i]->platform_id << "\t";
+        cerr << "encoding_id: " << mFtFace->charmaps[i]->encoding_id << "\t";
+        cerr << "\n";
+    }
+
+    for ( int i = 0; i < mFtFace->num_charmaps; i++ ) {
+
+        const auto charMap = generateCharMap( mFtFace, mFtFace->charmaps[i], i == active_charmap_index );
+        mCharMaps.push_back( charMap );
+    }
+
     return true;
 }
 
@@ -191,18 +227,14 @@ void Generator::getKernings()
                 continue;
             }
 
-            auto ci1 = FT_Get_Char_Index( mFtFace, g1->codePoint() );
-
             for ( auto* g2 : mGlyphs ) {
 
                 if ( g2->hasExternalBitmap() ) {
                     continue;
                 }
 
-                auto ci2 = FT_Get_Char_Index( mFtFace, g2->codePoint() );
-
                 FT_Vector kerning;
-                FT_Get_Kerning( mFtFace, ci1, ci2, FT_KERNING_DEFAULT, &kerning);
+                FT_Get_Kerning( mFtFace, g1->codePoint(), g2->codePoint(), FT_KERNING_DEFAULT, &kerning);
 
                 if ( kerning.x != 0 ) {
 
@@ -362,26 +394,78 @@ long Generator::findBestWidthForDefaultFontSize( long& bestHeight, long& maxNumG
 
 bool Generator::generateGlyphs()
 {
+    char glyph_name_buffer[256];
+    string glyph_name( "" );
+
     for (FT_ULong i = 0; i <= mConf.maxCodePoint(); i++) {
 
         if ( mConf.isInACodepointRange(i) ) {
 
-            auto ind = FT_Get_Char_Index ( mFtFace, i );
-            if ( ind == 0 ) {
-                continue;
-            }
-            auto ftError = FT_Load_Glyph ( mFtFace, ind, FT_LOAD_DEFAULT );
+            auto ftError = FT_Load_Glyph ( mFtFace, i, FT_LOAD_DEFAULT );
 
             if ( ftError != FT_Err_Ok ) {
-                cerr << "error at char code [" << i << "]: " << ftError << "\n";
-                return false;
+
+                // no glyph present for the codepoint
+                continue;
             }
-            auto* g = new InternalGlyphForGen( mConf, i, mFtFace->glyph->metrics );
+
+            if ( mConf.faceHasGlyphNames() ) {
+
+                ftError = FT_Get_Glyph_Name( mFtFace, i, glyph_name_buffer, 256 );
+
+                if ( ftError != FT_Err_Ok ) {
+
+                    cerr << "FreeType error: " << ftError << "\n";
+                    return false;
+                }
+
+                glyph_name_buffer[255] = 0;
+                glyph_name = glyph_name_buffer;
+            }
+
+            auto* g = new InternalGlyphForGen( mConf, i, mFtFace->glyph->metrics, glyph_name );
             mGlyphs.push_back ( g );
         }
     }
     return true;
 }
+
+CharMap Generator::generateCharMap(
+    FT_Face        ftFace,
+    FT_CharMapRec* ftCharMap,
+    const bool     isDefault
+) {
+    CharMap charMap(
+        isDefault,
+        FTUtilStringEncoding( ftCharMap->encoding ),
+        ftCharMap->platform_id,
+        ftCharMap->encoding_id
+    );
+
+    auto ftError = FT_Set_Charmap( ftFace, ftCharMap );
+
+    if ( ftError != FT_Err_Ok ) {
+
+        cerr << "FreeType error: " << ftError << "\n";
+
+        return charMap;
+    }
+
+    FT_UInt gindex = 0;
+
+    FT_ULong charcode = FT_Get_First_Char( ftFace, &gindex );
+    int count = 0;
+
+    while ( gindex != 0 ) {
+
+        charMap.m_char_to_codepoint.insert( pair( charcode, gindex ) );
+
+        charcode = FT_Get_Next_Char( ftFace, charcode, &gindex );
+        count++;
+    }
+    return charMap;
+}
+
 
 std::pair<float, float> Generator::findMeanGlyphDimension()
 {
@@ -402,12 +486,12 @@ void Generator::generateExtraGlyphs()
 {
     const auto dim  = findMeanGlyphDimension();
 
-    addExtraGlyph( 0x0A, dim, GeneratorConfig::FileNameExtraGlyphLineFeed );
+    addExtraGlyph( 0x0A, "extra line feed", dim, GeneratorConfig::FileNameExtraGlyphLineFeed );
 
-    addExtraGlyph( 0x00, dim, GeneratorConfig::FileNameExtraGlyphBlank          );
+    addExtraGlyph( 0x00, "extra blank", dim, GeneratorConfig::FileNameExtraGlyphBlank          );
 }
 
-void Generator::addExtraGlyph( const long code_point, const std::pair<float, float>& dim, const std::string& file_name )
+void Generator::addExtraGlyph( const long code_point, const string& glyph_name, const std::pair<float, float>& dim, const std::string& file_name )
 {
     const auto base_path = std::filesystem::path{ mConf.extraGlyphPath() };
     const auto file_path = std::filesystem::path{ file_name };
@@ -424,6 +508,7 @@ void Generator::addExtraGlyph( const long code_point, const std::pair<float, flo
     auto* g = new InternalGlyphForGen (
         mConf,
         code_point,
+        glyph_name,
         static_cast< long >( dim.first  ),
         static_cast< long >( dim.second ),
         data,
@@ -449,9 +534,7 @@ bool Generator::generateGlyphBitmaps( long bestWidthForDefaultFontSize )
             g->setSignedDist();
         }
         else {
-            auto ind = FT_Get_Char_Index( mFtFace, g->codePoint() );
-
-            auto ftError = FT_Load_Glyph( mFtFace, ind, FT_LOAD_DEFAULT );
+            auto ftError = FT_Load_Glyph( mFtFace, g->codePoint(), FT_LOAD_DEFAULT );
 
             if (ftError != FT_Err_Ok) {
 
@@ -547,8 +630,7 @@ bool Generator::generateTexture( bool reverseY )
 
                 auto dist  = g->signedDist(
                     srcX, 
-                    mConf.isReverseYDirectionForGlyphsSet() ? (g->signedDistHeight() - 1 - srcY) : srcY
-
+                    reverseY ? srcY : (g->signedDistHeight() - 1 - srcY)
                 );
 
                 auto alpha = min ( 255, max( 0, (int)( dist * 255.0 ) ) );
@@ -731,6 +813,15 @@ bool Generator::emitFileMetrics()
 
     }
 
+    osMetrics << "#Char Maps\tEncoding\tPlatform ID\tEncoding ID\tDefault?\tNum Chars\t";
+    osMetrics << "#Char Code 1\tGlyph Code Point 1\tChar Code 2\tGlyph Code Point 2...\n";
+    osMetrics << "CHAR MAPS\n";
+
+    for ( auto& char_map : mCharMaps ) {
+
+        char_map.emit( osMetrics );
+    }
+
     osMetrics.close();
 
     if ( mVerbose ) {
@@ -757,7 +848,6 @@ void Generator::generateMetrics(float& margin, vector<Glyph>& glyphs)
     }
 
 }
-
 
 } // namespace SDFont
 

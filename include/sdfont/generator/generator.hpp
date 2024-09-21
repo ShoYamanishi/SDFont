@@ -6,9 +6,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-
 #include "sdfont/generator/internal_glyph_for_generator.hpp"
 #include "sdfont/generator/generator_config.hpp"
+#include "sdfont/char_map.hpp"
 
 namespace SDFont {
 
@@ -45,10 +45,11 @@ class Generator {
 
     bool  initializeFreeType      ( ) ;
     bool  generateGlyphs          ( ) ;
-    void  generateExtraGlyphs     ( ) ;
+    CharMap generateCharMap       ( FT_Face face, FT_CharMapRec* char_map, const bool is_default );
+    void  generateExtraGlyphs     ( );
     std::pair<float, float>
           findMeanGlyphDimension  ( ) ;
-    void  addExtraGlyph           ( const long code_point, const std::pair<float, float>& dim, const std::string& file_name );
+    void  addExtraGlyph           ( const long code_point, const string& glyph_name, const std::pair<float, float>& dim, const std::string& file_name );
     void  getKernings             ( ) ;
     long  fitGlyphsToTexture      ( ) ;
     long  findBestWidthForDefaultFontSize( long& bestHeight, long& maxNumGlyphsPerEdge );
@@ -65,6 +66,7 @@ class Generator {
     unsigned char*                 mPtrMain;
     unsigned char**                mPtrArray;
 
+    vector< CharMap >              mCharMaps;
 };
 
 } // namespace SDFont
