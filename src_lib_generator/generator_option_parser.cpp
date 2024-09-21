@@ -18,10 +18,9 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "-texture_size [num] "
                                             "-glyph_size_for_sampling [num] "
                                             "-ratio_spread_to_glyph [float] "
-                                            "-codepoint_range_file_path [FilePath] "
-                                            "-encoding [unicode(default) / ms_symbol / sjis / prc / big5 / wansung / johab / adobe_latin_1 / adobe_standard / adobe_expert / adobe_custom / apple_roman / old_latin_2] "
-                                            " -enable_dead_reckoning "
-                                            " -reverse_y_direction_for_glyphs "
+                                            "-num_threads [num 1-32] "
+                                            "-enable_dead_reckoning "
+                                            "-reverse_y_direction_for_glyphs "
                                             "[output file name w/o ext]"
                                             "\n";
 
@@ -31,6 +30,7 @@ const string GeneratorOptionParser::MaxCodePoint         = "-max_code_point" ;
 const string GeneratorOptionParser::TextureSize          = "-texture_size" ;
 const string GeneratorOptionParser::GlyphSizeForSampling = "-glyph_size_for_sampling" ;
 const string GeneratorOptionParser::RatioSpreadToGlyph   = "-ratio_spread_to_glyph" ;
+const string GeneratorOptionParser::NumThreads           = "-num_threads" ;
 const string GeneratorOptionParser::Encoding             = "-encoding" ;
 const string GeneratorOptionParser::EnableDeadReckoning  = "-enable_dead_reckoning" ;
 const string GeneratorOptionParser::ReverseYDirectionForGlyphs
@@ -136,6 +136,19 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
                 break;
             }
         }
+        else if ( arg.compare ( NumThreads ) == 0 ) {
+
+            if ( i < argc - 1 ) {
+
+                string arg2( argv[++i] );
+                processNumThreads( arg2 );
+            }
+            else {
+                mError = true;
+                break;
+            }
+        }
+
         else if ( arg.compare ( CodepointRangeFilePath ) == 0 ) {
 
             if ( i < argc - 1 ) {
@@ -258,6 +271,20 @@ void GeneratorOptionParser::processRatioSpreadToGlyph( const string s ) {
     else {
 
         mConfig.setRatioSpreadToGlyph( ratio );
+    }
+}
+
+void GeneratorOptionParser::processNumThreads( const string s ) {
+
+    long numThreads = atoi( s.c_str() ) ;
+
+    if ( numThreads < 1 || numThreads > 32 ) {
+
+        mError = true;
+    }
+    else {
+
+        mConfig.setNumThreads( numThreads );
     }
 }
 

@@ -30,6 +30,7 @@ class GeneratorConfig {
                                     { 1.0f },
         mGlyphBitmapSizeForSampling { DefaultGlyphBitmapSizeForSampling },
         mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
+        mNumThreads                 { DefaultNumThreads },
         mCodepointRangeFilePath     { DefaultCodepointRangeFilePath },
         mEncoding                   { DefaultEncoding },
         mEnableDeadReckoning        { DefaultEnableDeadReckoning },
@@ -47,6 +48,7 @@ class GeneratorConfig {
     void setGlyphBitmapSizeForSampling
                                ( long   v ) { mGlyphBitmapSizeForSampling = v ; }
     void setRatioSpreadToGlyph ( float v  ) { mRatioSpreadToGlyph = v ; }
+    void setNumThreads         ( long v   ) { mNumThreads = v ; }
     void setGlyphScalingFromSamplingToPackedSignedDist
                                ( float v  ) { mGlyphScalingFromSamplingToPackedSignedDist = v; }
     void setCodepointRangeFilePath( string s );
@@ -77,6 +79,7 @@ class GeneratorConfig {
     long   glyphBitmapSizeForSampling()
                                const { return mGlyphBitmapSizeForSampling ;       }
     float  ratioSpreadToGlyph()const { return mRatioSpreadToGlyph ;               }
+    long   numThreads() const { return mNumThreads; }
     float  glyphScalingFromSamplingToPackedSignedDist()
                                const { return mGlyphScalingFromSamplingToPackedSignedDist ; }
     long   signedDistExtent()  const { return   (long)( mGlyphBitmapSizeForSampling
@@ -115,6 +118,7 @@ class GeneratorConfig {
     long   mGlyphBitmapSizeForSampling;
     float  mGlyphScalingFromSamplingToPackedSignedDist ;
     float  mRatioSpreadToGlyph;
+    long   mNumThreads;
     string mCodepointRangeFilePath;
     vector< pair< long, long > >
            mCodepointRangePairs;
@@ -130,6 +134,7 @@ class GeneratorConfig {
     static const long   DefaultOutputTextureSize ;
     static const long   DefaultGlyphBitmapSizeForSampling ;
     static const float  DefaultRatioSpreadToGlyph ;
+    static const long   DefaultNumThreads;
     static const string DefaultCodepointRangeFilePath;
     static const string DefaultEncoding;
     static const bool   DefaultEnableDeadReckoning;

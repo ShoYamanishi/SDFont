@@ -31,6 +31,7 @@ class GeneratorOptionParser {
     void processTextureSize          ( const string s ) ;
     void processGlyphSizeForSampling ( const string s ) ;
     void processRatioSpreadToGlyph   ( const string s ) ;
+    void processNumThreads           ( const string s ) ;
     void processOutputFileName       ( const string s ) ;
     void processCodepointRangeFilePath( const string s ) ;
     void processEncoding             ( const string s ) ;
@@ -53,6 +54,7 @@ class GeneratorOptionParser {
     static const string   TextureSize;
     static const string   GlyphSizeForSampling;
     static const string   RatioSpreadToGlyph;
+    static const string   NumThreads;
     static const string   EnableDeadReckoning;
     static const string   ReverseYDirectionForGlyphs;
     static const string   Help;

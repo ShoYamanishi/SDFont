@@ -7,6 +7,7 @@
 #include FT_FREETYPE_H
 
 #include "sdfont/generator/internal_glyph_for_generator.hpp"
+#include "sdfont/generator/internal_glyph_thread_driver.hpp"
 #include "sdfont/generator/generator_config.hpp"
 #include "sdfont/char_map.hpp"
 
@@ -67,6 +68,8 @@ class Generator {
     unsigned char**                mPtrArray;
 
     vector< CharMap >              mCharMaps;
+
+    InternalGlyphThreadDriver*     mThreadDriver;
 };
 
 } // namespace SDFont

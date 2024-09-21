@@ -29,8 +29,14 @@ Generator::Generator(GeneratorConfig& conf, bool verbose):
     mConf    ( conf    ),
     mVerbose ( verbose ),
     mPtrMain ( nullptr ),
-    mPtrArray( nullptr )
-    {;}
+    mPtrArray( nullptr ),
+    mThreadDriver( nullptr )
+{
+    if ( mConf.numThreads() != 0 ) {
+
+        mThreadDriver = new InternalGlyphThreadDriver( mConf.numThreads() );
+    }
+}
 
 
 Generator::~Generator()
@@ -40,6 +46,11 @@ Generator::~Generator()
     for ( auto* g : mGlyphs ) {
 
         delete g;
+    }
+
+    if ( mThreadDriver != nullptr ) {
+
+        delete mThreadDriver;
     }
 }
 
@@ -423,7 +434,7 @@ bool Generator::generateGlyphs()
                 glyph_name = glyph_name_buffer;
             }
 
-            auto* g = new InternalGlyphForGen( mConf, i, mFtFace->glyph->metrics, glyph_name );
+            auto* g = new InternalGlyphForGen( mConf, mThreadDriver, i, mFtFace->glyph->metrics, glyph_name );
             mGlyphs.push_back ( g );
         }
     }
@@ -507,6 +518,7 @@ void Generator::addExtraGlyph( const long code_point, const string& glyph_name, 
 
     auto* g = new InternalGlyphForGen (
         mConf,
+        mThreadDriver,
         code_point,
         glyph_name,
         static_cast< long >( dim.first  ),

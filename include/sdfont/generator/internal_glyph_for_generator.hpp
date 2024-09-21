@@ -11,6 +11,8 @@ using namespace std;
 
 namespace SDFont {
 
+class InternalGlyphThreadDriver;
+
 /** @file sdfont_internal_glyph_for_gen.hpp
  *
  *  @brief per glyph object to generate signed distant font from the 
@@ -24,21 +26,23 @@ class InternalGlyphForGen {
   public:
 
     InternalGlyphForGen(
-        GeneratorConfig&  conf,
-        long              codePoint,
-        FT_Glyph_Metrics& m,
-        const string&     glyphName
+        GeneratorConfig&           conf,
+        InternalGlyphThreadDriver* threadDriver,
+        long                       codePoint,
+        FT_Glyph_Metrics&          m,
+        const string&              glyphName
     );
 
     InternalGlyphForGen (
-        GeneratorConfig&  conf,
-        const long        codePoint,
-        const string&     glyphName,
-        const long        width,
-        const long        height,
-        unsigned char*    external_bitmap,
-        const long        external_bitmap_width,
-        const long        external_bitmap_height
+        GeneratorConfig&           conf,
+        InternalGlyphThreadDriver* threadDriver,
+        const long                 codePoint,
+        const string&              glyphName,
+        const long                 width,
+        const long                 height,
+        unsigned char*             external_bitmap,
+        const long                 external_bitmap_width,
+        const long                 external_bitmap_height
     );
 
     virtual ~InternalGlyphForGen ();
@@ -290,6 +294,8 @@ class InternalGlyphForGen {
     float doGaussianBlur5x5( FT_Bitmap& bm, long i, long j );
 
     GeneratorConfig&    mConf;
+    InternalGlyphThreadDriver* mThreadDriver;
+
     long                mCodePoint;
     const string        mGlyphName;
     float               mTextureCoordX;
@@ -322,6 +328,8 @@ class InternalGlyphForGen {
     long                mExternalBitmapWidth;
     long                mExternalBitmapHeight;
     unsigned char*      mExternalBitmap;
+
+friend class InternalGlyphThreadDriver;
 };
 
 

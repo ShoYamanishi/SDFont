@@ -19,6 +19,7 @@ add_library( sdfont_gen
     ${PROJECT_SOURCE_DIR}/src_lib_generator/generator_config.cpp
     ${PROJECT_SOURCE_DIR}/src_lib_generator/generator_option_parser.cpp
     ${PROJECT_SOURCE_DIR}/src_lib_generator/internal_glyph_for_generator.cpp
+    ${PROJECT_SOURCE_DIR}/src_lib_generator/internal_glyph_thread_driver.cpp
     ${PROJECT_SOURCE_DIR}/src_lib_generator/png_loader.cpp
 )
 

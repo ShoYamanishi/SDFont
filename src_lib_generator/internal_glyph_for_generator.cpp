@@ -7,6 +7,7 @@
 
 #include "sdfont/generator/generator_config.hpp"
 #include "sdfont/generator/internal_glyph_for_generator.hpp"
+#include "sdfont/generator/internal_glyph_thread_driver.hpp"
 #include "sdfont/util.hpp"
 
 using namespace std;
@@ -18,12 +19,14 @@ const long InternalGlyphForGen::FREE_TYPE_FIXED_POINT_SCALING = 64 ;
 
 
 InternalGlyphForGen::InternalGlyphForGen (
-    GeneratorConfig&  conf,
-    long              codePoint,
-    FT_Glyph_Metrics& m,
-    const string&     glyphName
+    GeneratorConfig&           conf,
+    InternalGlyphThreadDriver* threadDriver,
+    long                       codePoint,
+    FT_Glyph_Metrics&          m,
+    const string&              glyphName
 ):
     mConf               ( conf ),
+    mThreadDriver       ( threadDriver ),
     mCodePoint          ( codePoint ),
     mGlyphName          ( glyphName ),
     mTextureCoordX      ( 0.0 ),
@@ -56,16 +59,18 @@ InternalGlyphForGen::InternalGlyphForGen (
 
 
 InternalGlyphForGen::InternalGlyphForGen (
-    GeneratorConfig&  conf,
-    const long        codePoint,
-    const string&     glyphName,
-    const long        width,
-    const long        height,
-    unsigned char*    external_bitmap,
-    const long        external_bitmap_width,
-    const long        external_bitmap_height
+    GeneratorConfig&           conf,
+    InternalGlyphThreadDriver* threadDriver,
+    const long                 codePoint,
+    const string&              glyphName,
+    const long                 width,
+    const long                 height,
+    unsigned char*             external_bitmap,
+    const long                 external_bitmap_width,
+    const long                 external_bitmap_height
 ):
     mConf               ( conf ),
+    mThreadDriver       ( threadDriver ),
     mCodePoint          ( codePoint ),
     mGlyphName          ( glyphName ),
     mTextureCoordX      ( 0.0 ),
@@ -770,18 +775,30 @@ void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch( FT_Bitmap& bm )
 
     const long offset = mConf.signedDistExtent();
 
-    for ( long i = 0 ; i < mSignedDistHeight; i++ ) {
+    if ( mThreadDriver == nullptr ) {
 
-        for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
+        for ( long i = 0 ; i < mSignedDistHeight; i++ ) {
 
-            auto val = getSignedDistance( bm,
-                                          scale,
-                                          spreadInBitmapPixels,
-                                          j - offset,
-                                          i - offset
-                                        );
-            mSignedDist[i * mSignedDistWidth + j] = val;
+            for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
+
+                auto val = getSignedDistance( bm,
+                                              scale,
+                                              spreadInBitmapPixels,
+                                              j - offset,
+                                              i - offset
+                                            );
+                mSignedDist[i * mSignedDistWidth + j] = val;
+            }
         }
+    }
+    else {
+        mThreadDriver->run(
+            this,
+            &bm,
+            scale,
+            spreadInBitmapPixels,
+            offset
+        );
     }
 }
 
@@ -797,8 +814,6 @@ void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch()
 
     mSignedDist = new float[ arraySize ];
 
-    const long offset = mConf.signedDistExtent();
-
     for ( long i = 0 ; i < mSignedDistHeight; i++ ) {
 
         for ( long j = 0 ; j < mSignedDistWidth; j++ ) {
@@ -813,8 +828,6 @@ void InternalGlyphForGen::setSignedDistBySeparateVicinitySearch()
         }
     }
 }
-
-
 
 void InternalGlyphForGen::releaseBitmap() {
 

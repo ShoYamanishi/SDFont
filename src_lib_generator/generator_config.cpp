@@ -14,6 +14,7 @@ const string GeneratorConfig::DefaultEncoding = "unicode" ;
 const long   GeneratorConfig::DefaultMaxCodePoint           =  1024 * 1024;
 const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
 const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
+const long   GeneratorConfig::DefaultNumThreads             =  0 ;
 const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
 const bool   GeneratorConfig::DefaultEnableDeadReckoning    = false;
 const bool   GeneratorConfig::DefaultReverseYDirectionForGlyphs = false;

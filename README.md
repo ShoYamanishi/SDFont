@@ -189,7 +189,7 @@ Please specify a correct path to a TrueType font to the option *-font_path* belo
 The fonts are usually found in `/usr/share/fonts, /usr/local/fonts` etc on Linux, and `/System/Library/Fonts/` on MacOS. The demo program was tested with the normal Helvetica font.
 
 ```
-./sdfont_commandline -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 512 -glyph_size_for_sampling 512 signed_dist_font
+./sdfont_commandline -verbose -font_path <path/to/truetype/fonts/such/as>/Helvetica.ttc -max_code_point 512 -texture_size 512 -glyph_size_for_sampling 512  -num_threads 16 signed_dist_font
 ```
 
 This will generate two files: `signed_dist_font.png` and `signed_dist_font.txt`. The former contains the glyph shapes in signed distance in the gray scale 8-bit PNG format. It will be loaded at runtime to an OpenGL texture. The latter contains the metrics information useful for typesetting.
@@ -206,7 +206,7 @@ It takes a vector TrueType font (usually the extension is `.ttf` or `.ttc`, and 
 **NOTE:** Ligatures are not supported at moment. I could not figure out if/how I handle ligatures with libfreetype. If you know how, I would appreciate your advice.
 
 ```
-Usage: sdfont_commandline -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] [output file name w/o ext]
+Usage: sdfont_commandline -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -num_threads [num 1-32] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
@@ -219,6 +219,8 @@ Usage: sdfont_commandline -verbose -font_path [FontPath] -max_code_point [num] -
 * -glyph_size_for_sampling [num] : The font size in pixels. The generator draws each glyph to a bitmap of this size to sample the signed distance. It affects the visual quality of the resultant signed distance font. The default value is 1024.
 
 * -ratio_spread_to_glyph [float] : The extra margin around each glyph to sample and to accommodate the signed distance values tapering off. An appropriate range is 0.1 to 0.2. The default is 0.2.
+
+* -num_threads [num 1-32] : The number of threads used for the vicinity search.
 
 * -enable_dead_reckoning : Experimental. Switch to enable the dead reckoning algorithm for faster processing. See [Appendix A](#appendix-a-notes-on-the-dead-reckoning-algorithm).
 
