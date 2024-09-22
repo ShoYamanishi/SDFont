@@ -8,58 +8,17 @@ const string GeneratorConfig::FileNameExtraGlyphBlank          = "blank.png";
 const string GeneratorConfig::DefaultFontPath = "/usr/share/fonts/Arial.ttf" ;
 const string GeneratorConfig::DefaultExtraGlyphPath = "" ;
 const string GeneratorConfig::DefaultOutputFileName = "signed_dist_font" ;
-const string GeneratorConfig::DefaultCodepointRangeFilePath = "" ;
 const string GeneratorConfig::DefaultEncoding = "unicode" ;
 
-const long   GeneratorConfig::DefaultMaxCodePoint           =  1024 * 1024;
 const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
 const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
+const bool   GeneratorConfig::DefaultProcessHiddenGlyphs    =  false;
 const long   GeneratorConfig::DefaultNumThreads             =  0 ;
+const long   GeneratorConfig::DefaultMaxCodePoint           = 1024 * 1024;
 const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
 const bool   GeneratorConfig::DefaultEnableDeadReckoning    = false;
 const bool   GeneratorConfig::DefaultReverseYDirectionForGlyphs = false;
 const bool   GeneratorConfig::DefaultFaceHasGlyphNames = false;
-
-void GeneratorConfig::setCodepointRangeFilePath( string s )
-{
-    mCodepointRangeFilePath = s ;
-
-    ifstream is( s.c_str() );
-
-    if (!is) {
-        return;
-    }
-
-    long            lineNumber = 0;
-    bool            error      = false;
-
-    while ( !is.eof() && !error ) {
-
-        string line;
-
-        getline( is, line );
-
-        trim( line );
-
-        lineNumber++;
-
-        if ( line.empty() ) {
-            continue;
-        }
-
-        if ( isCommentLine(line) ) {
-            continue;
-        }
-
-        vector<std::string> fields;
-
-        if ( splitLine( line, fields, ',' ) == 2 ) {
-            trim( fields[0] );
-            trim( fields[1] );
-            mCodepointRangePairs.emplace_back( atoi( fields[0].c_str() ), atoi( fields[1].c_str() ) );
-        }
-    }
-}
 
 void GeneratorConfig::trim( string& line ) const
 {
@@ -123,15 +82,24 @@ void GeneratorConfig::emitVerbose() const {
     cerr << "Font Path: ["        << mFontPath           << "]\n";
     cerr << "Extra Glyph Path: [" << mExtraGlyphPath     << "]\n";
     cerr << "Encoding: ["         << mEncoding           << "]\n";
-    cerr << "Codepoint Range File Path: ["
-                                  << mCodepointRangeFilePath << "]\n";
     cerr << "Output File Name: [" << mOutputFileName     << "]\n";
-    cerr << "Max Code Point: ["   << mMaxCodePoint       << "]\n";
-    cerr << "Codepoint Range Pairs(low, high+1): [";
-    for ( const auto& pair : mCodepointRangePairs ) {
-        cerr << " (" << pair.first << "," << pair.second << ")";
+    if ( mCharCodeRanges.empty() ) {
+        cerr << "No Char Code Range specified.\n";
     }
-    cerr << "]\n";
+    else {
+        cerr << "Char Code Ranges(low, high+1): [";
+        for ( const auto& pair : mCharCodeRanges ) {
+            cerr << " (" << pair.first << "," << pair.second << ")";
+        }
+        cerr << "]\n";
+    }
+    if ( mProcessHiddenGlyphs ) {
+        cerr << "Processing Hidden Glyphs. Max Code Point: " << mMaxCodePoint << "\n";
+    }
+    else {
+        cerr << "Not Processing Hidden Glyphs.\n";
+    }
+
     cerr << "Output Texture Size: ["     << mOutputTextureSize        << "]\n";
     cerr << "Initial Glyph Scaling from Sampling oo Packed Signed Dist: ["    << mGlyphScalingFromSamplingToPackedSignedDist << "]\n";
     cerr << "Glyph Bitmap Size for Sampling: ["  << glyphBitmapSizeForSampling()        << "]\n";
@@ -152,11 +120,9 @@ void GeneratorConfig::outputMetricsHeader( ostream& os ) const  {
     os << "# Encoding: ";
     os << mEncoding;
     os << "\n";
-    os << "# Highest Code Point: ";
-    os << mMaxCodePoint;
     os << "\n";
-    os << "# Codepoint Range Pairs:(low, high+1) [";
-    for ( const auto& pair : mCodepointRangePairs ) {
+    os << "# Char Code Ranges:(low, high+1) [";
+    for ( const auto& pair : mCharCodeRanges ) {
         os << " (" << pair.first << "," << pair.second << ")";
     }
     os << "]\n";

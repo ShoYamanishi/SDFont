@@ -206,13 +206,15 @@ It takes a vector TrueType font (usually the extension is `.ttf` or `.ttc`, and 
 **NOTE:** Ligatures are not supported at moment. I could not figure out if/how I handle ligatures with libfreetype. If you know how, I would appreciate your advice.
 
 ```
-Usage: sdfont_commandline -verbose -font_path [FontPath] -max_code_point [num] -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -num_threads [num 1-32] [output file name w/o ext]
+Usage: sdfont_commandline -verbose -font_path [FontPath] -process_hidden_glyphs [highest codepoint] -char_code_range 0X********-0X******** (can be specified multiple times) -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -num_threads [num 1-32] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
 * -font_path : Path to the TrueType font including the extention. The fonts are usually found in `/usr/share/fonts`, `/usr/local/fonts` etc. on Linux, and `/System/Library/Fonts/` on MacOS.
 
-* -max_code_point [num] : The highest code point to process. The encoding depends on the input font. It is UTF-8 in most of the fonts. Some old fonts use some esoteric encoding such as Shift-JIS. This command-line parameter provides a convenient way to exclude the glyphs that you don't use, if the code-points of those unused glyphs are assigned in a higher range. Some fonts contain many glyphs, which are not used in most of the cases. If all the glyphs you use reside in the index range of 0-*num*, then you can specify *num* to reduce the number of glyphs to pack in the PNG file. For example, many fonts contains thousands of glyphs, but often times you use only the ones within [32-255]. In this case you can specify 255 to this option to process the glyphs only in the range of [0-255]. The default value is 255.
+* -process_hidden_glyphs [highest codepoint] : Processes hidden glyphs that are not reachable from any character maps included in the original font. For example, 'Computer Modern' fonts have a few thousand glyphs (mostly math symbols) defined but not accessible from any character maps. This option enables the generation of the signed distance data for those glyphs.
+
+* -char_code_range [0X********-0X********] : This option can be specified multiple times. If this option is present, it proceeses the glyphs that correspond to the character codes in the specified ranges only.
 
 * -texture_size [num] : The height and width of the PNG files in pixels. The default value is 512. It  should be a power of 2, as most of the OpenGL implementations do not accept the textures of different sizes.
 

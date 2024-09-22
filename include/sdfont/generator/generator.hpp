@@ -2,6 +2,8 @@
 #define __SDFONT_GENERATOR_HPP__
 
 #include <vector>
+#include <set>
+#include <map>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -68,6 +70,7 @@ class Generator {
     unsigned char**                mPtrArray;
 
     vector< CharMap >              mCharMaps;
+    set< uint32_t >                mCodepointsToProcess;
 
     InternalGlyphThreadDriver*     mThreadDriver;
 };

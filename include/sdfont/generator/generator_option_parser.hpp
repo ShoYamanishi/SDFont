@@ -25,22 +25,22 @@ class GeneratorOptionParser {
 
     inline void reset() { mHelp = false; mError = false; mVerbose = false; }
 
-    void processFontPath             ( const string s ) ;
-    void processExtraGlyphPath       ( const string s ) ;
-    void processMaxCodePoint         ( const string s ) ;
-    void processTextureSize          ( const string s ) ;
-    void processGlyphSizeForSampling ( const string s ) ;
-    void processRatioSpreadToGlyph   ( const string s ) ;
-    void processNumThreads           ( const string s ) ;
-    void processOutputFileName       ( const string s ) ;
-    void processCodepointRangeFilePath( const string s ) ;
-    void processEncoding             ( const string s ) ;
+    void processFontPath             ( const string& s ) ;
+    void processExtraGlyphPath       ( const string& s ) ;
+    void processTextureSize          ( const string& s ) ;
+    void processGlyphSizeForSampling ( const string& s ) ;
+    void processRatioSpreadToGlyph   ( const string& s ) ;
+    void processCharCodeRange        ( const string& s ) ;
+    void processProcessHiddenGlyphs  ( const string& s ) ;
+    void processNumThreads           ( const string& s ) ;
+    void processOutputFileName       ( const string& s ) ;
+    void processEncoding             ( const string& s ) ;
     void processDeadReckoning        ( const bool   b );
     void processReverseYDirectionForGlyphs
                                      ( const bool   b );
-    bool doesFileExist               ( const string s ) const ;
-    bool doesDirectoryExist          ( const string s ) const ;
-    bool isValidFileName             ( const string s ) const ;
+    bool doesFileExist               ( const string& s ) const ;
+    bool doesDirectoryExist          ( const string& s ) const ;
+    bool isValidFileName             ( const string& s ) const ;
 
 
     GeneratorConfig&      mConfig;
@@ -50,17 +50,17 @@ class GeneratorOptionParser {
 
     static const string   FontPath;
     static const string   ExtraGlyphPath;
-    static const string   MaxCodePoint;
     static const string   TextureSize;
     static const string   GlyphSizeForSampling;
     static const string   RatioSpreadToGlyph;
+    static const string   ProcessHiddenGlyphs;
+    static const string   CharCodeRange;
     static const string   NumThreads;
     static const string   EnableDeadReckoning;
     static const string   ReverseYDirectionForGlyphs;
     static const string   Help;
     static const string   DashH;
     static const string   Verbose;
-    static const string   CodepointRangeFilePath;
     static const string   Encoding;
 };
 

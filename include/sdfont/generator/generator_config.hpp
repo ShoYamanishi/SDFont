@@ -24,14 +24,14 @@ class GeneratorConfig {
         mFontPath                   { DefaultFontPath },
         mExtraGlyphPath             { DefaultExtraGlyphPath },
         mOutputFileName             { DefaultOutputFileName },
-        mMaxCodePoint               { DefaultMaxCodePoint },
         mOutputTextureSize          { DefaultOutputTextureSize },
         mGlyphScalingFromSamplingToPackedSignedDist
                                     { 1.0f },
         mGlyphBitmapSizeForSampling { DefaultGlyphBitmapSizeForSampling },
         mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
+        mProcessHiddenGlyphs        { DefaultProcessHiddenGlyphs },
         mNumThreads                 { DefaultNumThreads },
-        mCodepointRangeFilePath     { DefaultCodepointRangeFilePath },
+        mMaxCodePoint               { DefaultMaxCodePoint },
         mEncoding                   { DefaultEncoding },
         mEnableDeadReckoning        { DefaultEnableDeadReckoning },
         mReverseYDirectionForGlyphs { DefaultReverseYDirectionForGlyphs },
@@ -43,34 +43,26 @@ class GeneratorConfig {
     void setFontPath           ( string s ) { mFontPath       = s ; }
     void setExtraGlyphPath     ( string s ) { mExtraGlyphPath = s ; }
     void setOutputFileName     ( string s ) { mOutputFileName = s ; }
-    void setMaxCodePoint       ( long   v ) { mMaxCodePoint   = v ; }
     void setOutputTextureSize  ( long   v ) { mOutputTextureSize    = v ; }
     void setGlyphBitmapSizeForSampling
                                ( long   v ) { mGlyphBitmapSizeForSampling = v ; }
     void setRatioSpreadToGlyph ( float v  ) { mRatioSpreadToGlyph = v ; }
+    void setProcessHiddenGlyphs( const bool b )
+                                            { mProcessHiddenGlyphs = b ; }
+    void setMaxCodePoint       ( long v   ) { mMaxCodePoint = v; }
+    void addCharCodeRange      ( const uint32_t s, const uint32_t f )
+                                            { mCharCodeRanges.push_back( std::pair( s, f ) ); }
     void setNumThreads         ( long v   ) { mNumThreads = v ; }
     void setGlyphScalingFromSamplingToPackedSignedDist
                                ( float v  ) { mGlyphScalingFromSamplingToPackedSignedDist = v; }
-    void setCodepointRangeFilePath( string s );
     void setEncoding           ( string s ) { mEncoding = s; }
     void setDeadReckoning      ( bool b )   { mEnableDeadReckoning = b; }
     void setReverseYDirectionForGlyphs
                                ( bool b )   { mReverseYDirectionForGlyphs = b; }
+
     string fontPath()          const { return mFontPath ;                         }
     string extraGlyphPath()    const { return mExtraGlyphPath ;                   }
     string outputFileName()    const { return mOutputFileName ;                   }
-    long maxCodePoint()      const {
-        if ( mCodepointRangePairs.empty() ) {
-            return mMaxCodePoint ;
-        }
-        else {
-            long v = 0;
-            for ( const auto& p : mCodepointRangePairs ) {
-                v = std::max( v, p.second );
-            }
-            return v;
-        }
-    }
     long   outputTextureSize() const { return mOutputTextureSize ;                }
     long   defaultRatioSpreadToGlyph()
                                const { return DefaultRatioSpreadToGlyph ;         }
@@ -79,7 +71,10 @@ class GeneratorConfig {
     long   glyphBitmapSizeForSampling()
                                const { return mGlyphBitmapSizeForSampling ;       }
     float  ratioSpreadToGlyph()const { return mRatioSpreadToGlyph ;               }
-    long   numThreads() const { return mNumThreads; }
+    bool   processHiddenGlyphs()
+                               const { return mProcessHiddenGlyphs;               }
+    long   maxCodePoint()      const { return mMaxCodePoint;                      }
+    long   numThreads()        const { return mNumThreads;                        }
     float  glyphScalingFromSamplingToPackedSignedDist()
                                const { return mGlyphScalingFromSamplingToPackedSignedDist ; }
     long   signedDistExtent()  const { return   (long)( mGlyphBitmapSizeForSampling
@@ -87,17 +82,20 @@ class GeneratorConfig {
                                               * mRatioSpreadToGlyph );                      }
     const string& encoding()   const { return mEncoding;                          }
 
-    bool   isDeadReckoningSet() const { return mEnableDeadReckoning; }
-    bool   isReverseYDirectionForGlyphsSet() const { return mReverseYDirectionForGlyphs; }
+    bool   isDeadReckoningSet()
+                               const { return mEnableDeadReckoning; }
+    bool   isReverseYDirectionForGlyphsSet()
+                               const { return mReverseYDirectionForGlyphs; }
+
     void   emitVerbose () const;
     void   outputMetricsHeader ( ostream& os ) const;
 
-    bool   isInACodepointRange( const long charcode ) const
+    bool   isInACharCodeRange( const long charcode ) const
     {
-        if ( mCodepointRangePairs.empty() ) {
+        if ( mCharCodeRanges.empty() ) {
             return true;
         }
-        for ( const auto& pair: mCodepointRangePairs ) {
+        for ( const auto& pair: mCharCodeRanges ) {
             if ( pair.first <= charcode && charcode < pair.second ) {
                 return true;
             }
@@ -113,15 +111,15 @@ class GeneratorConfig {
     string mFontPath ;
     string mExtraGlyphPath ;
     string mOutputFileName ;
-    long   mMaxCodePoint ;
     long   mOutputTextureSize ;
     long   mGlyphBitmapSizeForSampling;
     float  mGlyphScalingFromSamplingToPackedSignedDist ;
     float  mRatioSpreadToGlyph;
+    bool   mProcessHiddenGlyphs;
     long   mNumThreads;
-    string mCodepointRangeFilePath;
+    long   mMaxCodePoint;
     vector< pair< long, long > >
-           mCodepointRangePairs;
+           mCharCodeRanges;
     string mEncoding;
     bool   mEnableDeadReckoning;
     bool   mReverseYDirectionForGlyphs;
@@ -130,12 +128,12 @@ class GeneratorConfig {
     static const string DefaultFontPath ;
     static const string DefaultExtraGlyphPath ;
     static const string DefaultOutputFileName ;
-    static const long   DefaultMaxCodePoint ;
     static const long   DefaultOutputTextureSize ;
     static const long   DefaultGlyphBitmapSizeForSampling ;
     static const float  DefaultRatioSpreadToGlyph ;
+    static const bool   DefaultProcessHiddenGlyphs ;
     static const long   DefaultNumThreads;
-    static const string DefaultCodepointRangeFilePath;
+    static const long   DefaultMaxCodePoint;
     static const string DefaultEncoding;
     static const bool   DefaultEnableDeadReckoning;
     static const bool   DefaultReverseYDirectionForGlyphs;

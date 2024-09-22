@@ -192,6 +192,9 @@ bool Generator::initializeFreeType()
         mConf.setFaceHasGlyphNames();
         cerr << "The face has glyph names.\n";
     }
+    else {
+        cerr << "The face does not have glyph names.\n";
+    }
 
     cerr << "Num charmaps: " << mFtFace->num_charmaps << "\n";
 
@@ -222,6 +225,17 @@ bool Generator::initializeFreeType()
 
         const auto charMap = generateCharMap( mFtFace, mFtFace->charmaps[i], i == active_charmap_index );
         mCharMaps.push_back( charMap );
+    }
+
+    if ( ! mConf.processHiddenGlyphs() ) {
+
+        for ( const auto& charMap : mCharMaps ) {
+
+            for ( const auto& pe : charMap.m_char_to_codepoint ) {
+
+                mCodepointsToProcess.insert( pe.second );
+            }
+        }
     }
 
     return true;
@@ -408,9 +422,9 @@ bool Generator::generateGlyphs()
     char glyph_name_buffer[256];
     string glyph_name( "" );
 
-    for (FT_ULong i = 0; i <= mConf.maxCodePoint(); i++) {
+    if ( mConf.processHiddenGlyphs() ) {
 
-        if ( mConf.isInACodepointRange(i) ) {
+        for (FT_ULong i = 0; i <= mConf.maxCodePoint(); i++) {
 
             auto ftError = FT_Load_Glyph ( mFtFace, i, FT_LOAD_DEFAULT );
 
@@ -438,6 +452,36 @@ bool Generator::generateGlyphs()
             mGlyphs.push_back ( g );
         }
     }
+    else {
+        for ( const FT_ULong i : mCodepointsToProcess ) {
+
+            auto ftError = FT_Load_Glyph ( mFtFace, i, FT_LOAD_DEFAULT );
+
+            if ( ftError != FT_Err_Ok ) {
+
+                // no glyph present for the codepoint
+                continue;
+            }
+
+            if ( mConf.faceHasGlyphNames() ) {
+
+                ftError = FT_Get_Glyph_Name( mFtFace, i, glyph_name_buffer, 256 );
+
+                if ( ftError != FT_Err_Ok ) {
+
+                    cerr << "FreeType error: " << ftError << "\n";
+                    return false;
+                }
+
+                glyph_name_buffer[255] = 0;
+                glyph_name = glyph_name_buffer;
+            }
+
+            auto* g = new InternalGlyphForGen( mConf, mThreadDriver, i, mFtFace->glyph->metrics, glyph_name );
+            mGlyphs.push_back ( g );
+        }
+    }
+
     return true;
 }
 
@@ -457,7 +501,7 @@ CharMap Generator::generateCharMap(
 
     if ( ftError != FT_Err_Ok ) {
 
-        cerr << "FreeType error: " << ftError << "\n";
+        cerr << "FreeType error: FT_Set_Charmap" << ftError << "\n";
 
         return charMap;
     }
@@ -465,14 +509,15 @@ CharMap Generator::generateCharMap(
     FT_UInt gindex = 0;
 
     FT_ULong charcode = FT_Get_First_Char( ftFace, &gindex );
-    int count = 0;
 
     while ( gindex != 0 ) {
 
-        charMap.m_char_to_codepoint.insert( pair( charcode, gindex ) );
+        if ( mConf.isInACharCodeRange( charcode ) ) {
+
+            charMap.m_char_to_codepoint.insert( pair( charcode, gindex ) );
+        }
 
         charcode = FT_Get_Next_Char( ftFace, charcode, &gindex );
-        count++;
     }
     return charMap;
 }
