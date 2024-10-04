@@ -174,6 +174,28 @@ bool Generator::initializeFreeType()
 
     cerr << "Number of glyphs: " << mFtFace->num_glyphs << "\n";
 
+    FT_UShort flags = FT_Get_FSType_Flags( mFtFace );
+    cerr << "Font Policy (FSType): [ ";
+    if ( ( flags & FT_FSTYPE_INSTALLABLE_EMBEDDING ) != 0 ) {
+        cerr << "This font may be embedded and permanently installed on the remote system by an application.";
+    }
+    if ( ( flags & FT_FSTYPE_RESTRICTED_LICENSE_EMBEDDING ) != 0 ) {
+        cerr << "This font must not be modified, embedded or exchanged in any manner.";
+    }
+    if ( ( flags & FT_FSTYPE_PREVIEW_AND_PRINT_EMBEDDING ) != 0 ) {
+        cerr << "This font may be embedded and temporarily loaded on the remote system. Documents containing Preview & Print fonts must be opened ‘read-only’";
+    }
+    if ( ( flags & FT_FSTYPE_EDITABLE_EMBEDDING ) != 0 ) {
+        cerr << "This font may be opened for reading, editing is permitted, and changes may be saved.";
+    }
+    if ( ( flags & FT_FSTYPE_NO_SUBSETTING ) != 0 ) {
+        cerr << "The font may not be subsetted prior to embedding.";
+    }
+    if ( ( flags & FT_FSTYPE_BITMAP_EMBEDDING_ONLY ) != 0 ) {
+        cerr << "Only bitmaps contained in the font may be embedded; no outline data may be embedded.";
+    }
+    cerr << " ]\n";
+
     ftError = setEncoding ( mConf.encoding() );
 
     if ( ftError != FT_Err_Ok ) {
