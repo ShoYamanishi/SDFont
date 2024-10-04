@@ -206,7 +206,7 @@ It takes a vector TrueType font (usually the extension is `.ttf` or `.ttc`, and 
 **NOTE:** Ligatures are not supported at moment. I could not figure out if/how I handle ligatures with libfreetype. If you know how, I would appreciate your advice.
 
 ```
-Usage: sdfont_commandline -verbose -font_path [FontPath] -process_hidden_glyphs [highest codepoint] -char_code_range 0X********-0X******** (can be specified multiple times) -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -num_threads [num 1-32] [output file name w/o ext]
+Usage: sdfont_commandline -verbose -font_path [FontPath] -process_hidden_glyphs -char_code_range 0X********-0X******** (can be specified multiple times) -texture_size [num] -glyph_size_for_sampling [num] -ratio_spread_to_glyph [float] -num_threads [num 1-32] [output file name w/o ext]
 ```
 * -verbose : Switch to turn on the verbose output.
 
