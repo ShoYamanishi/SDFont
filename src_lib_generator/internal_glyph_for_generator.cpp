@@ -123,7 +123,10 @@ void InternalGlyphForGen::setBaseXY( long x, long y ) {
     auto fDim        = (float) mConf.outputTextureSize() ;
 
     mTextureCoordX   = (float) ( x + mConf.signedDistExtent() ) / fDim ;
-    mTextureCoordY   = (float) ( y + mConf.signedDistExtent() ) / fDim ;
+
+    const auto yCompensation = ( mConf.isReverseYDirectionForGlyphsSet() ) ? 0.0f : 0.5f;
+
+    mTextureCoordY   = ( (float) ( y + mConf.signedDistExtent() ) + yCompensation ) / fDim ;
 
     const auto scale = mConf.glyphScalingFromSamplingToPackedSignedDist();
 

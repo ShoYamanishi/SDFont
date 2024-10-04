@@ -212,7 +212,7 @@ Usage: sdfont_commandline -verbose -font_path [FontPath] -process_hidden_glyphs 
 
 * -font_path : Path to the TrueType font including the extention. The fonts are usually found in `/usr/share/fonts`, `/usr/local/fonts` etc. on Linux, and `/System/Library/Fonts/` on MacOS.
 
-* -process_hidden_glyphs [highest codepoint] : Processes hidden glyphs that are not reachable from any character maps included in the original font. For example, 'Computer Modern' fonts have a few thousand glyphs (mostly math symbols) defined but not accessible from any character maps. This option enables the generation of the signed distance data for those glyphs.
+* -process_hidden_glyphs : Processes hidden glyphs that are not reachable from any character maps included in the original font. For example, 'Computer Modern' fonts have a few thousand glyphs (mostly math symbols) defined but not accessible from any character maps. This option enables the generation of the signed distance data for those glyphs.
 
 * -char_code_range [0X********-0X********] : This option can be specified multiple times. If this option is present, it proceeses the glyphs that correspond to the character codes in the specified ranges only.
 

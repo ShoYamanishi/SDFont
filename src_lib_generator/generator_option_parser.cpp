@@ -17,7 +17,7 @@ const string GeneratorOptionParser::Usage = "Usage: "
                                             "-texture_size [num] "
                                             "-glyph_size_for_sampling [num] "
                                             "-ratio_spread_to_glyph [float] "
-                                            "-process_hidden_glyphs [highest codepoint] "
+                                            "-process_hidden_glyphs "
                                             "-char_code_range 0X********-0X******** (can be specified multiple times) "
                                             "-num_threads [num 1-64] "
                                             " -enable_dead_reckoning  "
@@ -127,15 +127,7 @@ bool GeneratorOptionParser::parse( int argc, char* argv[] )
         }
         else if ( arg.compare ( ProcessHiddenGlyphs ) == 0 ) {
 
-            if ( i < argc - 1 ) {
-
-                string arg2( argv[++i] );
-                processProcessHiddenGlyphs( arg2 );
-            }
-            else {
-                mError = true;
-                break;
-            }
+            processProcessHiddenGlyphs( true );
         }
         else if ( arg.compare ( CharCodeRange ) == 0 ) {
 
@@ -263,7 +255,7 @@ void GeneratorOptionParser::processNumThreads( const string& s ) {
 
     long numThreads = atoi( s.c_str() ) ;
 
-    if ( numThreads < 1 || numThreads > 32 ) {
+    if ( numThreads < 1 || numThreads > 64 ) {
 
         mError = true;
     }
@@ -273,18 +265,9 @@ void GeneratorOptionParser::processNumThreads( const string& s ) {
     }
 }
 
-void GeneratorOptionParser::processProcessHiddenGlyphs( const string& s )
+void GeneratorOptionParser::processProcessHiddenGlyphs( const bool b )
 {
-    long maxCodePoint = atoi( s.c_str() ) ;
-
-    if ( maxCodePoint < 1 ) {
-
-        mError = true;
-    }
-    else {
-        mConfig.setProcessHiddenGlyphs( true );
-        mConfig.setMaxCodePoint( maxCodePoint );
-    }
+    mConfig.setProcessHiddenGlyphs( b );
 }
 
 void GeneratorOptionParser::processCharCodeRange( const string& s )

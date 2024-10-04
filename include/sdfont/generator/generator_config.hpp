@@ -31,7 +31,6 @@ class GeneratorConfig {
         mRatioSpreadToGlyph         { DefaultRatioSpreadToGlyph },
         mProcessHiddenGlyphs        { DefaultProcessHiddenGlyphs },
         mNumThreads                 { DefaultNumThreads },
-        mMaxCodePoint               { DefaultMaxCodePoint },
         mEncoding                   { DefaultEncoding },
         mEnableDeadReckoning        { DefaultEnableDeadReckoning },
         mReverseYDirectionForGlyphs { DefaultReverseYDirectionForGlyphs },
@@ -49,7 +48,6 @@ class GeneratorConfig {
     void setRatioSpreadToGlyph ( float v  ) { mRatioSpreadToGlyph = v ; }
     void setProcessHiddenGlyphs( const bool b )
                                             { mProcessHiddenGlyphs = b ; }
-    void setMaxCodePoint       ( long v   ) { mMaxCodePoint = v; }
     void addCharCodeRange      ( const uint32_t s, const uint32_t f )
                                             { mCharCodeRanges.push_back( std::pair( s, f ) ); }
     void setNumThreads         ( long v   ) { mNumThreads = v ; }
@@ -73,7 +71,6 @@ class GeneratorConfig {
     float  ratioSpreadToGlyph()const { return mRatioSpreadToGlyph ;               }
     bool   processHiddenGlyphs()
                                const { return mProcessHiddenGlyphs;               }
-    long   maxCodePoint()      const { return mMaxCodePoint;                      }
     long   numThreads()        const { return mNumThreads;                        }
     float  glyphScalingFromSamplingToPackedSignedDist()
                                const { return mGlyphScalingFromSamplingToPackedSignedDist ; }
@@ -117,7 +114,6 @@ class GeneratorConfig {
     float  mRatioSpreadToGlyph;
     bool   mProcessHiddenGlyphs;
     long   mNumThreads;
-    long   mMaxCodePoint;
     vector< pair< long, long > >
            mCharCodeRanges;
     string mEncoding;
@@ -133,7 +129,6 @@ class GeneratorConfig {
     static const float  DefaultRatioSpreadToGlyph ;
     static const bool   DefaultProcessHiddenGlyphs ;
     static const long   DefaultNumThreads;
-    static const long   DefaultMaxCodePoint;
     static const string DefaultEncoding;
     static const bool   DefaultEnableDeadReckoning;
     static const bool   DefaultReverseYDirectionForGlyphs;

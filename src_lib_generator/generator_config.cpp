@@ -14,7 +14,6 @@ const long   GeneratorConfig::DefaultOutputTextureSize      =  512 ;
 const float  GeneratorConfig::DefaultRatioSpreadToGlyph     =  0.2f ;
 const bool   GeneratorConfig::DefaultProcessHiddenGlyphs    =  false;
 const long   GeneratorConfig::DefaultNumThreads             =  0 ;
-const long   GeneratorConfig::DefaultMaxCodePoint           = 1024 * 1024;
 const long   GeneratorConfig::DefaultGlyphBitmapSizeForSampling = 1024 ;
 const bool   GeneratorConfig::DefaultEnableDeadReckoning    = false;
 const bool   GeneratorConfig::DefaultReverseYDirectionForGlyphs = false;
@@ -94,7 +93,7 @@ void GeneratorConfig::emitVerbose() const {
         cerr << "]\n";
     }
     if ( mProcessHiddenGlyphs ) {
-        cerr << "Processing Hidden Glyphs. Max Code Point: " << mMaxCodePoint << "\n";
+        cerr << "Processing Hidden Glyphs.\n";
     }
     else {
         cerr << "Not Processing Hidden Glyphs.\n";

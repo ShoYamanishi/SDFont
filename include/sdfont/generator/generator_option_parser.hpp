@@ -31,13 +31,13 @@ class GeneratorOptionParser {
     void processGlyphSizeForSampling ( const string& s ) ;
     void processRatioSpreadToGlyph   ( const string& s ) ;
     void processCharCodeRange        ( const string& s ) ;
-    void processProcessHiddenGlyphs  ( const string& s ) ;
+    void processProcessHiddenGlyphs  ( const bool    b ) ;
     void processNumThreads           ( const string& s ) ;
     void processOutputFileName       ( const string& s ) ;
     void processEncoding             ( const string& s ) ;
-    void processDeadReckoning        ( const bool   b );
+    void processDeadReckoning        ( const bool    b );
     void processReverseYDirectionForGlyphs
-                                     ( const bool   b );
+                                     ( const bool    b );
     bool doesFileExist               ( const string& s ) const ;
     bool doesDirectoryExist          ( const string& s ) const ;
     bool isValidFileName             ( const string& s ) const ;

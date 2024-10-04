@@ -172,6 +172,8 @@ bool Generator::initializeFreeType()
         return false;
     }
 
+    cerr << "Number of glyphs: " << mFtFace->num_glyphs << "\n";
+
     ftError = setEncoding ( mConf.encoding() );
 
     if ( ftError != FT_Err_Ok ) {
@@ -424,7 +426,7 @@ bool Generator::generateGlyphs()
 
     if ( mConf.processHiddenGlyphs() ) {
 
-        for (FT_ULong i = 0; i <= mConf.maxCodePoint(); i++) {
+        for ( FT_ULong i = 0; i <= mFtFace->num_glyphs; i++ ) {
 
             auto ftError = FT_Load_Glyph ( mFtFace, i, FT_LOAD_DEFAULT );
 
