@@ -1,4 +1,4 @@
-#include <time.h>
+#include <chrono>
 #include "sdfont/generator/generator_option_parser.hpp"
 #include "sdfont/generator/generator_config.hpp"
 #include "sdfont/generator/generator.hpp"
@@ -13,7 +13,8 @@ using namespace std;
 
 int main ( int argc, char* argv[] )
 {
-    auto tStart = clock();
+    auto time_begin = std::chrono::high_resolution_clock::now();
+
     SDFont::GeneratorConfig conf;
 
     SDFont::GeneratorOptionParser parser( conf );
@@ -54,13 +55,12 @@ int main ( int argc, char* argv[] )
         exit(1);
     }
 
-    auto tEnd = clock();
+    auto time_end = std::chrono::high_resolution_clock::now();
+
     if ( parser.hasVerbose() ) {
 
-        auto tDiffInMillisec =  static_cast<float>( tEnd - tStart ) 
-                              / static_cast<float>( CLOCKS_PER_SEC ) * 1000.0f;
-
-        cerr << "Finishied in " << int(tDiffInMillisec) << " milli seconds\n";
+        std::chrono::duration<double> time_diff = time_end - time_begin;
+        std::cerr << "\n\nFinished in " << time_diff.count() << "[s].\n\n";
     }
 
     return 0;
