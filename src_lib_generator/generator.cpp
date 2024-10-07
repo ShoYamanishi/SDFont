@@ -86,6 +86,20 @@ bool Generator::generate()
         return false;
     }
 
+    auto ftError = FT_Done_Face( mFtFace );
+
+    if ( ftError != FT_Err_Ok ) {
+
+        cerr << "FT_DONE_Face error: " << ftError << "\n";
+    }
+
+    ftError = FT_Done_FreeType( mFtHandle );
+
+    if ( ftError != FT_Err_Ok ) {
+
+        cerr << "FT_DONE_FreeType error: " << ftError << "\n";
+    }
+
     return true;
 }
 
