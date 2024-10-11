@@ -295,39 +295,59 @@ float InternalGlyphForGen::getSignedDistance(
     const long downSampleRate = 1;
 
     bool  curP       = isPixelSet( bm, xPix, yPix );
-    float fSpread    = (float) spreadInGlyphPixelsForSampling ;
-    float minSqDist  = fSpread * fSpread ;
-    long  nextStartI = spreadInGlyphPixelsForSampling + downSampleRate;
+    float fSpread    = (float) spreadInGlyphPixelsForSampling;
+    float minDist  = fSpread;
+    float minSqDist  = fSpread * fSpread;
+    float effectiveSpread = fSpread * 2.0f;
 
     for (auto i = 1 ; i <= spreadInGlyphPixelsForSampling; i += downSampleRate ) {
 
         float fi = (float)i;
 
+        if ( fi > effectiveSpread ) {
+            break;
+        }
+
         if ( testOrthogonalPoints( bm, curP, xPix, yPix, i ) ) {
 
-            minSqDist  = min( minSqDist, fi * fi );
-            nextStartI = i + downSampleRate;
+            minDist   = min( minDist, fi );
+            minSqDist = min( minSqDist, fi * fi );
+            effectiveSpread = min( effectiveSpread, fi * 1.414213562373095f );
             break;
         }
 
         for ( auto j = 1 ; j < i; j++ ) {
 
+            float fj   = (float) j;
+
+            if ( fj > effectiveSpread ) {
+                break;
+            }
+
+            const auto sqDist = fi * fi + fj * fj;
+            if ( sqDist >= minSqDist ) {
+                continue;
+            }
+
             if ( testSymmetricPoints( bm, curP, xPix, yPix, i, j ) ) {
 
-                float fj   = (float) j;
-                minSqDist  = min( minSqDist, fi * fi + fj * fj );
-                nextStartI = i + downSampleRate;
+                const float fij = (float)sqrt( sqDist );
+                minDist         = min( minDist, fij );
+                minSqDist       = min( minSqDist, sqDist );
+                effectiveSpread = min( effectiveSpread, fij * 1.414213562373095f );
             }
         }
 
-        if ( testDiagonalPoints( bm, curP, xPix, yPix, i ) ) {
+        if ( fi * fi * 2.0 < minSqDist ) {
+            if ( testDiagonalPoints( bm, curP, xPix, yPix, i ) ) {
 
-            minSqDist  = min( minSqDist, 2 * fi * fi );
-            nextStartI = i + downSampleRate;
+                minDist  = min( minDist, fi * 1.414213562373095f );
+                effectiveSpread = min( effectiveSpread, fi * 2.0f  );
+            }
         }
     }
 
-    auto normalizedMinDist = ( (float)sqrt(minSqDist) - 1.0 ) / fSpread ;
+    auto normalizedMinDist = ( minDist - 1.0f ) / fSpread ;
 
     if (curP) {
 
